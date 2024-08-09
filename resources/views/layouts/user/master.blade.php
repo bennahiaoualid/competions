@@ -22,7 +22,7 @@
         <!-- Header -->
         @include("layouts.user.main-header")
         <!-- Main Content -->
-            <main class="flex-1 p-4">
+            <main class="p-2 mt-4 container">
                 @yield('content')
             </main>
     </div>

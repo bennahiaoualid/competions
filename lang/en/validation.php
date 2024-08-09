@@ -155,6 +155,11 @@ return [
         'attribute-name' => [
             'rule-name' => 'custom-message',
         ],
+        'age_minmax_validation' => 'The :attribute must be greater than or equal to :other.',
+        'start_date' => [
+            'after_or_equal' => 'The datetime must be a date and time after or equal to the current datetime.',
+        ],
+        'start_date_gt_competition' => "The level start date must be a date and time after or equal to the competition start date"
     ],
 
     /*
@@ -169,17 +174,15 @@ return [
     */
 
     'attributes' => [
-
-        'firstname_en' => 'firstname in english',
-        'lastname_ar' => 'lastname in arabic',
-        'lastname_en' => 'lastname in english',
-        //purchase clients suppliers
-        'supplier' => 'supplier',
-        'sim_card' => 'sim_card',
-        'unit' => 'unit',
-        'discount' => 'discount',
-        'payment' => 'payment',
-        'observation' => 'observation',
+        'admin_id' => 'admin',
+        'age_end' => 'max age',
+        'age_start' => 'min age',
+        'duration.*' => 'duration',
+        'levels_number' => 'levels number',
+        'max_score.*' => 'max score',
+        'start_date' => 'start date',
+        'question_text.*' => 'question text',
+        'questions_number' => 'questions number'
     ],
 
 ];

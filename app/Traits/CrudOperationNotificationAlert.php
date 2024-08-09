@@ -48,4 +48,18 @@ trait CrudOperationNotificationAlert
             ];
         return $notifications;
     }
+
+    /**
+     * Generates notifications based on the result of the admin service create operation.
+     *
+     * @param string $message The messages of the notification.
+     * @param string $type the type of notification.
+     * @return array An array of notifications to be flashed to the session.
+     */
+    public function generateCustomNotification(string $message, string $type): array {
+        return [
+                'message' => $message,
+                'alert-type' => $type
+            ];
+    }
 }

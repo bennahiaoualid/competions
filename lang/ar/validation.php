@@ -35,7 +35,7 @@ return [
     'current_password' => 'The password is incorrect.',
     'date' => ' :attribute غير صحيح',
     'date_equals' => 'The :attribute must be a date equal to :date.',
-    'date_format' => 'The :attribute does not match the format :format.',
+    'date_format' => ':attribute لا يطابق النمط :format.',
     'declined' => 'The :attribute must be declined.',
     'declined_if' => 'The :attribute must be declined when :other is :value.',
     'different' => 'The :attribute and :other must be different.',
@@ -151,6 +151,11 @@ return [
         'attribute-name' => [
             'rule-name' => 'custom-message',
         ],
+        'age_minmax_validation' => ':attribute يجب ان يكون اكبر او يساوي :other.',
+        'start_date' => [
+            'after_or_equal' => 'وقت الانطلاق يجب أن لا يكون قبل الوقت الحالي.',
+        ],
+        'start_date_gt_competition' => "وقت انطلاق المرحلة يجب أن لا يكون قبل وقت انطلاق المسابقة"
     ],
 
     /*
@@ -165,13 +170,24 @@ return [
     */
 
     'attributes' => [
-
+        'admin_id' => 'المسؤول',
+        'age_end' => 'العمر الاقصى',
+        'age_start' => 'العمر الادنى',
         'birthdate' => 'تاريخ الميلاد',
+        'description' => 'الوصف',
+        'duration' => 'المدة',
+        'duration.*' => 'المدة',
         'email' => 'البريد الالكتروني',
         'gender' => 'الجنس',
+        'levels_number' => 'عدد المراحل',
+        'max_score.*' => 'العلامة',
         'name' => 'الاسم',
         'password' => 'كلمة السر',
-        'role' => 'الوظيفة'
+        'question_text.*' => 'نص السؤال',
+        'questions_number' => 'عدد الاسئلة',
+        'role' => 'الوظيفة',
+        'start_date' => 'تاريخ الانطلاق',
+        'title' => 'العنوان',
 
 
 

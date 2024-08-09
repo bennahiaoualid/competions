@@ -24,6 +24,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth_user_profile' => \App\Http\Middleware\AuthUserRedirectToProfile::class,
             'can_delete_admin' => \App\Http\Middleware\RightsToDeleteAdmin::class,
             'can_delete_user' => \App\Http\Middleware\RightsToDeleteUser::class,
+            'can_update_competition' => \App\Http\Middleware\UpdateCompetition::class,
+
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

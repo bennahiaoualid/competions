@@ -100,7 +100,7 @@
         </x-slot>
     </x-modal>
 
-    <div class="overflow-x-auto py-4 px-2">
+    <div class="overflow-x-auto max-w-[90vw] pt-2">
         <livewire:user-table/>
     </div>
 @endsection

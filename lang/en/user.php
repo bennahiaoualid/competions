@@ -9,6 +9,7 @@ return [
         'name' => 'Name',
         'email' => 'email',
         'birthdate' => 'birthdate',
+        'age' => 'age',
         'password' => [
             'password' =>  'password',
             'update' =>  'update password',
@@ -24,6 +25,17 @@ return [
             'gender' => 'gender',
             'male' => 'male',
             'female' => 'female',
+        ],
+        'status' =>[
+            'state' =>  'state',
+            'active' =>  'verified',
+            'inactive' =>  'not verified',
+        ],
+        'verify' =>[
+            'confirm' => 'Confirm Email',
+            'unverified' =>  'Your email address is unverified.',
+            're-send-email' =>  'Click here to re-send the verification email.',
+            'email-sent' =>  'A new verification link has been sent to your email address.',
         ],
         'actions'=> [
             'created_by' => 'created by'

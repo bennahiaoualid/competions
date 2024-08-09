@@ -9,6 +9,9 @@ return [
     ],
     'user' =>[
         'list' => 'المستخدمين',
+    ],
+    'competition' =>[
+        'competitions' => 'المسابقات',
+        'list' => 'قائمة المسابقات',
     ]
-
 ];

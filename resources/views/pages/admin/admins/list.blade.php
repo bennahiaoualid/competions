@@ -124,7 +124,7 @@
             </x-slot>
         </x-modal>
     @endcan
-    <div class="overflow-x-auto py-4 px-2">
+    <div class="overflow-x-auto max-w-[90vw] pt-2">
         <livewire:admin-table/>
     </div>
 @endsection

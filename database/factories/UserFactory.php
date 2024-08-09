@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Admin\Admin;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -23,13 +24,30 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
-        return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+        static $counter = 1;
+
+        // Generate random admin id from the admins table
+        $admin = Admin::inRandomOrder()->first();
+        $admin_id = $admin ? $admin->id : 1;
+
+        // Generate the name and email based on the counter
+        $name = 'user_' . $counter . '_' . $this->faker->firstName;
+        $email = strtolower($name) . '@user.com';
+
+        $user = [
+            'name' => $name,
+            'email' => $email,
+            'admin_id' => $admin_id,
+            'birthdate' => $this->faker->dateTimeBetween('2002-01-01', '2014-01-01')->format('Y-m-d'),
+            'gender' => $this->faker->randomElement(['male', 'female']),
+            'email_verified_at' => $this->faker->optional()->dateTime(),
+            'password' => bcrypt('12345678'), // password
             'remember_token' => Str::random(10),
         ];
+
+        $counter++;
+
+        return $user;
     }
 
     /**

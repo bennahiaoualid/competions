@@ -20,6 +20,7 @@ return new class extends Migration
             $table->enum('gender', ['male', 'female'])->default('male');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('anonymized_identifier')->unique()->nullable();
             $table->rememberToken();
             $table->timestamps();
             $table->foreign('admin_id')->references('id')->on('admins');

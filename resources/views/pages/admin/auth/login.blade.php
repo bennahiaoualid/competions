@@ -5,6 +5,8 @@
     </h1>
     <form action="{{route("admin.login")}}" method="POST">
         @csrf
+        @method('post')
+        <input type="hidden" name="timezone" id="timezone">
         <!-- Email Address -->
         <div>
             <x-input-label for="email" :value="__('user.profile.email')" />
@@ -56,4 +58,11 @@
         </div>
     </form>
 </div>
+
+@section('custom_js')
+    <script>
+        let timezone = moment.tz.guess();
+        document.getElementById("timezone").value = timezone;
+    </script>
+@endsection
 </x-guest-layout>

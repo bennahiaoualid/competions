@@ -23,6 +23,7 @@ class RoleSeeder extends Seeder
         Permission::create(['guard_name' => 'admin', 'name' => 'update user']);
         Permission::create(['guard_name' => 'admin', 'name' => 'delete user']);
         Permission::create(['guard_name' => 'admin', 'name' => 'view user']);
+        Permission::create(['guard_name' => 'admin', 'name' => 'add competition']);
 
         $role_owner = Role::create(['guard_name' => 'admin', 'name' => 'owner']);
 
@@ -35,7 +36,8 @@ class RoleSeeder extends Seeder
             'add user',
             'update user',
             'delete user',
-            'view user');
+            'view user',
+            'add competition');
         $role_manager = Role::create(['guard_name' => 'admin', 'name' => 'manager']);
         $role_manager->givePermissionTo(
             "view admin",

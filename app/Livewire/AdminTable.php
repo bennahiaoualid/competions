@@ -23,8 +23,6 @@ use PowerComponents\LivewirePowerGrid\Traits\WithExport;
 
 final class AdminTable extends PowerGridComponent
 {
-    use WithExport;
-    public bool $deferLoading = true;
 
     public function setUp(): array
     {
@@ -106,17 +104,6 @@ final class AdminTable extends PowerGridComponent
         ];
     }
 
-    /*
-    public function actionRules($row): array
-    {
-       return [
-            // Hide button edit for ID 1
-            Rule::button('edit')
-                ->when(fn($row) => $row->id === 1)
-                ->hide(),
-        ];
-    }
-    */
     public function template(): ?string
     {
         return TailwindStriped::class;

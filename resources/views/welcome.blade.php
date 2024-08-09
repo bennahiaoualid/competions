@@ -129,5 +129,8 @@
                 </div>
             </div>
         </div>
+        <div class=" container overflow-x-auto max-w-full">
+            <livewire:user-table/>
+        </div>
     </body>
 </html>

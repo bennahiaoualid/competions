@@ -1,4 +1,4 @@
-<div id="sidebar" class="h-auto min-h-screen z-40 fixed inset-y-0 left-0 transform -translate-x-full md:translate-x-0  md:relative bg-gray-800 text-white w-64 p-4 md:flex-shrink-0">
+<div id="sidebar" class=" h-auto min-h-screen z-40 fixed inset-y-0 left-0 transform -translate-x-full md:translate-x-0  md:relative bg-gray-800 text-white w-64 p-4 md:flex-shrink-0">
     <h2 class="text-2xl font-bold">Dashboard</h2>
     <hr class="h-px my-4 bg-gray-700 border-0 dark:bg-gray-700">
     <nav>
@@ -30,6 +30,15 @@
                         <i class="fas fa-home me-3"></i>
                     </x-slot:icon>
                     {{__("links.user.list")}}
+                </x-nav-link>
+            </li>
+
+            <li class="mb-2">
+                <x-nav-link href="{{route('admin.competitions')}}" :active="request()->routeIs('admin.competitions')" :sub="false">
+                    <x-slot:icon>
+                        <i class="fas fa-home me-3"></i>
+                    </x-slot:icon>
+                    {{__("links.competition.competitions")}}
                 </x-nav-link>
             </li>
 
