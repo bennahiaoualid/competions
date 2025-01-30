@@ -2,7 +2,7 @@
 @section('css')
 
     @section('title')
-        hello
+        {{__('links.competition.list')}}
     @stop
 @endsection
 
@@ -15,14 +15,15 @@
                 name="myModal"
                 x-on:click="$dispatch('open-modal', { detail: 'filter' })">
                 <x-slot:icon>
-                    <i class="fa-solid fa-plus me-2"></i>
+                    <i class="fa-solid fa-filter me-2"></i>
                 </x-slot:icon>
-                {{__("form.actions.add")}}
+                {{__("form.actions.filter")}}
             </x-button>
         </div>
     </div>
 
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 max-w-full">
+    @if($competitions->count() > 0)
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 max-w-full mt-4">
        @foreach($competitions as $competition)
            <div class="bg-white border shadow-md p-4 space-y-2">
 
@@ -44,16 +45,28 @@
 
                <div class="flex justify-between items-center">
                    <p class="py-1 px-2 border border-sky-600 text-sky-600" class="">{{$competition->start_date->inUserTimezone()}}</p>
-                   <x-button>more</x-button>
+                   <x-button :islink="true" href="{{route('competitions.detail',['id'=>base64_encode($competition->id)])}}">
+                       {{__('messages.global.details')}}
+                   </x-button>
                </div>
            </div>
        @endforeach
     </div>
+    @else
+        <div class="text-center">
+            <div class="text-gray-500 mb-4">
+                <i class="fas fa-folder-open text-6xl"></i>
+            </div>
+            <div class="text-gray-700 text-lg font-semibold">
+                {{__('messages.global.no_records')}}
+            </div>
+        </div>
+    @endif
 
     <!-- filter form -->
     <x-modal name="filter" title="My Modal" :show="$errors->hasBag('filterCompetitions')">
         <x-slot:modalhead>
-            {{__("form.filter")}}
+            {{__("form.filter.filter")}}
         </x-slot>
         <form id="filter" method="post" action="{{ route('competitions') }}" class="space-y-2">
             @csrf
@@ -97,6 +110,17 @@
                         <x-input-error :messages="$errors->filterCompetitions->get('age_end')" class="mt-2" />
                     </div>
                 </div>
+            </div>
+            <div>
+                <x-input-label for="status" :value=" ucwords(__('competition.info.status.state'))" />
+                <x-form.select-box id="status" name="status"  :options="[
+                    ['value' => '', 'text' => __('form.filter.all'), 'selected' => true],
+                    ['value' => '0', 'text' => __('competition.info.status.inactive'), 'selected' => false],
+                    ['value' => '1', 'text' => __('competition.info.status.active'), 'selected' => false],
+                    ['value' => '2', 'text' => __('competition.info.status.finished'), 'selected' => false],
+                ]">
+                </x-form.select-box>
+                <x-input-error :messages="$errors->createAdmin->get('gender')" class="mt-2" />
             </div>
         </form>
         <x-slot:modalfooter>

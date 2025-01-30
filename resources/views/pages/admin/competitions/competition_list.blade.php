@@ -85,18 +85,25 @@
     </x-modal>
     @endcan
 
-    @can("delete admin")
+    @hasanyrole('super_admin|owner')
         <x-modal name="delete" title="My Modal" :show="false">
             <x-slot:modalhead>
-                {{__("form.admin.delete")}}
+                {{__("form.competition.delete")}}
             </x-slot>
-            <form id="delete-form" method="post" action="{{route("admin.delete")}}" class="space-y-2">
+            <form id="delete-form" method="post" action="{{route("admin.competitions.delete")}}" class="space-y-2">
                 @csrf
                 @method('post')
 
                 <div>
                     <input type="hidden" name="id" x-model="inputValue"/>
-                    <p class=""> {{__("form.actions.confirm_delete")}}</p>
+                    <x-alert
+                        type="danger"
+                        outline="true"
+                        size="sm"
+                        :title="__('messages.alert.type.danger')"
+                    >
+                        {{__('messages.alert.content.delete_competition')}}
+                    </x-alert>
                 </div>
 
             </form>
@@ -106,7 +113,7 @@
                 </div>
             </x-slot>
         </x-modal>
-    @endcan
+    @endhasanyrole
     <div class="overflow-x-auto max-w-[90vw] pt-2">
         <livewire:competition-table/>
     </div>

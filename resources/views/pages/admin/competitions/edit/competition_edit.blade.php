@@ -20,18 +20,28 @@
              <!-- section title -->
              <div class="flex justify-between items-center my-2 p-2 shadow-sm" >
                  <h2 class="text-xl font-bold capitalize">{{__('competition.info.information')}}</h2>
-                 @can("add admin")
-                     <div x-data>
-                         <x-button
-                             name="myModal"
-                             x-on:click="$dispatch('open-modal', { detail: 'myModal' })">
-                             <x-slot:icon>
-                                 <i class="fa-solid fa-plus me-2"></i>
-                             </x-slot:icon>
-                             {{__("form.actions.add")}}
-                         </x-button>
-                     </div>
-                 @endcan
+                 @if($competition->canEdit())
+                     {{-- show activation button --}}
+                     @if($competition->status == 0)
+                         <form action="{{route('admin.competitions.activate')}}" method="post">
+                            @csrf
+                             @method('post')
+                             <input type="hidden" value="{{$competition->id}}" name="competition_id">
+                             <x-button color_type="success">
+                                 <x-slot:icon>
+                                     <i class="fa-solid fa-circle-check fa-fw me-2"></i>
+                                 </x-slot:icon>
+                                 {{__("form.actions.activate")}}
+                             </x-button>
+                         </form>
+                      {{-- show finishing button --}}
+                     @else
+                         <x-status-widget :status="$competition->getStatus()" :outline="false"
+                                          :text="__('competition.info.status.' . $competition->getStatus())">
+                         </x-status-widget>
+                     @endif
+
+                 @endif
              </div>
              <form id="edit-competition" method="post" action="{{ route('admin.competitions.update') }}" class="space-y-2">
                  @csrf
@@ -39,18 +49,20 @@
                  <input type="hidden" name="id" value="{{ $competition->id }}">
                  <div>
                      <x-input-label for="title" :value=" ucwords(__('competition.info.title'))" />
-                     <x-text-input id="title" type="text" class="mt-1 block w-full" :value="$competition->title" disabled />
+                     <x-text-input id="title" type="text" class="mt-1 block w-full" :value="$competition->title" readonly />
                  </div>
 
                  <div>
                      <x-input-label for="description" :value=" ucwords(__('competition.info.description'))" />
-                     <x-text-area id="description"  class="mt-1 block w-full h-fit" :value="$competition->description" disabled />
+                     <x-text-area id="description"  class="mt-1 block w-full h-fit"  readonly>
+                         {{$competition->description}}
+                     </x-text-area>
                  </div>
 
                  <div>
                      <x-input-label for="start_date" :value=" ucwords(__('competition.info.start_date'))" />
                      <x-text-input id="start_date" name="start_date" type="text" class="date-input mt-1 block w-full"
-                                   :value="old('start_date', $competition->start_date->timezone(session()->get('timezone')))"/>
+                                   :value="$competition->start_date->inUserTimezone()"/>
                      <x-input-error :messages="$errors->updateCompetition->get('start_date')" class="mt-2" />
                  </div>
 
@@ -60,13 +72,13 @@
                          <div>
                              <x-text-input id="age_start" name="age_start" type="number" min="6" lang="en"
                                            class="mt-1 block w-full" :placeholder="__('competition.info.age_start')"
-                                           :value="old('age_start', $competition->age_start)"/>
+                                           :value="$competition->age_start"/>
                              <x-input-error :messages="$errors->UpdateCompetition->get('age_start')" class="mt-2" />
                          </div>
                          <div>
                              <x-text-input id="age_end" name="age_end" type="number" min="6" lang="en"
                                            class="mt-1 block w-full" :placeholder="__('competition.info.age_end')"
-                                           :value="old('age_end', $competition->age_end)"/>
+                                           :value="$competition->age_end"/>
                              <x-input-error :messages="$errors->updateCompetition->get('age_end')" class="mt-2" />
                          </div>
                      </div>
@@ -75,7 +87,7 @@
                  <div>
                      <x-input-label for="levels_number" :value=" ucwords(__('competition.info.levels_number'))" />
                      <x-text-input id="levels_number" type="number" lang="en" class="mt-1 block w-full"
-                                   :value="$competition->levels_number" disabled />
+                                   :value="$competition->levels_number" readonly />
                  </div>
 
                  <div class="flex justify-end">
@@ -90,6 +102,17 @@
 
      {{-- competions details --}}
      <div class="md:w-1/2">
+
+         {{-- competions users --}}
+         <div class="flex justify-between items-center my-4 p-2 shadow-card" >
+             <h2 class="text-xl font-bold capitalize">{{__('competition.info.auditor.list')}}</h2>
+             <x-button :islink="true" href='{{route("admin.competitions.auditors",["id"=>base64_encode($competition->id)])}}'>
+                 <x-slot:icon>
+                     <i class="fa-solid fa-eye me-2"></i>
+                 </x-slot:icon>
+                 {{__("form.actions.show")}}
+             </x-button>
+         </div>
 
          {{-- competions users --}}
          <div class="flex justify-between items-center my-4 p-2 shadow-card" >
@@ -125,10 +148,6 @@
 
      </div>
 
-
-    {{-- <div class="overflow-x-auto max-w-[90vw] p-2 md:basis-6/12 shadow-card">
-         <livewire:competition-users-table competition="{{$competition->id}}"/>
-     </div> --}}
  </div>
  {{-- ----------------- forms ----------------- --}}
  <!-- add new level form -->

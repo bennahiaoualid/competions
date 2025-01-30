@@ -13,5 +13,13 @@ interface CompetitionRepositoryInterface
     function getCompetitionUsers($competition_id);
     function removeCompetitionUser($competition_id, $user_id);
     function addCompetitionUsers($competition_id, array $user_ids);
+    function getCompetitionAuditors($competition_id);
+    function addCompetitionAuditors($competition_id, array $auditor_ids);
+    function removeCompetitionAuditor($competition_id, $auditor_id);
+    function activateCompetition($competition_id);
+    function delete(Competition $competition);
+
+
+
 
 }

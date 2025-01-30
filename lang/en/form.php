@@ -16,9 +16,21 @@ return [
         'add' => "add competitor",
         'delete' => "delete competition"
     ],
+    'auditor' => [
+        'add' => "add auditors",
+        'delete' => "delete auditor"
+    ],
     'level' => [
         'add' => "add new level",
         'delete' => "delete level"
+    ],
+    'global_question' => [
+        'add' => "add new global question",
+        'delete' => "delete global question"
+    ],
+    'filter' => [
+        'filter' => 'filter',
+        'all' => 'All',
     ],
     'actions' => [
         "add" => "Add",
@@ -28,11 +40,19 @@ return [
         "delete" => "delete",
         "confirm_delete" => "Are you sure to continue deleting this record",
         "confirm_competitor_add" => "Are you sure to add this competitors",
+        'confirm_auditor_add' => 'Are you sure to add this auditors?',
         'login' => "Log in",
+        'register' => "Register",
         'show' => "show",
+        'activate' => "activate",
+        'finish' => 'finish',
+        'filter' => 'filter',
+        'generate' => 'generate',
+        'start' => 'start',
     ],
     'title' => [
         "rest_password" => "Rest Password",
         "login" => "login to your account",
+        'register' => "Create New Account",
     ]
 ];

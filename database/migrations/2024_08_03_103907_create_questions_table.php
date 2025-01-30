@@ -16,7 +16,7 @@ return new class extends Migration
             $table->text('question_text');
             $table->integer('max_score');
             $table->integer('duration'); // time in seconds
-            $table->foreignId('level_id')->constrained('levels')->onDelete('cascade');;
+            $table->foreignId('level_id')->constrained('levels')->onDelete('cascade');
             $table->timestamps();
         });
     }

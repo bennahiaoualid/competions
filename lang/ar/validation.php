@@ -180,13 +180,17 @@ return [
         'email' => 'البريد الالكتروني',
         'gender' => 'الجنس',
         'levels_number' => 'عدد المراحل',
+        'score' => 'العلامة',
         'max_score.*' => 'العلامة',
         'name' => 'الاسم',
         'password' => 'كلمة السر',
+        'question_text' => 'نص السؤال',
         'question_text.*' => 'نص السؤال',
         'questions_number' => 'عدد الاسئلة',
         'role' => 'الوظيفة',
+        'response_text' => 'نص الاجابة',
         'start_date' => 'تاريخ الانطلاق',
+        'scores.*' => 'العلامة',
         'title' => 'العنوان',
 
 

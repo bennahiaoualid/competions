@@ -8,6 +8,7 @@ use App\Models\Competition\Question;
 use App\Traits\CrudOperationNotificationAlert;
 use App\Traits\RegisterLogs;
 use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 
@@ -28,9 +29,10 @@ class QuestionRepository implements QuestionRepositoryInterface
     {
         $notifications[] = [];
         try {
+            DB::beginTransaction();
             $level = Level::find($data["level_id"]);
             // check if this question level not activated yet
-            if ($level->active == 0){
+            if ($level->status == 0){
                 // check if this user can store question
                 if ($level->canEditQuestion()){
                     for ($i=0; $i < count($data["question_text"]); $i++) {
@@ -51,8 +53,9 @@ class QuestionRepository implements QuestionRepositoryInterface
                 $notifications = $this->generateCustomNotifications(__('messages.validation.not_allow.active_level_question_update'),"error");;
             }
 
-
+            DB::commit();
         }catch (Exception $exception){
+            DB::rollBack();
             $this->registerLogs('Questions creation error: ',$exception);
             $notifications = $this->generateNotifications(false,"saved");
         } finally {
@@ -71,7 +74,7 @@ class QuestionRepository implements QuestionRepositoryInterface
 
             $level = Level::find($question->level_id);
             // check if this question level not activated yet
-            if ($level->active == 0){
+            if ($level->status == 0){
                 // check if this user can store question
                 if ($level->canEditQuestion()){
                     $question->question_text = $data["question_text"];

@@ -16,11 +16,11 @@ use PowerComponents\LivewirePowerGrid\PowerGridComponent;
 
 final class CompetitionUsersTable extends PowerGridComponent
 {
-    public string $competition;
+    public int $competition;
 
     public function setUp(): array
     {
-       
+
 
         return [
             Header::make()->showSearchInput(),
@@ -66,9 +66,10 @@ final class CompetitionUsersTable extends PowerGridComponent
             Column::make(__("user.profile.name"), 'name')
                 ->sortable()
                 ->searchable(),
-            Column::make(__("user.profile.age"), 'age')
+            Column::make(__("user.profile.age"), 'age','birthdate')
                 ->sortable()
                 ->searchable(),
+
 
             Column::action('')
         ];

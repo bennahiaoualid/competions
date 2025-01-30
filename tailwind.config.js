@@ -14,6 +14,8 @@ export default {
         './vendor/power-components/livewire-powergrid/resources/views/**/*.php',
         './vendor/power-components/livewire-powergrid/src/Themes/Tailwind.php',
         'app/PowerGridThemes/*.php',
+        'app/Livewire/*.php',
+        'app/View/**/*.php',
     ],
     darkMode:'false',
     theme: {

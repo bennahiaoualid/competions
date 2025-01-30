@@ -20,7 +20,7 @@ class TailwindStriped extends Tailwind
             ->th('font-extra bold px-2 pr-4 py-3 text-left text-sm text-pg-primary-800 capitalize tracking-wider whitespace-nowrap dark:text-pg-primary-300')
             ->tbody('text-pg-primary-800')
             ->trBody('even:bg-neutral-100 dark:even:bg-pg-primary-700 border-b border-pg-primary-100 dark:border-pg-primary-600 hover:bg-pg-primary-50 dark:bg-pg-primary-800 dark:hover:bg-pg-primary-800')
-            ->tdBody('px-3 py-2 whitespace-nowrap dark:text-pg-primary-200')
+            ->tdBody('text-wrap px-3 py-2 whitespace-nowrap dark:text-pg-primary-200')
             ->tdBodyEmpty('px-3 py-2 whitespace-nowrap dark:text-pg-primary-200')
             ->trBodyClassTotalColumns('')
             ->tdBodyTotalColumns('px-3 py-2 whitespace-nowrap dark:text-pg-primary-200 text-sm text-pg-primary-600 text-right space-y-2');

@@ -32,7 +32,7 @@ class UpdateCompetition
             ) ;
         }
         // only the competition that not activated yet can be updated
-        elseif ($competition->active != 0 && $routeName != "admin.competitions.level.update"){
+        elseif ($competition->status != 0 && $routeName != "admin.competitions.level.update"){
             return redirect()->back()->with(
                 [
                     "messages" => $this->generateCustomNotifications(__('messages.validation.not_allow.active_competition_update'),"error")

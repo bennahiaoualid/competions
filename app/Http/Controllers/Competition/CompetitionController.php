@@ -33,9 +33,10 @@ class CompetitionController extends Controller
      *
      * @param StoreCompetitionRequest $request The incoming request containing admin data.
      */
-    function store(StoreCompetitionRequest $request){
+    function store(StoreCompetitionRequest $request): RedirectResponse
+    {
         $this->competitionService->create($request->validated());
-        return redirect()->route('admin.competitions');
+        return Redirect::back();
     }
 
     function edit($id){
@@ -50,6 +51,19 @@ class CompetitionController extends Controller
     function update(UpdateCompetitionRequest $request) : RedirectResponse {
         $competition = Competition::findorfail($request->id);
         $this->competitionService->update($competition, $request->validated());
+
+        return Redirect::back();
+    }
+
+
+    /**
+     * Handles the deleting of a competition request and returns a response with notifications.
+     *
+     * @param Request $request The incoming request containing admin data.
+     */
+    function delete(Request $request) : RedirectResponse {
+        $competition = Competition::findorfail($request->id);
+        $this->competitionService->delete($competition);
 
         return Redirect::back();
     }
@@ -83,4 +97,41 @@ class CompetitionController extends Controller
         return Redirect::back();
     }
 
+    /**
+     * navigate to view that display the auditors  belong to a competition.
+     */
+    function getCompetitionAuditors($competition_id) : view{
+        return $this->competitionService->getCompetitionAuditors($competition_id);
+    }
+
+    /**
+     * Handles the adding of a auditors to a competition request and returns a response with notifications.
+     *
+     * @param Request $request The incoming request containing admin data.
+     */
+    function addCompetitionAuditors(Request $request) : RedirectResponse {
+        if ($request->auditor_ids) {
+            $this->competitionService->addCompetitionAuditors($request->competition_id, explode(",",$request->auditor_ids));
+        }
+        return Redirect::back();
+    }
+
+    /**
+     * Handles the deleting of a auditor who belong to this competition request and returns a response with notifications.
+     *
+     * @param Request $request The incoming request containing admin data.
+     */
+    function removeCompetitionAuditor(Request $request) : RedirectResponse {
+        $this->competitionService->removeCompetitionAuditor($request->competition_id, $request->auditor_id);
+        return Redirect::back();
+    }
+
+    /**
+     * @param Request $request The incoming request containing competition_id.
+     */
+    function activateCompetition(Request $request): RedirectResponse
+    {
+        $this->competitionService->activateCompetition($request->competition_id);
+        return Redirect::back();
+    }
 }

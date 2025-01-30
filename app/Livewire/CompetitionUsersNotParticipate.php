@@ -85,7 +85,7 @@ final class CompetitionUsersNotParticipate extends PowerGridComponent
             Column::make(__("user.profile.name"), 'name')
                 ->sortable()
                 ->searchable(),
-            Column::make(__("user.profile.age"), 'age')
+            Column::make(__("user.profile.age"), 'age', 'birthdate')
                 ->sortable()
                 ->searchable(),
         ];
@@ -94,7 +94,7 @@ final class CompetitionUsersNotParticipate extends PowerGridComponent
     public function filters(): array
     {
         return [
-            Filter::datepicker('birthdate'),
+
         ];
     }
 

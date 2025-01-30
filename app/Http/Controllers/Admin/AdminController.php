@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\AuditUserResponsesScoreRequest;
 use App\Http\Requests\Admin\StoreAdminRequest;
 use App\Http\Requests\Admin\UpdateAdminRequest;
+use App\Http\Requests\Competition\FilterCompetitionRequest;
 use App\Models\Admin\Admin;
 use App\Services\Admin\AdminService;
 use App\Traits\CrudOperationNotificationAlert;
@@ -13,6 +15,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Permission;
@@ -90,7 +93,7 @@ class AdminController extends Controller
      * @return RedirectResponse
      */
     function delete(Request $request) : RedirectResponse {
-        $admin = $request->admin;
+        $admin = Admin::findorfail($request->id);
         $result = $this->adminService->delete($admin);
         $notifications = $this->generateNotifications($result,"deleted");
         foreach ($notifications as $notification) {
@@ -98,6 +101,25 @@ class AdminController extends Controller
         }
         return Redirect::back();
     }
+    function auditCompetitions(FilterCompetitionRequest $request) {
+        $data = $request->validated();
+        $data['get'] = $request->isMethod('get');
+        return $this->adminService->auditCompetitions($data);
+    }
 
+    function auditUsers($level_id) {
+        return $this->adminService->auditUsers($level_id);
+    }
+
+    function auditUserResponses($level_id,$user_id) {
+        return $this->adminService->auditUserResponses($level_id, $user_id);
+    }
+    public function submitAudit(AuditUserResponsesScoreRequest $request){
+        $responses = $request->input('scores', []);
+        $user_id = Crypt::decrypt($request->input('user_id'));
+        $level_id = Crypt::decrypt($request->input('level_id'));
+        $this->adminService->submitAudit($responses, $user_id, $level_id);
+        return Redirect::back();
+    }
 
 }

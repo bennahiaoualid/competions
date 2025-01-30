@@ -13,5 +13,8 @@ return [
     'competition' =>[
         'competitions' => 'المسابقات',
         'list' => 'قائمة المسابقات',
-    ]
+        'auditing_responses' => 'مراجعة الاجابات'
+    ],
+    'home' => 'الصفحة الرئيسية',
+    'log_out' => 'تسجيل الخروج',
 ];

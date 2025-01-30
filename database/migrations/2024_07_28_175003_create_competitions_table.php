@@ -16,11 +16,11 @@ return new class extends Migration
             $table->string('title');
             $table->text('description')->nullable();
             $table->foreignId('admin_id')->constrained('admins');
-            $table->timestamp('start_date');
+            $table->dateTime('start_date');
             $table->integer('age_start');
             $table->integer('age_end');
             $table->integer('levels_number');
-            $table->boolean('active')->default(false);
+            $table->enum('status', [0,1,2])->default(0)->comment('inactive,active,finished');
             $table->timestamps();
         });
     }

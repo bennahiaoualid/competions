@@ -180,9 +180,15 @@ return [
         'duration.*' => 'duration',
         'levels_number' => 'levels number',
         'max_score.*' => 'max score',
+        'score' => 'score',
         'start_date' => 'start date',
+        'question_text' => 'question text',
         'question_text.*' => 'question text',
-        'questions_number' => 'questions number'
+        'questions_number' => 'questions number',
+        'response_text' => 'response text',
+        'scores.*' => 'score',
+
+
     ],
 
 ];

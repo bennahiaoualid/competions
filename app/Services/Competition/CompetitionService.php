@@ -28,6 +28,10 @@ class CompetitionService
         return $this->competitionRepository->update($competition, $data);
     }
 
+    public function delete(Competition $competition){
+        return $this->competitionRepository->delete($competition);
+    }
+
     function getCompetitionUsers($competition_id){
         return $this->competitionRepository->getCompetitionUsers($competition_id);
     }
@@ -40,4 +44,19 @@ class CompetitionService
         return $this->competitionRepository->addCompetitionUsers($competition_id, $user_ids);
     }
 
+    function getCompetitionAuditors($competition_id){
+        return $this->competitionRepository->getCompetitionAuditors($competition_id);
+    }
+
+    function addCompetitionAuditors($competition_id, $auditor_ids){
+        return $this->competitionRepository->addCompetitionAuditors($competition_id, $auditor_ids);
+    }
+
+    function removeCompetitionAuditor($competition_id, $auditor_id){
+        return $this->competitionRepository->removeCompetitionAuditor($competition_id,$auditor_id);
+    }
+
+    function activateCompetition($competition_id){
+        return $this->competitionRepository->activateCompetition($competition_id);
+    }
 }

@@ -1,7 +1,7 @@
 @extends('layouts.admin.master')
 @section('css')
     @section('title')
-        {{__('competition.question.list')}}
+        {{ucwords(__('competition.info.competitors'))}}
     @stop
 @endsection
 

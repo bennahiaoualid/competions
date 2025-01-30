@@ -15,13 +15,15 @@ class InfoCard extends Component
     public $size;
     public $content;
     public $value;
+    public $link ;
 
-    public function __construct($type = 'info', $size = 'md', $content = '', $value = '')
+    public function __construct($type = 'info', $size = 'md', $content = '', $value = '' ,$link = null)
     {
         $this->type = $type;
         $this->size = $size;
         $this->content = $content;
         $this->value = $value;
+        $this->link = $link;
     }
 
     /**

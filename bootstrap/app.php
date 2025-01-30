@@ -25,6 +25,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'can_delete_admin' => \App\Http\Middleware\RightsToDeleteAdmin::class,
             'can_delete_user' => \App\Http\Middleware\RightsToDeleteUser::class,
             'can_update_competition' => \App\Http\Middleware\UpdateCompetition::class,
+            'guest.guard' => \App\Http\Middleware\GuestWithGuard::class,
+            'auth_competitor' =>\App\Http\Middleware\AuthCompetitor::class,
 
         ]);
     })

@@ -1,7 +1,7 @@
 @props(["tooltip" => null, "islink" => false, "color_type" => 'primary', 'outline' => false, 'disabled' => false, 'size' => 'md', 'ariaLabel' => ''])
 
 @php
-    $base_classes = "inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150";
+    $base_classes = "block inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150";
 
     // Size classes
     switch ($size) {

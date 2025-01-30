@@ -2,12 +2,14 @@
 
 namespace App\Models\Admin;
 
+use App\Models\Competition\Competition;
+use App\Models\GuestUsers\GlobalQuestion;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Models\Activity;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -56,6 +58,21 @@ class Admin extends Authenticatable
             $query->whereIn('name', $roles);
         });
     }
+    /**
+     * The admins that has permissions to be auditor in this competition.
+     */
+    public function competitionsAudit(): BelongsToMany
+    {
+        return $this->belongsToMany(Competition::class);
+    }
+
+    /**
+     * The global questions that added by this admin.
+     */
+    public function globalQuestions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(GlobalQuestion::class);
+    }
 
     /**
      * override methode for storing log activity
@@ -63,7 +80,8 @@ class Admin extends Authenticatable
     protected array  $logAttributes = [   'name',
         'email',
         'birthdate',
-        'gender',];
+        'gender',
+        ];
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

@@ -1,4 +1,4 @@
-@props(['status' => 'inactive', 'outline' => true])
+@props(['status' => 'inactive', 'outline' => false])
 @php
 
     switch ($status) {
@@ -21,7 +21,7 @@
     }
 @endphp
 
-<div class="">
+<div class="text-nowrap">
     <span class="block py-1 px-3 text-center text-sm {{ $color }} rounded-full font-semibold {{$outline ? 'border-2' . $color_border : ''}}">
         {{ $text }}
     </span>

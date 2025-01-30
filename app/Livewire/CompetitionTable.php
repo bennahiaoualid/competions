@@ -9,8 +9,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Blade;
 use PowerComponents\LivewirePowerGrid\Button;
 use PowerComponents\LivewirePowerGrid\Column;
-use PowerComponents\LivewirePowerGrid\Exportable;
-use PowerComponents\LivewirePowerGrid\Facades\Filter;
 use PowerComponents\LivewirePowerGrid\Footer;
 use PowerComponents\LivewirePowerGrid\Header;
 use PowerComponents\LivewirePowerGrid\PowerGrid;
@@ -20,7 +18,7 @@ use PowerComponents\LivewirePowerGrid\Traits\WithExport;
 
 final class CompetitionTable extends PowerGridComponent
 {
-    use WithExport;
+    public string $sortField = 'start_date';
 
     public function setUp(): array
     {
@@ -67,7 +65,7 @@ final class CompetitionTable extends PowerGridComponent
                 );
             })
             ->add('levels_number')
-            ->add('active', function ($competition) {
+            ->add('status', function ($competition) {
                 return Blade::render(
                     '<x-status-widget status="'. $competition->getStatus().
                     '" text="'.__('competition.info.status.'.$competition->getStatus()).'" />'
@@ -87,7 +85,7 @@ final class CompetitionTable extends PowerGridComponent
                 ->sortable(),
             Column::make(__('competition.info.users_age'), 'users_age'),
             Column::make(__('competition.info.levels_number'), 'levels_number'),
-            Column::make(__('competition.info.status.state'), 'active'),
+            Column::make(__('competition.info.status.state'), 'status'),
             Column::action('Action')
         ];
     }
@@ -106,11 +104,19 @@ final class CompetitionTable extends PowerGridComponent
 
     public function actions(Competition $row): array
     {
+
         return [
             Button::add('edit')
                 ->slot('<i class="fa-regular fa-pen-to-square"></i>')
                 ->class('inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 px-2 py-1 text-lg bg-transparent text-info border-info hover:bg-info hover:text-white focus:bg-info focus:text-white active:bg-info active:text-white focus:ring-info')
                 ->route('admin.competitions.edit', ['id' =>base64_encode( $row->id)]),
+
+            Button::add('delete_competitions')
+                ->slot(' <i class="fa-solid fa-unlock text-base"></i>')
+                ->class('px-2 py-1  inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150
+            bg-transparent text-danger border-danger hover:bg-danger hover:text-white focus:bg-danger focus:text-white active:bg-danger active:text-white focus:ring-danger')
+                ->can(allowed: $row->canEdit())
+                ->dispatch('open-modal', ['detail' => 'delete', 'value' => $row->id]),
         ];
     }
 

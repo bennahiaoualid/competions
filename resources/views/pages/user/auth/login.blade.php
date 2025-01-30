@@ -36,7 +36,7 @@
 
         <div class="flex items-center mb-6 mt-4">
             <div class="flex ms-auto">
-                <a href="{{route("admin.password.request")}}" class="inline-flex text-xs sm:text-sm text-blue-500 hover:text-blue-700">
+                <a href="{{route("password.request")}}" class="inline-flex text-xs sm:text-sm text-blue-500 hover:text-blue-700">
                     {{__('passwords.forget')}}
                 </a>
             </div>

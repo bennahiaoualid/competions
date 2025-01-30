@@ -6,6 +6,7 @@ use App\Models\User;
 
 interface UserRepositoryInterface
 {
+    function index();
     function show();
     function create(array $data);
     function edit($id);

@@ -4,12 +4,15 @@ namespace App\Models;
 
 use App\Models\Admin\Admin;
 use App\Models\Competition\Competition;
+use App\Models\Competition\Level;
+use App\Models\Competition\Response;
 use Carbon\Carbon;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -33,6 +36,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'birthdate',
         'gender',
         "admin_id",
+        'guest'
     ];
 
     /**
@@ -58,6 +62,16 @@ class User extends Authenticatable implements MustVerifyEmail
                 $user->anonymized_identifier = Str::uuid();
             }
         });
+
+
+    }
+
+    protected static function booted(): void
+    {
+        // Apply a global scope to exclude guest users by default
+        static::addGlobalScope('nonGuest', function (Builder $builder) {
+            $builder->where('guest', false);
+        });
     }
 
     /**
@@ -70,6 +84,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'guest' => 'boolean'
         ];
     }
 
@@ -100,24 +115,39 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsTo(Admin::class);
     }
 
+    public function levelAdminUser(): BelongsToMany
+    {
+        return $this->belongsToMany(Level::class, 'level_admin_user', 'user_id', 'level_id')
+            ->withPivot('admin_id');
+    }
+
+    public function responses(): HasMany
+    {
+        return $this->hasMany(Response::class);
+    }
+
+
     /**
      * Scope a query to only include users of a certain age range.
      *
      * @param Builder $query
      * @param int $ageMin
      * @param int $ageMax
-     * @param int $competitionId
+     * @param int|null $competitionId
      * @return Builder
      */
-    public function scopeEligibleForCompetition(Builder $query, int $ageMin, int $ageMax, int $competitionId) : Builder
+    public function scopeEligibleForCompetition(Builder $query, int $ageMin, int $ageMax, int $competitionId = null) : Builder
     {
         $currentDate = now()->toDateString();
 
-        return $query->whereRaw("TIMESTAMPDIFF(YEAR, birthdate, ?) BETWEEN ? AND ?", [$currentDate, $ageMin, $ageMax])
-            ->where("email_verified_at","!=",null)
-            ->whereDoesntHave('competitions', function ($query) use ($competitionId) {
+        $query =  $query->whereRaw("TIMESTAMPDIFF(YEAR, birthdate, ?) BETWEEN ? AND ?", [$currentDate, $ageMin, $ageMax])
+            ->where("email_verified_at","!=",null);
+        if ($competitionId) {
+            $query->whereDoesntHave('competitions', function ($query) use ($competitionId) {
                 $query->where('competition_id', $competitionId);
             });
+        }
+        return $query;
     }
 
     /**

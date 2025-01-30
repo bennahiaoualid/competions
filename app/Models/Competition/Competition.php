@@ -28,7 +28,7 @@ class Competition extends Model
         'age_start',
         'age_end',
         'levels_number',
-        'active',
+        'status',
     ];
 
     /**
@@ -52,6 +52,14 @@ class Competition extends Model
     }
 
     /**
+     * The admins that has permissions to be auditor in this competition.
+     */
+    public function auditors(): BelongsToMany
+    {
+        return $this->belongsToMany(Admin::class);
+    }
+
+    /**
      * The users that belong to the competition.
      */
     public function users(): BelongsToMany
@@ -71,7 +79,7 @@ class Competition extends Model
      * get status
      */
     public function getStatus() : string{
-        switch ($this->active){
+        switch ($this->status){
             case 1 : $st =  'active';
                 break;
             case 0 : $st = 'inactive';
@@ -104,10 +112,27 @@ class Competition extends Model
         return false;
     }
 
+    /**
+     * check if all competition levels start_time are greater then now before competition activation
+     *
+     * @return bool
+     */
+    function isAllLevelAfterNow($exclude_id = null): bool
+    {
+        foreach ($this->levels as $level){
+            if (($exclude_id == null || $level->id != $exclude_id) && $level->status = 0){
+                if ($level->start_date->lessThanOrEqualTo(now())){
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     // Scope for filtering by title
     public function scopeTitle(Builder $query, $title): Builder
     {
-        if ($title) {
+        if ($title != null) {
             return $query->where('title', 'like', '%' . $title . '%');
         }
         return $query;
@@ -116,15 +141,15 @@ class Competition extends Model
     // Scope for filtering by start date range
     public function scopeStartDate(Builder $query, $startDateFrom, $startDateTo): Builder
     {
-        if ($startDateFrom && !$startDateTo) {
+        if ($startDateFrom != null && !$startDateTo) {
             return $query->where('start_date', '>=', $startDateFrom);
         }
 
-        if (!$startDateFrom && $startDateTo) {
+        if (!$startDateFrom && $startDateTo != null) {
             return $query->where('start_date', '<=', $startDateTo);
         }
 
-        if ($startDateFrom && $startDateTo) {
+        if ($startDateFrom != null && $startDateTo != null) {
             return $query->whereBetween('start_date', [$startDateFrom, $startDateTo]);
         }
 
@@ -134,19 +159,28 @@ class Competition extends Model
     // Scope for filtering by age range
     public function scopeAgeRange(Builder $query, $ageStart, $ageEnd)
     {
-        if ($ageStart && !$ageEnd) {
+        if ($ageStart != null  && !$ageEnd) {
             return $query->where('age_start', '>=', $ageStart);
         }
 
-        if (!$ageStart && $ageEnd) {
+        if (!$ageStart && $ageEnd != null) {
             return $query->where('age_end', '<=', $ageEnd);
         }
 
-        if ($ageStart && $ageEnd) {
+        if ($ageStart != null && $ageEnd != null) {
             return $query->where('age_start', '>=', $ageStart)
                 ->where('age_end', '<=', $ageEnd);
         }
 
+        return $query;
+    }
+
+    // Scope for filtering by state
+    public function scopeStatus(Builder $query, $state): Builder
+    {
+        if ($state != null) {
+            return $query->where('status', '=',  $state );
+        }
         return $query;
     }
 }

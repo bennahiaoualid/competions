@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Enums\Gender;
 use App\Models\User;
+use App\PowerGridThemes\TailwindStriped;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -62,13 +63,19 @@ final class UserTable extends PowerGridComponent
                 );
             })
             ->add('created_by', function ($user) {
-                return sprintf(
-                    '<a target="_blank"
+                $admin = $user->admin;
+                if ($admin){
+                    return sprintf(
+                        '<a target="_blank"
                     class="underline text-blue-600 hover:text-blue-800"
                     href="%s">%s</a>',
-                    route("admin.edit",["id" => e($user->admin->id)]),
-                    e($user->admin->name)
-                );
+                        route("admin.edit",["id" => e($admin->id)]),
+                        e($user->admin->name)
+                    );
+                }else{
+                    return e($user->admin_id);
+                }
+
             });
 
 
@@ -107,5 +114,10 @@ final class UserTable extends PowerGridComponent
             Button::add('my-custom-button')
                 ->bladeComponent('tables.user-table-action-buttons', ['row' => $row])
         ];
+    }
+
+    public function template(): ?string
+    {
+        return TailwindStriped::class;
     }
 }

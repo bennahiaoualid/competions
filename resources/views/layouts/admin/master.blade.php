@@ -17,7 +17,6 @@
 </head>
 
 <body>
-
     <div class="wrapper flex flex-1">
         <!-- Sidebar -->
         @include("layouts.admin.sidebar")

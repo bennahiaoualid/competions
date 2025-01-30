@@ -4,7 +4,7 @@
             {{__("form.title.rest_password")}}
         </h1>
 
-        <form method="POST" action="{{ route('admin.password.store') }}">
+        <form method="POST" action="{{ route('password.store') }}">
             @csrf
 
             <!-- Password Reset Token -->

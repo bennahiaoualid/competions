@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->bigInteger('admin_id')->unsigned();;
-            $table->date('birthdate');
-            $table->enum('gender', ['male', 'female'])->default('male');
+            $table->bigInteger('admin_id')->unsigned()->nullable();
+            $table->date('birthdate')->nullable();
+            $table->enum('gender', ['male', 'female'])->default('male')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('anonymized_identifier')->unique()->nullable();

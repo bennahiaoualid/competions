@@ -11,7 +11,10 @@ class UserService
         protected UserRepository $userRepository
     ) {
     }
-
+    function index()
+    {
+        return $this->userRepository->index();
+    }
     public function show(){
         return $this->userRepository->show();
     }

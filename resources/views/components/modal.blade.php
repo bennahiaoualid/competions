@@ -1,7 +1,8 @@
 @props([
     'name',
     'show' => false,
-    'maxWidth' => '2xl'
+    'maxWidth' => '2xl',
+    'id' => '',
 ])
 
 @php
@@ -18,6 +19,7 @@
     x-data="{
         show: @js($show),
         modalName: @js($name),
+        modalId: @js($id), // Modal ID
         inputValue: '',
         focusables() {
             let selector = 'a, button, input:not([type=\'hidden\']), textarea, select, details, [tabindex]:not([tabindex=\'-1\'])';
@@ -80,10 +82,11 @@
         <div class="p-2 ">
             {{ $slot }}
         </div>
-
+        @isset($modalfooter)
         <hr class="h-px my-1 bg-gray-300 border-0">
         <footer>
             {{ $modalfooter }}
         </footer>
+        @endisset
     </div>
 </div>

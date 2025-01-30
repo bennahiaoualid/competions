@@ -40,16 +40,20 @@ class FilterCompetitionRequest extends FormRequest
             'start_date_to' => 'nullable|date_format:Y-m-d',
             'age_start' => 'nullable|integer|min:6',
             'age_end' => 'nullable|integer|min:6',
+            'status' => 'nullable|in:0,1,2',
         ];
     }
 
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            if ($this->input('age_end') < $this->input('age_start')) {
-                $validator->errors()->add('age_end', trans('validation.custom.age_minmax_validation',
-                    ['attribute' => trans('validation.attributes.age_end'), 'other' => trans('validation.attributes.age_start')]));
+            if($this->input('age_end') && $this->input('age_start')){
+                if ($this->input('age_end') < $this->input('age_start')) {
+                    $validator->errors()->add('age_end', trans('validation.custom.age_minmax_validation',
+                        ['attribute' => trans('validation.attributes.age_end'), 'other' => trans('validation.attributes.age_start')]));
+                }
             }
+
         });
     }
 

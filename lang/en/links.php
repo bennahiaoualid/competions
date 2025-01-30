@@ -13,6 +13,9 @@ return [
     'competition' =>[
         'competitions' => 'Competitions',
         'list' => 'Competitions List',
-    ]
+        'auditing_responses' => 'review answers'
+    ],
+    'home' => 'home',
+    'log_out' => 'Sign out',
 
 ];

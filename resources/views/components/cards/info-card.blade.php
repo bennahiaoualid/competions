@@ -31,14 +31,17 @@
 <div {{$attributes->merge(["class" => $bgColor. " rounded shadow-lg flex flex-col"])}}>
     <div class="{{$sizeClass}} space-y-2 relative">
         <div class="text-white text-3xl">{{ $value }}</div>
-        <div class="text-white">{{ $content }}</div>
+        <div class="text-white capitalize">{{ $content }}</div>
         <div class="{{$bgColorIcon}} text-5xl absolute top-1/2 end-2 -translate-y-1/2">
             @isset($icon)
             {{$icon}}
             @endisset
         </div>
     </div>
-    <a href="#" class="{{$bgColorDark}} block text-white text-center py-1">
-        More info <i class="fas fa-arrow-circle-right"></i>
-    </a>
+    @if($link)
+        <a href="{{$link}}" class="{{$bgColorDark}} block text-white text-center py-1">
+            {{__('messages.global.details')}} <i class="fas fa-arrow-circle-right"></i>
+        </a>
+    @endif
+
 </div>

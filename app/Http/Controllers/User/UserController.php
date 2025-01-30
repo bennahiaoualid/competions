@@ -24,6 +24,10 @@ class UserController extends Controller
     ) {
     }
 
+    function index() : View{
+        return $this->userService->index();
+    }
+
     function show() : View{
         return $this->userService->show();
     }

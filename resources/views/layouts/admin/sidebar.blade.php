@@ -42,6 +42,16 @@
                 </x-nav-link>
             </li>
 
+            <li class="mb-2">
+                <x-nav-link href="{{route('admin.auditor')}}" :active="request()->routeIs('admin.auditor')" :sub="false">
+                    <x-slot:icon>
+                        <i class="fas fa-home me-3"></i>
+                    </x-slot:icon>
+                    {{__('links.competition.auditing_responses')}}
+                    <span class="block ms-2 py-0.5 px-2 rounded-md bg-primary text-white">{{ $assignedUserCount }}</span>
+                </x-nav-link>
+            </li>
+
 
         </ul>
     </nav>

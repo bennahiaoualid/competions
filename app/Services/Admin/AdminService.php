@@ -38,4 +38,19 @@ class AdminService
         return $this->adminRepository->delete($admin);
     }
 
+    public function auditCompetitions(array $data){
+        return $this->adminRepository->auditCompetitions($data);
+    }
+
+    public function auditUsers($leve_id){
+        return $this->adminRepository->auditUsers($leve_id);
+    }
+
+    public function auditUserResponses($level_id,$user_identifier){
+        return $this->adminRepository->auditUserResponses($level_id,$user_identifier);
+    }
+    public function submitAudit(array $responses, $user_id, $level_id){
+        return $this->adminRepository->submitAudit($responses, $user_id, $level_id);
+    }
+
 }

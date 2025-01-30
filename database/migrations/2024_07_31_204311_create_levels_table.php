@@ -18,9 +18,9 @@ return new class extends Migration
             $table->foreignId('competition_id')->constrained('competitions')->onDelete('cascade');;
             $table->foreignId('admin_id')->constrained('admins');
             $table->integer('questions_number');
-            $table->timestamp('start_date');
+            $table->dateTime('start_date');
             $table->integer('duration'); // Duration in minutes
-            $table->boolean('active')->default(false);
+            $table->enum('status', [0,1,2])->default(0)->comment('inactive,active,finished');
             $table->timestamps();
         });
     }
