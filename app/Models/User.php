@@ -6,6 +6,7 @@ use App\Models\Admin\Admin;
 use App\Models\Competition\Competition;
 use App\Models\Competition\Level;
 use App\Models\Competition\Response;
+use App\Models\GuestUsers\GlobalResponse;
 use Carbon\Carbon;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
@@ -124,6 +125,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function responses(): HasMany
     {
         return $this->hasMany(Response::class);
+    }
+
+    public function globalResponses(): HasMany
+    {
+        return $this->hasMany(GlobalResponse::class, 'user_id');
     }
 
 

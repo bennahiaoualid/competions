@@ -80,7 +80,7 @@ return [
             'you_cant_change_audited_responses' => 'you cant change the giving scores after saving',
             'response_final_score_calc' => 'final score = score - (response duration / duration * (score / 2))',
             'delete_competition' => 'This process will remove competition and its information including levels competitors auditors and results, you cant undo ',
-
+            'correct_choice' => 'the first choice will be chose as the correct one'
         ]
     ],
     'global' => [
@@ -101,6 +101,13 @@ return [
         'created_by' => 'created by',
         'approved_by' => 'approved by',
         'not_approved' => 'not approved',
+        'global_order'=> 'global order',
+        'your_order' => 'your order is',
+        'check' => 'check it',
+        'detail' => 'detail',
+        'text_dir' => 'text direction',
+        'ltr' => 'left to right',
+        'rtl' => 'right to left',
     ],
     'mail' => [
         'welcome' => 'Welcome dear :user',

@@ -38,7 +38,7 @@
                 {{$level->questions_number}}
             </td>
             <td>
-                <x-button :islink="true" color_type="info" size="sm" title="permissions"
+                <x-button :islink="true" color_type="info" size="sm" title="{{__('messages.global.detail')}}"
                           :outline="true" href='{{route("competitions.level", ["id" => base64_encode($level->id)])}}' target="_blank">
                     <x-slot:icon>
                         <i class="fa-regular fa-pen-to-square"></i>

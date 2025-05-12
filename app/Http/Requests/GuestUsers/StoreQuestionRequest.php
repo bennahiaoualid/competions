@@ -3,6 +3,7 @@
 namespace App\Http\Requests\GuestUsers;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreQuestionRequest extends FormRequest
 {
@@ -34,6 +35,10 @@ class StoreQuestionRequest extends FormRequest
             'score' => 'required|integer|min:1',
             'choice' => 'array|min:2|max:5',
             'choice.*' => 'required|string|min:3|max:400',
+            'txt_direction' => [
+                'required',
+                Rule::in(['ltr', 'rtl']),
+            ],
         ];
     }
 }

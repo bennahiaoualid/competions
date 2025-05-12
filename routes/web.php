@@ -53,28 +53,35 @@ Route::group(
         Route::patch('/profile', [UserProfileController::class, 'update'])->name('profile.update');
         Route::delete('/profile', [UserProfileController::class, 'destroy'])->name('profile.destroy');
 
+        Route::get( '/competitions/{user}', [\App\Http\Controllers\User\UserCompetitionController::class, "all"])->name('competitions');
+        Route::post( '/competitions/{user}', [\App\Http\Controllers\User\UserCompetitionController::class, "all"])->name('competitions');
+
         Route::middleware('auth_competitor')->group(function (){
             Route::get('/competition/response/{id}', [\App\Http\Controllers\User\UserCompetitionController::class, 'levelStart'])->name('competitions.level.response');
             Route::post('/competition/response/store', [\App\Http\Controllers\User\UserCompetitionController::class, 'storeResponse'])->name('competitions.level.response.store');
             Route::get('/competition/user/responses/{id}', [\App\Http\Controllers\User\UserCompetitionController::class, 'userResponses'])->name('competitions.response');
-            Route::match(['get', 'post'], '/competitions/{user?}', [\App\Http\Controllers\User\UserCompetitionController::class, "all"])->name('competitions');
 
         });
-
-        Route::get('/questions/',[\App\Http\Controllers\GuestUsers\UserGuestController::class, 'index'])->name('global_questions.index');
+        // global questions
         Route::get('/questions/response/', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'getRandomQuestion'])->name('global_questions.response');
         Route::post('/questions/response/store', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'storeResponse'])->name('global_questions.response.store');
 
+        Route::get('my/global-responses', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'getGlobalUserResponse'])->name('global_questions.responses');
+
     });
 
-    Route::match(['get', 'post'], '/competitions', [\App\Http\Controllers\User\UserCompetitionController::class, "all"])->name('competitions');
+    Route::get( '/competitions', [\App\Http\Controllers\User\UserCompetitionController::class, "all"])->name('competitions');
+    Route::Post( '/competitions/{user?}', [\App\Http\Controllers\User\UserCompetitionController::class, "all"])->name('competitions');
+
 
     Route::get('/competition/{id}', [\App\Http\Controllers\User\UserCompetitionController::class, 'competitionDetail'])->name('competitions.detail');
     Route::get('/competition/{id}/competitors-order', [\App\Http\Controllers\User\UserCompetitionController::class, 'competitorsCompetitionOrder'])->name('competitions.order');
     Route::get('/competition/level/{id}', [\App\Http\Controllers\User\UserCompetitionController::class, 'levelDetail'])->name('competitions.level');
     Route::get('/competition/level/{id}/competitors-order', [\App\Http\Controllers\User\UserCompetitionController::class, 'competitorsLevelOrder'])->name('competitions.level.order');
 
-    Route::get('/global-order', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'globalUsersOrder'])->name('global_order');
+    // global questions
+    Route::get('/questions/',[\App\Http\Controllers\GuestUsers\UserGuestController::class, 'index'])->name('global_questions.index');
+    Route::get('/global-order', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'globalUsersOrder'])->name('global_questions.global_order');
 
 
     require __DIR__.'/auth.php';

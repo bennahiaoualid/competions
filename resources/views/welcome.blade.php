@@ -2,7 +2,7 @@
 @section('css')
 
     @section('title')
-        {{__('links.competition.list')}}
+        {{__('messages.global.site_name')}}
     @stop
 @endsection
 
@@ -14,7 +14,7 @@
         </div>
         <div class="flex-1 order-1 mt-4 md:mt-0">
             <div class="max-w-md text-center md:text-start space-y-6">
-                <h1 class="text-4xl font-bold uppercase text-primary">Be creative</h1>
+                <h1 class="text-4xl font-bold uppercase text-primary">{{__('messages.global.site_name')}}</h1>
                 <p class="leading-8">
                     {{__('messages.global.site_brief')}}
                 </p>

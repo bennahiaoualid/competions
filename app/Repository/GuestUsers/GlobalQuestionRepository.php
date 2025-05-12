@@ -35,6 +35,7 @@ class GlobalQuestionRepository implements GlobalQuestionRepositoryInterface
                $approved = $user->hasRole(['super_admin','owner'], 'admin') ? $user->id : null;
                 $question = GlobalQuestion::create([
                     'question_text' => $data['question_text'],
+                    'text_direction' => $data['txt_direction'],
                     'score' => $data['score'],
                     'duration' => $data['duration'],
                     'admin_id' => $user->id,

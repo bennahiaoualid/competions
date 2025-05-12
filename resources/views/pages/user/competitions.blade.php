@@ -1,3 +1,4 @@
+@php use Illuminate\Support\Facades\Auth; @endphp
 @extends('layouts.user.master')
 @section('css')
 
@@ -68,7 +69,15 @@
         <x-slot:modalhead>
             {{__("form.filter.filter")}}
         </x-slot>
-        <form id="filter" method="post" action="{{ route('competitions') }}" class="space-y-2">
+        @php
+            $url = 'competitions';
+            $user = null;
+            if(\Illuminate\Support\Facades\Auth::guard('web')->check() && ! \Illuminate\Support\Facades\Auth::user()->guest){
+                $url = 'user.competitions';
+                $user = base64_encode(Auth::user()->anonymized_identifier);
+            }
+        @endphp
+        <form id="filter" method="post" action="{{ route($url,['user'=>$user]) }}" class="space-y-2">
             @csrf
             @method('post')
 

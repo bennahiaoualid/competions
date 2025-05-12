@@ -30,29 +30,8 @@ class UserGuestRepository implements UserGuestRepositoryInterface
         $user = auth()->user();
         // get the question
 
-        /*$question = GlobalQuestion::whereDoesntHave('responses', function ($query) use ($user) {
-            $query->where('user_id', $user->id);
-        })
-            ->orWhere(function ($query) use ($user) {
-                $query->whereHas('responses', function ($subQuery) use ($user) {
-                    $subQuery->where('user_id', $user->id)
-                        ->where('score', 0);
-                })
-                    ->whereHas('responses', function ($subQuery) {
-                        $subQuery->selectRaw('COUNT(*) = 1');
-                    }); // Exactly one response
-            })
-            ->inRandomOrder()
-            ->first();*/
-
-        $questions = GlobalQuestion::with('responses')
-            ->whereDoesntHave('responses', function ($query) use ($user) {
-                $query->where('user_id', $user->id);
-            })
-            ->orWhereHas('responses', function ($query) use ($user) {
-                $query->where('user_id', $user->id);
-            })
-            ->inRandomOrder()
+        $questions = GlobalQuestion::with(['responses','choices'])
+            ->whereNotNull('approved') // Now this will apply correctly
             ->get();
 
         $filteredQuestions = $questions->filter(function ($question) use ($user) {
@@ -64,7 +43,7 @@ class UserGuestRepository implements UserGuestRepositoryInterface
         });
 
         $question = $filteredQuestions->isNotEmpty() ? $filteredQuestions->random() : null;
-       
+
 
 
         if (!$question) {
@@ -75,6 +54,9 @@ class UserGuestRepository implements UserGuestRepositoryInterface
         if (! $this->initResponse($question->id, $user->id)){
             return redirect()->back();
         }
+
+        // Shuffle choices in random order
+        $question->choices = $question->choices->shuffle();
 
         // Store the start time in the session
         session(['start_time' => now()]);
@@ -149,9 +131,12 @@ class UserGuestRepository implements UserGuestRepositoryInterface
     public function globalUsersOrder(): \Illuminate\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
     {
         // TODO: Implement globalUsersOrder() method.
-        $users = UsersGlobalOrder::getUsersGlobalOrder();
+        $users_data = UsersGlobalOrder::getUsersGlobalOrder();
+        $users = $users_data["users"];
+        $user_rank = $users_data["userRank"];
+        $user_page = $users_data["userPage"];
 
-        return view('pages.user.guest_users.global_order', compact('users'));
+        return view('pages.user.guest_users.global_order', compact('users', 'user_rank', 'user_page'));
     }
 
     /**
@@ -173,6 +158,32 @@ class UserGuestRepository implements UserGuestRepositoryInterface
             return true;
         }catch (Exception $exception){
             $this->registerLogs('ٌGlobal Response creation error: ',$exception);
+            $notifications = $this->generateNotifications(false,"something_went_wrong");
+            // Flash each message to the session
+            foreach ($notifications as $notification) {
+                session()->flash('messages', session('messages', collect())->push($notification));
+            }
+            return false;
+        }
+    }
+
+    public function getGlobalUserResponse(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application|false
+    {
+        try {
+            $user = auth()->user();
+
+            $questions = GlobalQuestion::whereHas('responses', function ($query) use ($user){
+                $query->where('user_id', $user->id);
+            })
+                ->with(['responses' => function ($query) use ($user) {
+                    $query->where('user_id', $user->id)->with('choice');
+                }])
+                ->paginate(10);
+
+            return view('pages.user.guest_users.user_global_responses',compact('questions'));
+
+        }catch (Exception $exception){
+            $this->registerLogs('ٌGlobal User Responses getting error: ',$exception);
             $notifications = $this->generateNotifications(false,"something_went_wrong");
             // Flash each message to the session
             foreach ($notifications as $notification) {

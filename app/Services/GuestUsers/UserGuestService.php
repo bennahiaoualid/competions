@@ -31,5 +31,10 @@ class UserGuestService
         return $this->userRepository->globalUsersOrder();
     }
 
+    public function getGlobalUserResponse(): \Illuminate\Contracts\View\View|\Illuminate\Foundation\Application|\Illuminate\Contracts\View\Factory|false
+    {
+        return $this->userRepository->getGlobalUserResponse();
+    }
+
 
 }

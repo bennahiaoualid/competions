@@ -15,6 +15,11 @@ return [
         'list' => 'Competitions List',
         'auditing_responses' => 'review answers'
     ],
+    'global_user'=>[
+        'global_questions' => 'global questions',
+        'global_responses' => 'my responses',
+        'global_order' => 'global order',
+    ],
     'home' => 'home',
     'log_out' => 'Sign out',
 

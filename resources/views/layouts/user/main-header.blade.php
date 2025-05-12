@@ -93,11 +93,28 @@
                     </li>
                     @if(\Illuminate\Support\Facades\Auth::guard('web')->check() && ! \Illuminate\Support\Facades\Auth::user()->guest)
                         <li>
-                            <a href="{{route('user.competitions',['user'=>base64_encode(Auth::user()->anonymized_identifier)])}}" class="{{request()->routeIs('competitions.user') ? $active_class : $inactive_classes}}">
+                            <a href="{{route('user.competitions',['user'=>base64_encode(Auth::user()->anonymized_identifier)])}}" class="{{request()->routeIs('user.competitions') ? $active_class : $inactive_classes}}">
                                 {{__('competition.info.user_auth')}}
                             </a>
                         </li>
                     @endif
+                    <li>
+                        <a href="{{route('global_questions.index')}}" class="{{request()->routeIs('global_questions.index') ? $active_class : $inactive_classes}}">
+                            {{__('links.global_user.global_questions')}}
+                        </a>
+                    </li>
+                    @if(\Illuminate\Support\Facades\Auth::guard('web')->check() && ! \Illuminate\Support\Facades\Auth::user()->guest)
+                        <li>
+                            <a href="{{route('user.global_questions.responses')}}" class="{{request()->routeIs('user.global_questions.responses') ? $active_class : $inactive_classes}}">
+                                {{__('links.global_user.global_responses')}}
+                            </a>
+                        </li>
+                    @endif
+                    <li>
+                        <a href="{{route('global_questions.global_order')}}" class="{{request()->routeIs('global_questions.global_order') ? $active_class : $inactive_classes}}">
+                            {{__('links.global_user.global_order')}}
+                        </a>
+                    </li>
                     @guest()
                     <li class="md:hidden">
                         <a class="py-1 px-2 bg-primary rounded-sm block my-2 mx-auto text-white text-center uppercase" href="{{route('login')}}">{{__('form.actions.login')}}</a>

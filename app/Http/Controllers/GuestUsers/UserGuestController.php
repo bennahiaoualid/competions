@@ -35,4 +35,9 @@ class UserGuestController extends Controller
         return $this->userGuestRepository->globalUsersOrder();
     }
 
+    function getGlobalUserResponse()
+    {
+        return $this->userGuestRepository->getGlobalUserResponse();
+    }
+
 }

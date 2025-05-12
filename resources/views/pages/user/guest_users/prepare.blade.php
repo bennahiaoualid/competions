@@ -9,7 +9,7 @@
 
 @section('content')
     <div class="max-w-lg mx-auto mt-4">
-        <h1 class="text-xl font-bold mb-2 text-center">{{__('competition.global.question')}}</h1>
+        <h1 class="capitalize text-xl font-bold mb-2 text-center">{{__('competition.global.question')}}</h1>
         <ul class="space-y-2 md:space-y-6">
             <li class="py-4 px-4 rounded-sm shadow-md flex gap-4 items-center">
                 <i class="fa-regular fa-circle-check"></i>
@@ -32,10 +32,18 @@
                 {{__('competition.global.condition.final_score')}}
             </li>
             <li class="flex justify-center">
-                <x-button form="add-form" color_type="success"
-                    :islink="true" href="{{route('user.global_questions.response')}}">
-                    {{ __('form.actions.start') }}
-                </x-button>
+                @if(\Illuminate\Support\Facades\Auth::guard('web')->check() && ! \Illuminate\Support\Facades\Auth::user()->guest)
+                    <x-button form="add-form" color_type="success"
+                              :islink="true" href="{{route('user.global_questions.response')}}">
+                        {{ __('form.actions.start') }}
+                    </x-button>
+                @else
+                    <x-button color_type="primary"
+                              :islink="true" href="{{route('login')}}">
+                        {{__('form.actions.login')}}
+                    </x-button>
+                @endif
+
             </li>
         </ul>
     </div>

@@ -7,5 +7,6 @@ interface UserGuestRepositoryInterface
     public function welcome();
     public function getRandomQuestion();
     public function globalUsersOrder();
+    public function getGlobalUserResponse();
 
 }

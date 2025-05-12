@@ -2,7 +2,7 @@
 @section('css')
 
     @section('title')
-        {{__('links.competition.competitions')}}
+        {{__('links.global_user.global_questions')}}
     @stop
 @endsection
 
@@ -12,7 +12,7 @@
 
 @section('content')
     <div class="flex justify-between items-center my-2 p-4 shadow-sm" >
-        <h1 class="text-xl font-bold">{{__('links.competition.list')}}</h1>
+        <h1 class="capitalize text-xl font-bold">{{__('links.global_user.global_questions')}}</h1>
         <div x-data>
             <x-button
                 name="myModal"
@@ -35,7 +35,7 @@
 
             <div>
                 <x-input-label for="question_text" :value=" ucwords(__('competition.question.question_text'))" />
-                <x-text-area name="question_text"  class="mt-1 block w-full" min="3"></x-text-area>
+                <x-text-area id="question_text" name="question_text"  class="mt-1 block w-full whitespace-pre-wrap" min="3"></x-text-area>
                 <x-input-error :messages="$errors->createQuestion->get('question_text')" class="mt-2" />
             </div>
 
@@ -55,7 +55,31 @@
             </div>
 
             <div>
+                <x-input-label for="txt_direction" :value="ucwords(__('messages.global.text_dir'))" />
+                <div class="flex gap-6 items-center">
+                    <div>
+                        <x-form.select-box id="txt_direction" name="txt_direction"  :options="[
+                                ['value' => 'ltr', 'text' => __('messages.global.ltr'), 'selected' => true],
+                                ['value' => 'rtl', 'text' => __('messages.global.rtl'), 'selected' => false],
+                            ]">
+                        </x-form.select-box>
+                    </div>
+                </div>
+                <x-input-error :messages="$errors->createQuestion->get('txt_direction')" class="mt-2" />
+            </div>
+
+            <div>
                 <x-input-label for="choices_number" :value=" ucwords(__('competition.global.choices'))" />
+                <div>
+                    <x-alert
+                        type="info"
+                        outline="true"
+                        size="sm"
+                        :title="__('messages.alert.type.info')"
+                    >
+                        {{__('messages.alert.content.correct_choice')}}
+                    </x-alert>
+                </div>
                 <div class="flex gap-6 items-center">
                     <div>
                         <x-form.select-box id="choices_number"   :options="[
@@ -143,6 +167,10 @@
                 choicesView.innerHTML = choice_ele;
                 choicesContainer.appendChild(choicesView);
             }
+       })
+
+       document.getElementById('txt_direction').addEventListener('change',function (event) {
+           document.getElementById('question_text').dir = event.target.value;
        })
     </script>
 @endsection

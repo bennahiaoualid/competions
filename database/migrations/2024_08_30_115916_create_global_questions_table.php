@@ -16,6 +16,7 @@ return new class extends Migration
             $table->text('question_text');
             $table->integer('score');
             $table->integer('duration'); // time in seconds
+            $table->enum('text_direction', ['ltr', 'rtl'])->default('ltr');
             $table->foreignId('admin_id')->nullable()->references('id')->on('admins')->onDelete('set null');
             $table->foreignId('approved')->nullable()->references('id')->on('admins')->onDelete('set null');
             $table->string('deleted_admin_name')->nullable()->index();

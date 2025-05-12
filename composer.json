@@ -13,7 +13,8 @@
         "opcodesio/log-viewer": "^3.10",
         "power-components/livewire-powergrid": "^5.9",
         "spatie/laravel-activitylog": "^4.8",
-        "spatie/laravel-permission": "^6.9"
+        "spatie/laravel-permission": "^6.9",
+        "ext-http": "*"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.13",

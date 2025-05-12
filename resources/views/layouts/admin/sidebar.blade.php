@@ -52,6 +52,15 @@
                 </x-nav-link>
             </li>
 
+            <li class="mb-2">
+                <x-nav-link href="{{route('admin.global_questions')}}" :active="request()->routeIs('admin.global_questions')" :sub="false">
+                    <x-slot:icon>
+                        <i class="fas fa-home me-3"></i>
+                    </x-slot:icon>
+                    {{__("links.global_user.global_questions")}}
+                </x-nav-link>
+            </li>
+
 
         </ul>
     </nav>

@@ -4,6 +4,7 @@ namespace App\Models\GuestUsers;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class GlobalResponse extends Model
 {
@@ -32,5 +33,10 @@ class GlobalResponse extends Model
             'score' => 'float',
             'response_duration' => 'integer',
         ];
+    }
+
+    public function choice(): BelongsTo
+    {
+        return $this->belongsTo(Choice::class);
     }
 }

@@ -22,7 +22,7 @@
                 <h2 class="w-fit mx-auto px-8 py-1 rounded-full border border-primary text-primary text-xl capitalize">
                     {{__('competition.question.the_question')}}
                 </h2>
-                <p>
+                <p class="text-center">
                     {{$data_result['question']['question_text']}}
                 </p>
 
@@ -51,7 +51,7 @@
                 <h2 class="w-fit mx-auto px-8 py-1 rounded-full border border-primary text-primary text-xl capitalize">
                     {{__('competition.question.the_question')}}
                 </h2>
-                <p>
+                <p class="text-center">
                     {{$data_result['question']['question_text']}}
                 </p>
 
