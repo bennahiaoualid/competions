@@ -12,6 +12,7 @@ use App\Traits\CrudOperationNotificationAlert;
 use App\Traits\RegisterLogs;
 use Exception;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Auth;
 use function PHPUnit\Framework\isNull;
 
 class UserGuestRepository implements UserGuestRepositoryInterface
@@ -27,7 +28,7 @@ class UserGuestRepository implements UserGuestRepositoryInterface
     {
 
 
-        $user = auth()->user();
+        $user = Auth::user();
         // get the question
 
         $questions = GlobalQuestion::with(['responses','choices'])
@@ -67,7 +68,7 @@ class UserGuestRepository implements UserGuestRepositoryInterface
     public function storeResponse(array $data): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application|\Illuminate\Http\RedirectResponse
     {
         try {
-            $user = auth()->user();
+            $user = Auth::user();
             if (!session()->has('start_time')) {
                 return redirect()->route('user.global_questions.index');
             }
@@ -92,7 +93,7 @@ class UserGuestRepository implements UserGuestRepositoryInterface
                 // Update the response record
                 $response = GlobalResponse::where([
                     'question_id' => $data['question_id'],
-                    'user_id' => auth()->id(),
+                    'user_id' => Auth::id(),
                     'choice_id' => null,
                 ])->orderBy('created_at','desc')->first();
 
@@ -170,7 +171,7 @@ class UserGuestRepository implements UserGuestRepositoryInterface
     public function getGlobalUserResponse(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application|false
     {
         try {
-            $user = auth()->user();
+            $user = Auth::user();
 
             $questions = GlobalQuestion::whereHas('responses', function ($query) use ($user){
                 $query->where('user_id', $user->id);

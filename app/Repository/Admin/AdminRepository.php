@@ -32,7 +32,7 @@ class AdminRepository implements AdminRepositoryInterface
     }
 
     function all(){
-        $roles = $this->possibleRoles(Auth::user()->getRoleNames()->first());
+        $roles = $this->possibleRoles();
         return view("pages.admin.admins.list", compact("roles"));
     }
 
@@ -53,7 +53,7 @@ class AdminRepository implements AdminRepositoryInterface
     }
 
     function edit(Admin $user){
-        $roles = $this->possibleRoles(Auth::user()->getRoleNames()->first());
+        $roles = $this->possibleRoles();
         return view("pages.admin.admins.edit-admin", compact("user", "roles"));
     }
 
@@ -105,7 +105,6 @@ class AdminRepository implements AdminRepositoryInterface
             ->status($status)
             ->orderBy("start_date")
             ->paginate(5);
-        //$competitions = $admin->competitionsAudit()->with('levels')->paginate(5);
         return view("pages.admin.admins.auditor.audited_competitions",compact('competitions'));
     }
 
