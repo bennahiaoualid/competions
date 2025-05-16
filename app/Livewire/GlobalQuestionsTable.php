@@ -9,30 +9,28 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use PowerComponents\LivewirePowerGrid\Button;
 use PowerComponents\LivewirePowerGrid\Column;
-use PowerComponents\LivewirePowerGrid\Detail;
 use PowerComponents\LivewirePowerGrid\Facades\Rule;
-use PowerComponents\LivewirePowerGrid\Footer;
-use PowerComponents\LivewirePowerGrid\Header;
-use PowerComponents\LivewirePowerGrid\PowerGrid;
+use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
 use PowerComponents\LivewirePowerGrid\PowerGridFields;
 use PowerComponents\LivewirePowerGrid\PowerGridComponent;
 
 
 final class GlobalQuestionsTable extends PowerGridComponent
 {
-
+    public string $tableName = 'GlobalQuestionsTable';
+    
     public function setUp(): array
     {
 
         return [
 
-            Header::make()
+            PowerGrid::header()
                 ->showToggleColumns()
                 ->showSearchInput(),
-            Footer::make()
+            PowerGrid::footer()
                 ->showPerPage()
                 ->showRecordCount(),
-            Detail::make()
+            PowerGrid::detail()
                 ->view('components.tables.question_choices')
                 ->showCollapseIcon()
         ];
@@ -139,12 +137,12 @@ final class GlobalQuestionsTable extends PowerGridComponent
                 ->slot('<i class="fa-solid fa-check text-lg"></i>')
                 ->class('inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 px-2 py-0.5 text-xs bg-transparent text-success border-success hover:bg-success hover:text-white focus:bg-success focus:text-white active:bg-success active:text-white focus:ring-success')
                 ->route('admin.global_question.approve', ['id' =>base64_encode( $row->id)])
-            ->can(allowed: Auth::user()->hasRole(['super_admin','owner'], 'admin')),
+            ->can(Auth::user()->hasRole(['super_admin','owner'], 'admin')),
             Button::add('delete_competitions')
                 ->slot(' <i class="fa-solid fa-unlock text-base"></i>')
                 ->class('inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 px-2 py-0.5 text-xs
             bg-transparent text-danger border-danger hover:bg-danger hover:text-white focus:bg-danger focus:text-white active:bg-danger active:text-white focus:ring-danger')
-                ->can(allowed: $row->canDelete())
+                ->can($row->canDelete())
                 ->dispatch('open-modal', ['detail' => 'delete', 'value' => base64_encode( $row->id)]),
 
         ];

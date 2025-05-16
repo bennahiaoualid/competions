@@ -5,34 +5,24 @@ namespace App\Livewire;
 use App\Enums\Gender;
 use App\Models\Admin\Admin;
 use App\PowerGridThemes\TailwindStriped;
-use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use PowerComponents\LivewirePowerGrid\Button;
-use PowerComponents\LivewirePowerGrid\Cache;
 use PowerComponents\LivewirePowerGrid\Column;
-use PowerComponents\LivewirePowerGrid\Exportable;
 use PowerComponents\LivewirePowerGrid\Facades\Filter;
-use PowerComponents\LivewirePowerGrid\Footer;
-use PowerComponents\LivewirePowerGrid\Header;
-use PowerComponents\LivewirePowerGrid\Lazy;
-use PowerComponents\LivewirePowerGrid\PowerGrid;
+use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
 use PowerComponents\LivewirePowerGrid\PowerGridFields;
 use PowerComponents\LivewirePowerGrid\PowerGridComponent;
-use PowerComponents\LivewirePowerGrid\Traits\WithExport;
 
 final class AdminTable extends PowerGridComponent
 {
-
+    public string $tableName = 'AdminTable';
     public function setUp(): array
     {
         return [
-            Cache::make()
-                ->forever()
-                ->prefix(Auth::id() . '_'),
-            Header::make()
+            PowerGrid::header()
                 ->showSearchInput(),
-            Footer::make()
+            PowerGrid::footer()
                 ->showPerPage()
                 ->showRecordCount(),
         ];
@@ -95,16 +85,17 @@ final class AdminTable extends PowerGridComponent
         ];
     }
 
-    public function actions(Admin $row): array
+    public function actions($row): array
     {
         return [
             Button::add('my-custom-button')
-                ->can(allowed: Auth::user()->hasRole(['super_admin','owner'], 'admin'))
-                ->bladeComponent('tables.action-buttons', ['row' => $row])
-        ];
+                ->can( Auth::user()->hasRole(['super_admin','owner'], 'admin'))
+                ->slot(view('components.tables.action-buttons', ['row' => $row])->render())
+        
+            ];
     }
 
-    public function template(): ?string
+    public function customThemeClass(): ?string
     {
         return TailwindStriped::class;
     }

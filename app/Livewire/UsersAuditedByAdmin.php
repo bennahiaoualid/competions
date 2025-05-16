@@ -4,31 +4,25 @@ namespace App\Livewire;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
 use PowerComponents\LivewirePowerGrid\Button;
 use PowerComponents\LivewirePowerGrid\Column;
-use PowerComponents\LivewirePowerGrid\Exportable;
-use PowerComponents\LivewirePowerGrid\Facades\Filter;
-use PowerComponents\LivewirePowerGrid\Facades\Rule;
-use PowerComponents\LivewirePowerGrid\Footer;
-use PowerComponents\LivewirePowerGrid\Header;
-use PowerComponents\LivewirePowerGrid\PowerGrid;
-use PowerComponents\LivewirePowerGrid\PowerGridFields;
 use PowerComponents\LivewirePowerGrid\PowerGridComponent;
+use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
+use PowerComponents\LivewirePowerGrid\PowerGridFields;
 
 final class UsersAuditedByAdmin extends PowerGridComponent
 {
     public int $admin_id ;
     public int $level_id ;
     public string $primaryKey = 'users.id';
+    public string $tableName = 'UsersAuditedByAdmin';
     public function setUp(): array
     {
 
         return [
 
-            Header::make()->showSearchInput(),
-            Footer::make()
+            PowerGrid::header()->showSearchInput(),
+            PowerGrid::footer()
                 ->showPerPage()
                 ->showRecordCount(),
         ];
@@ -36,22 +30,6 @@ final class UsersAuditedByAdmin extends PowerGridComponent
 
     public function datasource(): Builder
     {
-       /* return User::query()
-            ->join('level_admin_user', 'users.id', '=', 'level_admin_user.user_id')
-            ->leftJoin('responses', 'users.id', '=', 'responses.user_id')
-            ->leftJoin('questions', 'responses.question_id', '=', 'questions.id')
-            ->where('level_admin_user.admin_id', $this->admin_id)
-            ->where('level_admin_user.level_id', $this->level_id)
-            ->where('questions.level_id', $this->level_id)
-            ->orderBy('users.id')
-            ->select('users.id', 'users.anonymized_identifier')
-            ->selectRaw('
-                    CASE
-                        WHEN COUNT(responses.id) > 0 AND SUM(CASE WHEN responses.admin_id IS NULL THEN 1 ELSE 0 END) = 0 THEN 1
-                        ELSE 0
-                    END AS all_audited
-                ')
-            ->groupBy('users.id', 'users.anonymized_identifier') ;*/
         return User::query()
             ->select('users.id', 'users.anonymized_identifier')
 
@@ -116,15 +94,4 @@ final class UsersAuditedByAdmin extends PowerGridComponent
         ];
     }
 
-    /*
-    public function actionRules(User $row): array
-    {
-       return [
-            // Hide button edit for ID 1
-            Rule::button('edit')
-                ->when(fn($row) => $row->id === 1)
-                ->hide(),
-        ];
-    }
-    */
 }

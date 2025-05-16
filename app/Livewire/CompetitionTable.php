@@ -9,23 +9,21 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Blade;
 use PowerComponents\LivewirePowerGrid\Button;
 use PowerComponents\LivewirePowerGrid\Column;
-use PowerComponents\LivewirePowerGrid\Footer;
-use PowerComponents\LivewirePowerGrid\Header;
-use PowerComponents\LivewirePowerGrid\PowerGrid;
+use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
 use PowerComponents\LivewirePowerGrid\PowerGridFields;
 use PowerComponents\LivewirePowerGrid\PowerGridComponent;
-use PowerComponents\LivewirePowerGrid\Traits\WithExport;
 
 final class CompetitionTable extends PowerGridComponent
 {
+    public string $tableName = 'competition_table';
     public string $sortField = 'start_date';
 
     public function setUp(): array
     {
 
         return [
-            Header::make()->showSearchInput(),
-            Footer::make()
+            PowerGrid::header()->showSearchInput(),
+            PowerGrid::footer()
                 ->showPerPage()
                 ->showRecordCount(),
         ];
@@ -115,7 +113,7 @@ final class CompetitionTable extends PowerGridComponent
                 ->slot(' <i class="fa-solid fa-unlock text-base"></i>')
                 ->class('px-2 py-1  inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150
             bg-transparent text-danger border-danger hover:bg-danger hover:text-white focus:bg-danger focus:text-white active:bg-danger active:text-white focus:ring-danger')
-                ->can(allowed: $row->canEdit())
+                ->can($row->canEdit())
                 ->dispatch('open-modal', ['detail' => 'delete', 'value' => $row->id]),
         ];
     }
