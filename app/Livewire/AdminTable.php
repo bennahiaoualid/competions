@@ -37,12 +37,15 @@ final class AdminTable extends PowerGridComponent
     public function datasource(): Builder
     {
         if (Auth::user()->hasRole('owner')){
-            return Admin::query()->where('id', '!=', Auth::id());
+            return Admin::query()
+                ->select('id','name', 'email', 'birthdate', 'gender')
+                ->where('id', '!=', Auth::id());
         }
         else{
-            return Admin::withoutRoles(['owner', 'super_admin'])->where('id', '!=', Auth::id());
+            return Admin::withoutRoles(['owner', 'super_admin'])
+                ->select('name', 'email', 'birthdate', 'gender')
+                ->where('id', '!=', Auth::id());
         }
-
     }
 
     public function relationSearch(): array

@@ -14,7 +14,6 @@ use App\Traits\RoleManipulation;
 use Exception;
 use App\Traits\RegisterLogs;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 

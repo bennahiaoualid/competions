@@ -13,14 +13,14 @@
     <div class="p-2 shadow-card" >
         <h1 class="sm:text-lg text-center md:text-start font-bold mb-2 capitalize">{{__('competition.info.auditor.information') .' : '. $competition->title}}</h1>
         <div class="overflow-x-auto max-w-[90vw] pt-2 px-2">
-            <livewire:competition-auditors-table competition="{{$competition->id}}"/>
+            <livewire:competition-auditors-table :competition="$competition"/>
         </div>
     </div>
 
    <div class="p-2 shadow-card mt-8" >
         <h2 class="sm:text-lg text-center md:text-start font-bold mb-2 capitalize">{{__('competition.info.auditor.not_in')}}</h2>
         <div class="overflow-x-auto max-w-[90vw] pt-2 px-2">
-            <livewire:competition-admin-not-audit competition="{{$competition->id}}"/>
+            <livewire:competition-admin-not-audit :competition="$competition"/>
         </div>
     </div>
 

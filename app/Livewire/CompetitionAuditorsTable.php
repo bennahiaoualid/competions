@@ -16,7 +16,7 @@ use PowerComponents\LivewirePowerGrid\PowerGridComponent;
 final class CompetitionAuditorsTable extends PowerGridComponent
 {
     public string $tableName = 'competition_auditors_table';
-    public int $competition;
+    public Competition $competition;
 
     public function setUp(): array
     {
@@ -32,9 +32,11 @@ final class CompetitionAuditorsTable extends PowerGridComponent
 
     public function datasource(): Builder
     {
-        return Admin::query()->whereHas("competitionsAudit",function ($q){
-            $q->where('Competitions.id', $this->competition);
-        })->with("competitionsAudit");
+        return Admin::query()
+            ->withCount('competitionsAudit') // Eager load the count of competitionsAudit
+            ->whereHas('competitionsAudit', function ($q) {
+                $q->where('Competitions.id', $this->competition->id);
+            });
     }
 
     public function relationSearch(): array
@@ -55,8 +57,8 @@ final class CompetitionAuditorsTable extends PowerGridComponent
                 );
             })
             ->add('email')
-            ->add('auditing_in',function ($admin){
-                return e($admin->competitionsAudit->count());
+            ->add('auditing_in', function ($admin) {
+                return e($admin->competitions_audit_count); // Use the eager-loaded count
             });
     }
 
@@ -90,20 +92,16 @@ final class CompetitionAuditorsTable extends PowerGridComponent
 
     public function actions(Admin $row): array
     {
-        $competition = Competition::find($this->competition);
-        if ($competition && $competition->canEdit()){
+        if ($this->competition && $this->competition->canEdit()) {
             return [
                 Button::add('delete_auditor')
                     ->slot(' <i class="fa-solid fa-unlock text-base"></i>')
                     ->class('px-2 py-1 text-xs inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150
                 bg-transparent text-danger border-danger hover:bg-danger hover:text-white focus:bg-danger focus:text-white active:bg-danger active:text-white focus:ring-danger')
-
                     ->dispatch('open-modal', ['detail' => 'delete', 'value' => $row->id]),
             ];
         }
-        return [
-
-        ];
+        return [];
     }
 
 

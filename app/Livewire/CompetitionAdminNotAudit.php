@@ -15,8 +15,9 @@ use PowerComponents\LivewirePowerGrid\PowerGridComponent;
 
 final class CompetitionAdminNotAudit extends PowerGridComponent
 {
-    public int $competition;
+    public Competition $competition;
     public string $tableName = 'competition_admin_not_audit';
+
     public function setUp(): array
     {
         $this->showCheckBox();
@@ -35,7 +36,7 @@ final class CompetitionAdminNotAudit extends PowerGridComponent
             Button::add('bulk-delete')
                 ->slot('<i class="fa-solid fa-plus me-2"></i>'. __('form.actions.add') . ' (<span x-text="window.pgBulkActions.count(\'' . $this->tableName . '\')"></span>)')
                 ->class('inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 px-4 py-2 text-xs bg-primary text-white border-transparent hover:bg-primary-dark focus:bg-primary-dark active:bg-primary-dark focus:ring-primary')
-                ->can((Competition::find($this->competition))?->canEdit())
+                ->can($this->competition->canEdit())
                 ->dispatch('bulkDelete.' . $this->tableName, [])
         ];
     }
@@ -49,9 +50,11 @@ final class CompetitionAdminNotAudit extends PowerGridComponent
     }
     public function datasource(): Builder
     {
-        return Admin::query()->whereDoesntHave("competitionsAudit",function ($q){
-            $q->where('Competitions.id', $this->competition);
-        });
+        return Admin::query()
+            ->withCount('competitionsAudit') // Eager load the count of competitionsAudit
+            ->whereDoesntHave('competitionsAudit', function ($q) {
+                $q->where('Competitions.id', $this->competition->id);
+            });
     }
 
     public function fields(): PowerGridFields
@@ -68,8 +71,8 @@ final class CompetitionAdminNotAudit extends PowerGridComponent
                 );
             })
             ->add('email')
-            ->add('auditing_in',function ($admin){
-                return e($admin->competitionsAudit->count());
+            ->add('auditing_in', function ($admin) {
+                return e($admin->competitions_audit_count); // Use the eager-loaded count
             });
     }
 

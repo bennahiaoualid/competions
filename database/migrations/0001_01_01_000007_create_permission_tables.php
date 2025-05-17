@@ -115,6 +115,21 @@ return new class extends Migration
             $table->primary([$pivotPermission, $pivotRole], 'role_has_permissions_permission_id_role_id_primary');
         });
 
+        Schema::table($tableNames['model_has_permissions'], function (Blueprint $table) use ($columnNames) {
+            $table->index([$columnNames['model_morph_key'], 'model_type'], 'model_has_permissions_model_id_model_type_index');
+            $table->index('permission_id', 'model_has_permissions_permission_id_index');
+        });
+
+        Schema::table($tableNames['model_has_roles'], function (Blueprint $table) use ($columnNames) {
+            $table->index([$columnNames['model_morph_key'], 'model_type'], 'model_has_roles_model_id_model_type_index');
+            $table->index('role_id', 'model_has_roles_role_id_index');
+        });
+
+        Schema::table($tableNames['role_has_permissions'], function (Blueprint $table) {
+            $table->index('role_id', 'role_has_permissions_role_id_index');
+            $table->index('permission_id', 'role_has_permissions_permission_id_index');
+        });
+
         app('cache')
             ->store(config('permission.cache.store') != 'default' ? config('permission.cache.store') : null)
             ->forget(config('permission.cache.key'));
