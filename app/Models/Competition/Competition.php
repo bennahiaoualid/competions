@@ -12,6 +12,50 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * 
+ *
+ * @property int $id
+ * @property string $title
+ * @property string|null $description
+ * @property int $admin_id
+ * @property \Illuminate\Support\Carbon $start_date
+ * @property int $age_start
+ * @property int $age_end
+ * @property int $levels_number
+ * @property string $status inactive,active,finished
+ * @property string|null $participants_sync_status
+ * @property \Illuminate\Support\Carbon|null $last_synced_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Admin $admin
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Admin> $auditors
+ * @property-read int|null $auditors_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Competition\Level> $levels
+ * @property-read int|null $levels_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $users
+ * @property-read int|null $users_count
+ * @method static Builder<static>|Competition ageRange($ageStart, $ageEnd)
+ * @method static \Database\Factories\Competition\CompetitionFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Competition newModelQuery()
+ * @method static Builder<static>|Competition newQuery()
+ * @method static Builder<static>|Competition query()
+ * @method static Builder<static>|Competition startDate($startDateFrom, $startDateTo)
+ * @method static Builder<static>|Competition status($state)
+ * @method static Builder<static>|Competition title($title)
+ * @method static Builder<static>|Competition whereAdminId($value)
+ * @method static Builder<static>|Competition whereAgeEnd($value)
+ * @method static Builder<static>|Competition whereAgeStart($value)
+ * @method static Builder<static>|Competition whereCreatedAt($value)
+ * @method static Builder<static>|Competition whereDescription($value)
+ * @method static Builder<static>|Competition whereId($value)
+ * @method static Builder<static>|Competition whereLevelsNumber($value)
+ * @method static Builder<static>|Competition whereStartDate($value)
+ * @method static Builder<static>|Competition whereStatus($value)
+ * @method static Builder<static>|Competition whereTitle($value)
+ * @method static Builder<static>|Competition whereUpdatedAt($value)
+ * @mixin \Eloquent
+ */
 class Competition extends Model
 {
     use HasFactory;
@@ -29,6 +73,8 @@ class Competition extends Model
         'age_end',
         'levels_number',
         'status',
+        'participants_sync_status',
+        'last_synced_at'
     ];
 
     /**
@@ -40,6 +86,10 @@ class Competition extends Model
     {
         return [
             'start_date' => 'datetime',
+            'age_start' => 'integer',
+            'age_end' => 'integer',
+            'levels_number' => 'integer',
+            'last_synced_at' => 'datetime',
         ];
     }
 
@@ -96,20 +146,6 @@ class Competition extends Model
      */
     public function canEdit() : bool{
         return $this->admin_id == Auth::id();
-    }
-
-    /**
-     * check if the competition already get maximum number of levels
-     * @param $competitionId
-     * @return boolean
-     */
-    public static function competitionMaxLevelNumbers($competitionId) : bool
-    {
-        $competition = self::with('levels')->find($competitionId);
-        if($competition->levels->count() == $competition->levels_number){
-            return true;
-        }
-        return false;
     }
 
     /**

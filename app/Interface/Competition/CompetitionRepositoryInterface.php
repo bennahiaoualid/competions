@@ -6,20 +6,15 @@ use App\Models\Competition\Competition;
 
 interface CompetitionRepositoryInterface
 {
-    function all();
-    function create(array $data);
-    function edit($id);
-    function update(Competition $competition , array $data);
-    function getCompetitionUsers($competition_id);
-    function removeCompetitionUser($competition_id, $user_id);
-    function addCompetitionUsers($competition_id, array $user_ids);
-    function getCompetitionAuditors($competition_id);
-    function addCompetitionAuditors($competition_id, array $auditor_ids);
-    function removeCompetitionAuditor($competition_id, $auditor_id);
-    function activateCompetition($competition_id);
-    function delete(Competition $competition);
-
-
-
-
+    function findById(int|string $id): ?Competition;
+    function create(array $data): Competition;
+    function update(Competition $competition , array $data): array;
+    function delete(Competition $competition): bool;
+    function getCompetitionWithUsers(int|string $competition_id): ?Competition;
+    function removeUserFromCompetition(Competition $competition, int $user_id): bool;
+    function addUsersToCompetition(Competition $competition, array $user_ids): bool;
+    function getCompetitionWithAuditors(int|string $competition_id): ?Competition;
+    function addAuditorsToCompetition(Competition $competition, array $auditor_ids): bool;
+    function removeAuditorFromCompetition(Competition $competition, int $auditor_id): bool;
+    function activate(Competition $competition): bool;
 }

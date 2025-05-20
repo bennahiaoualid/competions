@@ -30,8 +30,8 @@ class UpdateCompetitionRequest extends FormRequest
      */
     public function rules(): array
     {
-        // Fetch the original competition from the database
-        $competition = Competition::find($this->id);
+        // Fetch the original competition from the route model binding
+        $competition = $this->route('competition');
 
         $rules = [
             'start_date' => 'required|date_format:Y-m-d H:i',
@@ -40,7 +40,8 @@ class UpdateCompetitionRequest extends FormRequest
         ];
 
         // Apply the after_or_equal:now rule if the start_date has changed
-        if ($competition && $competition->start_date->format('Y-m-d H:i') !== $this->input('start_date')) {
+        // Ensure $competition is an instance of Competition before accessing properties
+        if ($competition instanceof Competition && $competition->start_date->format('Y-m-d H:i') !== $this->input('start_date')) {
             $rules['start_date'] .= '|after_or_equal:now';
         }
 

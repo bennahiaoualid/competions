@@ -21,6 +21,61 @@ use Illuminate\Support\Str;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
+/**
+ * 
+ *
+ * @property int $id
+ * @property string $name
+ * @property string $email
+ * @property bool $guest
+ * @property int|null $admin_id
+ * @property string|null $birthdate
+ * @property string|null $gender
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property string $password
+ * @property string $anonymized_identifier
+ * @property string|null $remember_token
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Competition> $Competitions
+ * @property-read int|null $competitions_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activities
+ * @property-read int|null $activities_count
+ * @property-read Admin|null $admin
+ * @property-read int $age
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, GlobalResponse> $globalResponses
+ * @property-read int|null $global_responses_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Level> $levelAdminUser
+ * @property-read int|null $level_admin_user_count
+ * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
+ * @property-read int|null $notifications_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Response> $responses
+ * @property-read int|null $responses_count
+ * @method static Builder<static>|User eligibleForCompetition(int $ageMin, int $ageMax, ?int $competitionId = null)
+ * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
+ * @method static Builder<static>|User newModelQuery()
+ * @method static Builder<static>|User newQuery()
+ * @method static Builder<static>|User onlyTrashed()
+ * @method static Builder<static>|User query()
+ * @method static Builder<static>|User whereAdminId($value)
+ * @method static Builder<static>|User whereAnonymizedIdentifier($value)
+ * @method static Builder<static>|User whereBirthdate($value)
+ * @method static Builder<static>|User whereCreatedAt($value)
+ * @method static Builder<static>|User whereDeletedAt($value)
+ * @method static Builder<static>|User whereEmail($value)
+ * @method static Builder<static>|User whereEmailVerifiedAt($value)
+ * @method static Builder<static>|User whereGender($value)
+ * @method static Builder<static>|User whereGuest($value)
+ * @method static Builder<static>|User whereId($value)
+ * @method static Builder<static>|User whereName($value)
+ * @method static Builder<static>|User wherePassword($value)
+ * @method static Builder<static>|User whereRememberToken($value)
+ * @method static Builder<static>|User whereUpdatedAt($value)
+ * @method static Builder<static>|User withTrashed()
+ * @method static Builder<static>|User withoutTrashed()
+ * @mixin \Eloquent
+ */
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable , LogsActivity, SoftDeletes;
@@ -57,13 +112,6 @@ class User extends Authenticatable implements MustVerifyEmail
         static::creating(function ($user) {
             $user->anonymized_identifier = Str::uuid();
         });
-
-        static::updating(function ($user) {
-            if (!$user->anonymized_identifier) {
-                $user->anonymized_identifier = Str::uuid();
-            }
-        });
-
 
     }
 
@@ -142,7 +190,7 @@ class User extends Authenticatable implements MustVerifyEmail
      * @param int|null $competitionId
      * @return Builder
      */
-    public function scopeEligibleForCompetition(Builder $query, int $ageMin, int $ageMax, int $competitionId = null) : Builder
+    public function scopeEligibleForCompetition(Builder $query, int $ageMin, int $ageMax, ?int $competitionId = null) : Builder
     {
         $currentDate = now()->toDateString();
 

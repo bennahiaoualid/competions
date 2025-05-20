@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Competition;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Competition\StoreCompetitionRequest;
 use App\Http\Requests\Competition\UpdateCompetitionRequest;
+use App\Models\Admin\Admin;
 use App\Models\Competition\Competition;
 use App\Services\Competition\CompetitionService;
-use App\Traits\CrudOperationNotificationAlert;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -15,7 +15,6 @@ use Illuminate\View\View;
 
 class CompetitionController extends Controller
 {
-    use CrudOperationNotificationAlert;
     public function __construct(
         protected CompetitionService $competitionService
     ) {
@@ -24,8 +23,9 @@ class CompetitionController extends Controller
     /**
      * display competitions list.
      */
-    public function all(){
-        return $this->competitionService->all();
+    public function index(): View
+    {
+        return view("pages.admin.competitions.competition_list");
     }
 
     /**
@@ -35,23 +35,28 @@ class CompetitionController extends Controller
      */
     function store(StoreCompetitionRequest $request): RedirectResponse
     {
-        $this->competitionService->create($request->validated());
+        $this->competitionService->createCompetition($request->validated());
         return Redirect::back();
     }
 
-    function edit($id){
-        return $this->competitionService->edit($id);
+    function edit($id): View
+    {
+        $competition = $this->competitionService->findCompetitionById($id);
+        if (!$competition) {
+            abort(404, 'Competition not found.');
+        }
+        $admins = Admin::all();
+        return view("pages.admin.competitions.edit.competition_edit", compact("competition", "admins"));
     }
 
     /**
      * Handles the updating of a competition request and returns a response with notifications.
      *
      * @param UpdateCompetitionRequest $request The incoming request containing admin data.
+     * @param Competition $competition The competition instance resolved by route model binding.
      */
-    function update(UpdateCompetitionRequest $request) : RedirectResponse {
-        $competition = Competition::findorfail($request->id);
-        $this->competitionService->update($competition, $request->validated());
-
+    function update(UpdateCompetitionRequest $request, Competition $competition) : RedirectResponse {
+        $this->competitionService->updateCompetition($competition, $request->validated());
         return Redirect::back();
     }
 
@@ -62,17 +67,20 @@ class CompetitionController extends Controller
      * @param Request $request The incoming request containing admin data.
      */
     function delete(Request $request) : RedirectResponse {
-        $competition = Competition::findorfail($request->id);
-        $this->competitionService->delete($competition);
-
+        $this->competitionService->deleteCompetition($request->id);
         return Redirect::back();
     }
 
     /**
      * navigate to view that display the the users belong to a competition.
      */
-    function getCompetitionUsers($competition_id) : view{
-        return $this->competitionService->getCompetitionUsers($competition_id);
+    function getCompetitionUsers($competition_id_b64) : view
+    {
+        $competition = $this->competitionService->getCompetitionUsers($competition_id_b64);
+        if (!$competition) {
+            abort(404, 'Competition not found.');
+        }
+        return view("pages.admin.competitions.competition_users", compact("competition"));
     }
 
     /**
@@ -81,7 +89,7 @@ class CompetitionController extends Controller
      * @param Request $request The incoming request containing admin data.
      */
     function removeCompetitionUser(Request $request) : RedirectResponse {
-        $this->competitionService->removeCompetitionUser($request->competition_id, $request->user_id);
+        $this->competitionService->removeCompetitionUser((int)$request->competition_id, (int)$request->user_id);
         return Redirect::back();
     }
 
@@ -92,7 +100,7 @@ class CompetitionController extends Controller
      */
     function addCompetitionUsers(Request $request) : RedirectResponse {
         if ($request->user_ids) {
-            $this->competitionService->addCompetitionUsers($request->competition_id, explode(",",$request->user_ids));
+            $this->competitionService->addCompetitionUsers((int)$request->competition_id, explode(",", $request->user_ids));
         }
         return Redirect::back();
     }
@@ -100,8 +108,13 @@ class CompetitionController extends Controller
     /**
      * navigate to view that display the auditors  belong to a competition.
      */
-    function getCompetitionAuditors($competition_id) : view{
-        return $this->competitionService->getCompetitionAuditors($competition_id);
+    function getCompetitionAuditors($competition_id_b64) : view
+    {
+        $competition = $this->competitionService->getCompetitionAuditors($competition_id_b64);
+        if (!$competition) {
+            abort(404, 'Competition not found.');
+        }
+        return view("pages.admin.competitions.competition_auditors", compact("competition"));
     }
 
     /**
@@ -111,7 +124,7 @@ class CompetitionController extends Controller
      */
     function addCompetitionAuditors(Request $request) : RedirectResponse {
         if ($request->auditor_ids) {
-            $this->competitionService->addCompetitionAuditors($request->competition_id, explode(",",$request->auditor_ids));
+            $this->competitionService->addCompetitionAuditors((int)$request->competition_id, explode(",", $request->auditor_ids));
         }
         return Redirect::back();
     }
@@ -122,7 +135,7 @@ class CompetitionController extends Controller
      * @param Request $request The incoming request containing admin data.
      */
     function removeCompetitionAuditor(Request $request) : RedirectResponse {
-        $this->competitionService->removeCompetitionAuditor($request->competition_id, $request->auditor_id);
+        $this->competitionService->removeCompetitionAuditor((int)$request->competition_id, (int)$request->auditor_id);
         return Redirect::back();
     }
 
@@ -131,7 +144,7 @@ class CompetitionController extends Controller
      */
     function activateCompetition(Request $request): RedirectResponse
     {
-        $this->competitionService->activateCompetition($request->competition_id);
+        $this->competitionService->activateCompetition((int)$request->competition_id);
         return Redirect::back();
     }
 }

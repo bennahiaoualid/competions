@@ -17,6 +17,8 @@ class UserFactory extends Factory
      */
     protected static ?string $password;
 
+    protected ?Admin $providedAdmin = null;
+
     /**
      * Define the model's default state.
      *
@@ -26,22 +28,27 @@ class UserFactory extends Factory
     {
         static $counter = 1;
 
-        // Generate random admin id from the admins table
-        $admin = Admin::inRandomOrder()->first();
-        $admin_id = $admin ? $admin->id : 1;
-
         // Generate the name and email based on the counter
         $name = 'user_' . $counter . '_' . $this->faker->firstName;
         $email = strtolower($name) . '@user.com';
 
+        $adminId = null;
+        if ($this->providedAdmin) {
+            $adminId = $this->providedAdmin->id;
+        } else {
+            // Attempt to get a random existing admin
+            $existingAdmin = Admin::inRandomOrder()->first();
+            $adminId = $existingAdmin ? $existingAdmin->id : Admin::factory();
+        }
+
         $user = [
             'name' => $name,
             'email' => $email,
-            'admin_id' => $admin_id,
+            'admin_id' => $adminId,
             'birthdate' => $this->faker->dateTimeBetween('2002-01-01', '2014-01-01')->format('Y-m-d'),
             'gender' => $this->faker->randomElement(['male', 'female']),
             'email_verified_at' => $this->faker->optional()->dateTime(),
-            'password' => bcrypt('12345678'), // password
+            'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
 
@@ -58,5 +65,17 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
+    }
+
+    /**
+     * Indicate a specific admin to be used.
+     *
+     * @param  \App\Models\Admin\Admin  $admin
+     * @return static
+     */
+    public function withAdmin(Admin $admin): static
+    {
+        $this->providedAdmin = $admin;
+        return $this;
     }
 }

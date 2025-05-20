@@ -5,19 +5,22 @@ namespace App\Http\Controllers\Competition;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Competition\StoreLevelRequest;
 use App\Http\Requests\Competition\UpdateLevelRequest;
-use App\Models\Competition\Level;
+use App\Interface\Competition\LevelRepositoryInterface;
 use App\Services\Competition\LevelService;
 use App\Traits\CrudOperationNotificationAlert;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use Exception;
 
 class LevelController extends Controller
 {
     use CrudOperationNotificationAlert;
+
     public function __construct(
-        protected LevelService $levelService
+        protected LevelService $levelService,
+        protected LevelRepositoryInterface $levelRepository
     ) {
     }
 
@@ -26,16 +29,53 @@ class LevelController extends Controller
      *
      * @param StoreLevelRequest $request The incoming request containing admin data.
      */
-    function store(StoreLevelRequest $request) : RedirectResponse {
-        $this->levelService->create($request->all());
+    public function store(StoreLevelRequest $request): RedirectResponse
+    {
+        $result = $this->levelService->create($request->all());
+        $notificationsToFlash = [];
+
+        if ($result['status'] === 'success') {
+            $notificationsToFlash = $this->generateNotifications(true, $result['message_key']);
+        } else {
+            $message = isset($result['message_key']) ? __($result['message_key']) : __('messages.general_error');
+            if (isset($result['exception']) && app()->environment('local')) {
+                $message .= ' ' . $result['exception']->getMessage(); 
+            }
+            $notificationsToFlash = $this->generateCustomNotifications($message, "error");
+        }
+        
+        if (!empty($notificationsToFlash)) {
+            session()->flash('messages', $notificationsToFlash);
+        }
+
         return Redirect::back();
     }
 
     /**
      * navigate to view that display the level information.
      */
-    function edit($id) : view{
-        return $this->levelService->edit($id);
+    public function edit(string $encodedId): View|RedirectResponse
+    {
+        $result = $this->levelService->getEditData($encodedId);
+        $notificationsToFlash = [];
+
+        if ($result['status'] === 'success') {
+            return view("pages.admin.competitions.edit.level_edit", [
+                'level' => $result['level'],
+                'admins' => $result['admins']
+            ]);
+        } else {
+            $message = isset($result['message_key']) ? __($result['message_key']) : __('messages.fetch_error_detailed');
+            if (isset($result['exception']) && app()->environment('local')) {
+                $message .= ' ' . $result['exception']->getMessage(); 
+            }
+            $notificationsToFlash = $this->generateCustomNotifications($message, "error");
+        }
+
+        if (!empty($notificationsToFlash)) {
+            session()->flash('messages', $notificationsToFlash);
+        }
+        return Redirect::back();
     }
 
     /**
@@ -43,9 +83,25 @@ class LevelController extends Controller
      *
      * @param UpdateLevelRequest $request The incoming request containing admin data.
      */
-    function update(UpdateLevelRequest $request) : RedirectResponse {
-        $level = Level::findorfail($request->id);
-        $this->levelService->update($level, $request->validated());
+    public function update(UpdateLevelRequest $request): RedirectResponse
+    {
+        $result = $this->levelService->update((int) $request->id, $request->validated());
+        $notificationsToFlash = [];
+
+        if ($result['status'] === 'success') {
+            $notificationsToFlash = $this->generateNotifications(true, $result['message_key']);
+        } else {
+            $message = isset($result['message_key']) ? __($result['message_key']) : __('messages.general_error');
+            if (isset($result['exception']) && app()->environment('local')) {
+                $message .= ' ' . $result['exception']->getMessage(); 
+            }
+            $notificationsToFlash = $this->generateCustomNotifications($message, "error");
+        }
+        
+        if (!empty($notificationsToFlash)) {
+            session()->flash('messages', $notificationsToFlash);
+        }
+
         return Redirect::back();
     }
 
@@ -54,9 +110,30 @@ class LevelController extends Controller
      *
      * @param string $level_id The incoming request containing admin data.
      */
-    function delete(string $level_id) : RedirectResponse {
-        $level = Level::findorfail(base64_decode($level_id));
-        $this->levelService->delete($level);
+    public function delete(string $encodedLevelId): RedirectResponse
+    {
+        $notificationsToFlash = [];
+        try {
+            $level = $this->levelRepository->findDecodedOrFail($encodedLevelId);
+            $result = $this->levelService->delete($level->id);
+
+            if ($result['status'] === 'success') {
+                $notificationsToFlash = $this->generateNotifications(true, $result['message_key']);
+            } else {
+                $message = isset($result['message_key']) ? __($result['message_key']) : __('messages.general_error');
+                if (isset($result['exception']) && app()->environment('local')) {
+                    $message .= ' ' . $result['exception']->getMessage(); 
+                }
+                $notificationsToFlash = $this->generateCustomNotifications($message, "error");
+            }
+        } catch (Exception $e) {
+            $this->levelService->registerLogs('LevelController delete error - level not found: ', $e);
+            $notificationsToFlash = $this->generateCustomNotifications(__('messages.validation.not_found.level'), "error");
+        }        
+
+        if (!empty($notificationsToFlash)) {
+            session()->flash('messages', $notificationsToFlash);
+        }
 
         return Redirect::back();
     }
@@ -64,21 +141,52 @@ class LevelController extends Controller
     /**
      * @param Request $request The incoming request containing level_id.
      */
-    function activateLevel(Request $request): RedirectResponse
+    public function activateLevel(Request $request): RedirectResponse
     {
-        $this->levelService->activateLevel($request->level_id);
+        $request->validate(['level_id' => 'required|integer']);
+        $result = $this->levelService->activateLevel((int) $request->level_id);
+        $notificationsToFlash = [];
+
+        if ($result['status'] === 'success') {
+            $notificationsToFlash = $this->generateNotifications(true, $result['message_key']);
+        } else {
+            $message = isset($result['message_key']) ? __($result['message_key']) : __('messages.general_error');
+            if (isset($result['exception']) && app()->environment('local')) {
+                $message .= ' ' . $result['exception']->getMessage(); 
+            }
+            $notificationsToFlash = $this->generateCustomNotifications($message, "error");
+        }
+
+        if (!empty($notificationsToFlash)) {
+            session()->flash('messages', $notificationsToFlash);
+        }
+
         return Redirect::back();
     }
 
     /**
      * @param Request $request The incoming request containing level_id.
      */
-    function finishLevel(Request $request): RedirectResponse
+    public function finishLevel(Request $request): RedirectResponse
     {
-        $this->levelService->finishLevel($request->level_id);
+        $request->validate(['level_id' => 'required|integer']);
+        $result = $this->levelService->finishLevel((int) $request->level_id);
+        $notificationsToFlash = [];
+
+        if ($result['status'] === 'success') {
+            $notificationsToFlash = $this->generateNotifications(true, $result['message_key']);
+        } else {
+            $message = isset($result['message_key']) ? __($result['message_key']) : __('messages.general_error');
+            if (isset($result['exception']) && app()->environment('local')) {
+                $message .= ' ' . $result['exception']->getMessage(); 
+            }
+            $notificationsToFlash = $this->generateCustomNotifications($message, "error");
+        }
+
+        if (!empty($notificationsToFlash)) {
+            session()->flash('messages', $notificationsToFlash);
+        }
+
         return Redirect::back();
     }
-
-
-
 }

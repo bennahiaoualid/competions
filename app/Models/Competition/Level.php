@@ -11,6 +11,41 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * 
+ *
+ * @property int $id
+ * @property string $name
+ * @property string|null $description
+ * @property int $competition_id
+ * @property int $admin_id
+ * @property int $questions_number
+ * @property \Illuminate\Support\Carbon $start_date
+ * @property int $duration
+ * @property string $status inactive,active,finished
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Admin $admin
+ * @property-read \App\Models\Competition\Competition $competition
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Competition\Question> $questions
+ * @property-read int|null $questions_count
+ * @method static \Database\Factories\Competition\LevelFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Level newModelQuery()
+ * @method static Builder<static>|Level newQuery()
+ * @method static Builder<static>|Level query()
+ * @method static Builder<static>|Level whereAdminId($value)
+ * @method static Builder<static>|Level whereCompetitionId($value)
+ * @method static Builder<static>|Level whereCreatedAt($value)
+ * @method static Builder<static>|Level whereDescription($value)
+ * @method static Builder<static>|Level whereDuration($value)
+ * @method static Builder<static>|Level whereId($value)
+ * @method static Builder<static>|Level whereName($value)
+ * @method static Builder<static>|Level whereQuestionsNumber($value)
+ * @method static Builder<static>|Level whereStartDate($value)
+ * @method static Builder<static>|Level whereStatus($value)
+ * @method static Builder<static>|Level whereUpdatedAt($value)
+ * @mixin \Eloquent
+ */
 class Level extends Model
 {
     use HasFactory;

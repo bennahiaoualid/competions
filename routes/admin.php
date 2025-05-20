@@ -49,10 +49,10 @@ Route::group(
             Route::post('/users/delete', [\App\Http\Controllers\User\UserController::class, "delete"])->middleware("can_delete_user")->name("users.delete");
 
             //competitions
-            Route::get('/competitions', [\App\Http\Controllers\Competition\CompetitionController::class, "all"])->name("competitions");
+            Route::get('/competitions', [\App\Http\Controllers\Competition\CompetitionController::class, "index"])->name("competitions");
             Route::post('/competitions/store', [\App\Http\Controllers\Competition\CompetitionController::class, "store"])->name("competitions.store");
             Route::get('/competitions/edit/{id}', [\App\Http\Controllers\Competition\CompetitionController::class, "edit"])->name("competitions.edit");
-            Route::middleware("can_update_competition")->patch('/competitions/update', [\App\Http\Controllers\Competition\CompetitionController::class, "update"])->name("competitions.update");
+            Route::middleware("can_update_competition")->patch('/competitions/{competition}/update', [\App\Http\Controllers\Competition\CompetitionController::class, "update"])->name("competitions.update");
             Route::middleware("can_update_competition")->post('/competition/activate', [\App\Http\Controllers\Competition\CompetitionController::class, "activateCompetition"])->name("competitions.activate");
             Route::post('/competitions/delete', [\App\Http\Controllers\Competition\CompetitionController::class, "delete"])->name("competitions.delete");
 

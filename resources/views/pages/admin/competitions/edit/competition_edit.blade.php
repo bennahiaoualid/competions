@@ -43,7 +43,7 @@
 
                  @endif
              </div>
-             <form id="edit-competition" method="post" action="{{ route('admin.competitions.update') }}" class="space-y-2">
+             <form id="edit-competition" method="post" action="{{ route('admin.competitions.update', ['competition' => $competition]) }}" class="space-y-2">
                  @csrf
                  @method('patch')
                  <input type="hidden" name="id" value="{{ $competition->id }}">
@@ -103,9 +103,12 @@
      {{-- competions details --}}
      <div class="md:w-1/2">
 
-         {{-- competions users --}}
-         <div class="flex justify-between items-center my-4 p-2 shadow-card" >
-             <h2 class="text-xl font-bold capitalize">{{__('competition.info.auditor.list')}}</h2>
+        {{-- competions auditors --}}
+        <div class="flex justify-between items-center my-4 p-2 shadow-card" >
+            <h2 class="text-xl font-bold capitalize">
+                {{__('competition.info.auditor.list')}}
+            </h2>
+
              <x-button :islink="true" href='{{route("admin.competitions.auditors",["id"=>base64_encode($competition->id)])}}'>
                  <x-slot:icon>
                      <i class="fa-solid fa-eye me-2"></i>
@@ -116,7 +119,23 @@
 
          {{-- competions users --}}
          <div class="flex justify-between items-center my-4 p-2 shadow-card" >
-             <h2 class="text-xl font-bold capitalize">{{__('competition.info.competitors')}}</h2>
+             <h2 class="text-xl font-bold capitalize">
+                {{__('competition.info.competitors')}}
+                @switch($competition->participants_sync_status)
+                    @case('in_progress')
+                        <span class="text-sm text-warning">Syncing participants...</span>
+                        @break
+                    @case('completed')
+                        <span class="text-sm text-success">Participants synced</span>
+                        @break
+                    @case('failed')
+                        <span class="text-sm text-danger">Sync failed</span>
+                        @break
+                    @default
+                        <span class="text-sm text-primary">Not synced</span>
+                @endswitch
+            </h2>
+            
              <x-button :islink="true" href='{{route("admin.competitions.users",["id"=>base64_encode($competition->id)])}}'>
                  <x-slot:icon>
                      <i class="fa-solid fa-eye me-2"></i>

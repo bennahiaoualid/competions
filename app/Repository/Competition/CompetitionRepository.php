@@ -14,115 +14,102 @@ use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Illuminate\Database\Eloquent\Collection;
 
 
 class CompetitionRepository implements CompetitionRepositoryInterface
 {
     use RegisterLogs;
     use CrudOperationNotificationAlert;
-    function all(): View
+
+
+    public function findById(int|string $id): ?Competition
     {
-        return view("pages.admin.competitions.competition_list");
-    }
-
-    public function create(array $data): void
-    {
-        try {
-
-            // Start a transaction
-            DB::beginTransaction();
-
-            $data["admin_id"] = Auth::id();
-            $competition = Competition::create($data);
-
-            // Retrieve eligible users
-            $competitionUsers = User::eligibleForCompetition($competition->age_start,  $competition->age_end,  $competition->id)->get();
-
-            // Attach the eligible users to the competition
-            $competition->users()->attach($competitionUsers->pluck('id')->toArray());
-
-            $notifications = $this->generateNotifications(true,"saved");
-            UserNotifyEmail::usersNewCompetition($competition);
-            // Commit the transaction
-            DB::commit();
-        }catch (Exception $exception){
-
-            // Rollback the transaction if something goes wrong
-            DB::rollback();
-            $this->registerLogs('Competition creation error: ',$exception);
-            $notifications = $this->generateNotifications(false,"saved");
-
-        } finally {
-
-            // Flash each message to the session
-            foreach ($notifications as $notification) {
-                session()->flash('messages', session('messages', collect())->push($notification));
-            }
-        }
-
-    }
-
-    function edit($id) : View{
-        $competition = Competition::with(["levels" => function ($q){
+        return Competition::with(["levels" => function ($q){
             $q->orderBy("start_date");
-        }])->findorfail(base64_decode($id));
-        $admins = Admin::all();
-        return view("pages.admin.competitions.edit.competition_edit",compact("competition","admins"));
+        }])->find($id);
+    }
+    
+    public function findOrFail(int|string $id): Competition
+    {
+        return Competition::with(["levels" => function ($q){
+            $q->orderBy("start_date");
+        }])->findOrFail($id);
     }
 
-    function update(Competition $competition, array $data): void
+    public function create(array $data): Competition
     {
-        try {
-            // Start a transaction
-            DB::beginTransaction();
-            $competition->start_date = $data['start_date'];
-            $competition->age_start = $data['age_start'];
-            $competition->age_end = $data['age_end'];
-            // re-assign competitors if the age is changed
-            if($competition->isDirty('age_start') || $competition->isDirty('age_end')){
-                // Retrieve eligible users
-                $competitionUsers = User::eligibleForCompetition($competition->age_start,  $competition->age_end)->get();
-
-                // Attach the eligible users to the competition
-                $competition->users()->sync($competitionUsers->pluck('id')->toArray());
-            }
-            $competition->save();
-            UserNotifyEmail::usersUpdateCompetition($competition);
-
-            $notifications = $this->generateNotifications(true,"updated");
-            // Commit the transaction
-            DB::commit();
-        }catch (Exception $exception){
-            // Rollback the transaction if something goes wrong
-            DB::rollback();
-            $this->registerLogs('Competition updating error: ',$exception);
-            $notifications = $this->generateNotifications(false,"updated");
-        } finally {
-            // Flash each message to the session
-            foreach ($notifications as $notification) {
-                session()->flash('messages', session('messages', collect())->push($notification));
-            }
-        }
+        $data["admin_id"] = Auth::id();
+        return  Competition::create($data);
     }
 
-    function delete(Competition $competition): void
+    /**
+     * Update a competition and return an array with the resyncCompetitionParticipants flag and the competition object.
+     *
+     * @param Competition $competition The competition to update.
+     * @param array $data The data to update the competition with.
+     * @return array An array containing the resyncCompetitionParticipants flag and the updated competition object.
+    **/
+    public function update(Competition $competition, array $data): array
     {
-        try {
-            if($competition->canEdit() || Auth::user()->hasRole('owner')){
-                $competition->delete();
-                $notifications = $this->generateNotifications(true,"deleted");
-            }else{
-                $notifications = $this->generateCustomNotifications(__('messages.validation.not_allow.competition_delete'),"error");;
-            }
-        }catch (Exception $exception){
-            $this->registerLogs('Competition deleting error: ',$exception);
-            $notifications = $this->generateNotifications(false,"deleted");
-        } finally {
-            // Flash each message to the session
-            foreach ($notifications as $notification) {
-                session()->flash('messages', session('messages', collect())->push($notification));
-            }
+        $competition->fill($data);
+        $resyncCompetitionParticipants = false;
+
+        if($competition->isDirty('age_start') || $competition->isDirty('age_end')){
+            $resyncCompetitionParticipants = true;
         }
+        $competition->save();
+        return [
+            'resyncCompetitionParticipants' => $resyncCompetitionParticipants,
+            'competition' => $competition
+            ];
+    }
+
+    public function delete(Competition $competition): bool
+    {
+        $result = $competition->delete();
+        return $result;
+    }
+
+    public function getCompetitionWithUsers(int|string $competition_id): ?Competition
+    {
+        return Competition::with('users')->find($competition_id);
+    }
+
+    public function removeUserFromCompetition(Competition $competition, int $user_id): bool
+    {
+        $competition->users()->detach($user_id);
+        return true;
+    }
+
+    public function addUsersToCompetition(Competition $competition, array $user_ids): bool
+    {
+        $competition->users()->syncWithoutDetaching($user_ids);
+        return true;
+    }
+
+    public function getCompetitionWithAuditors(int|string $competition_id): ?Competition
+    {
+        return Competition::with('auditors')->find($competition_id);
+    }
+
+    public function addAuditorsToCompetition(Competition $competition, array $auditor_ids): bool
+    {
+        $competition->auditors()->syncWithoutDetaching($auditor_ids);
+        return true;
+    }
+
+    public function removeAuditorFromCompetition(Competition $competition, int $auditor_id): bool
+    {
+        $competition->auditors()->detach($auditor_id);
+        return true;
+    }
+
+    public function activate(Competition $competition): bool
+    {
+        $competition->status = "1";
+        $result = $competition->save();
+        return $result;
     }
 
     function getCompetitionUsers($competition_id) : View
@@ -255,6 +242,34 @@ class CompetitionRepository implements CompetitionRepositoryInterface
         }
     }
 
+    function find($id)
+    {
+        return Competition::findOrFail($id);
+    }
+
+    function hasValidLevelNumbers($competition_id): bool
+    {
+        return Competition::competitionMaxLevelNumbers($competition_id);
+    }
+
+    function hasEnoughCompetitors($competition_id): bool
+    {
+        $competition = $this->find($competition_id);
+        return $competition->users->count() > 2;
+    }
+
+    function hasAuditors($competition_id): bool
+    {
+        $competition = $this->find($competition_id);
+        return $competition->auditors->count() > 0;
+    }
+
+    function areAllLevelsAfterNow($competition_id): bool
+    {
+        $competition = $this->find($competition_id);
+        return $competition->isAllLevelAfterNow();
+    }
+
     function activateCompetition($competition_id): void
     {
         $notifications[] = [];
@@ -308,5 +323,25 @@ class CompetitionRepository implements CompetitionRepositoryInterface
             }
 
         }
+    }
+
+    function detachUser(Competition $competition, $user_id): void
+    {
+        $competition->users()->detach($user_id);
+    }
+
+    function attachUsers(Competition $competition, array $user_ids): void
+    {
+        $competition->users()->syncWithoutDetaching($user_ids);
+    }
+
+    function attachAuditors(Competition $competition, array $auditor_ids): void
+    {
+        $competition->auditors()->syncWithoutDetaching($auditor_ids);
+    }
+
+    function detachAuditor(Competition $competition, $auditor_id): void
+    {
+        $competition->auditors()->detach($auditor_id);
     }
 }
