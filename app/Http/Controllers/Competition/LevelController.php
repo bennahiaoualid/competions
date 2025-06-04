@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers\Competition;
 
+use Exception;
+use Illuminate\View\View;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
+use App\Models\Competition\Competition;
+use Illuminate\Support\Facades\Redirect;
+use App\Services\Competition\LevelService;
+use App\Traits\CrudOperationNotificationAlert;
 use App\Http\Requests\Competition\StoreLevelRequest;
 use App\Http\Requests\Competition\UpdateLevelRequest;
 use App\Interface\Competition\LevelRepositoryInterface;
-use App\Services\Competition\LevelService;
-use App\Traits\CrudOperationNotificationAlert;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\View\View;
-use Exception;
 
 class LevelController extends Controller
 {
@@ -29,13 +30,15 @@ class LevelController extends Controller
      *
      * @param StoreLevelRequest $request The incoming request containing admin data.
      */
-    public function store(StoreLevelRequest $request): RedirectResponse
+    public function store(StoreLevelRequest $request, Competition $competition): RedirectResponse
     {
-        $result = $this->levelService->create($request->all());
+        $result = $this->levelService->create($request->validated(), $competition);
         $notificationsToFlash = [];
 
         if ($result['status'] === 'success') {
             $notificationsToFlash = $this->generateNotifications(true, $result['message_key']);
+        } elseif ($result['status'] === 'exception') {
+            $notificationsToFlash = $this->generateNotifications(false, $result['message_key']);
         } else {
             $message = isset($result['message_key']) ? __($result['message_key']) : __('messages.general_error');
             if (isset($result['exception']) && app()->environment('local')) {

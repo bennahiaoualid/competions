@@ -134,12 +134,26 @@ class CompetitionService
         }
     }
 
-    public function getCompetitionUsers(string $competition_id_b64)
+    public function addCompetitionUsers(Competition $competition, array $user_ids): bool
     {
-        $decodedId = base64_decode($competition_id_b64);
-        return $this->competitionRepository->getCompetitionWithUsers($decodedId);
+        try {
+            $this->competitionRepository->addUsersToCompetition($competition, $user_ids);
+            // UserNotifyEmail::usersAddedToCompetition($competition, $user_ids); // Example notification
+            session()->flash(
+                'messages',
+                collect(session('messages', []))->merge($this->generateNotifications(true, "saved"))
+            );
+            return true;
+        } catch (Exception $exception) {
+            $this->registerLogs('Error adding users to competition: ', $exception);
+            session()->flash(
+                'messages',
+                collect(session('messages', []))->merge($this->generateNotifications(false, "saved"))
+            );
+            return false;
+        }
     }
-
+    
     public function removeCompetitionUser(int $competition_id, int $user_id): bool
     {
         $competition = $this->competitionRepository->findById($competition_id);
@@ -162,39 +176,15 @@ class CompetitionService
         }
     }
 
-    public function addCompetitionUsers(int $competition_id, array $user_ids): bool
+    /**
+     * Handles the adding of a auditors to a competition request and returns a response with notifications.
+     *
+     * @param Competition $competition The competition object.
+     * @param array $auditor_ids The IDs of the auditors to add.
+     * @return bool True if the auditors were added successfully, false otherwise.
+     */
+    public function addCompetitionAuditors(Competition $competition, array $auditor_ids): bool
     {
-        $competition = $this->competitionRepository->findById($competition_id);
-        if (!$competition) return false;
-
-        try {
-            $this->competitionRepository->addUsersToCompetition($competition, $user_ids);
-            // UserNotifyEmail::usersAddedToCompetition($competition, $user_ids); // Example notification
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateNotifications(true, "saved"))
-            );
-            return true;
-        } catch (Exception $exception) {
-            $this->registerLogs('Error adding users to competition: ', $exception);
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateNotifications(false, "saved"))
-            );
-            return false;
-        }
-    }
-
-    public function getCompetitionAuditors(string $competition_id_b64)
-    {
-        $decodedId = base64_decode($competition_id_b64);
-        return $this->competitionRepository->getCompetitionWithAuditors($decodedId);
-    }
-
-    public function addCompetitionAuditors(int $competition_id, array $auditor_ids): bool
-    {
-        $competition = $this->competitionRepository->findById($competition_id);
-        if (!$competition) return false;
 
         if (!$competition->canEdit()) {
             session()->flash(
@@ -242,18 +232,18 @@ class CompetitionService
             return false;
         }
 
-        // AuditorSaveDelete logic - if it's complex, it might be its own service or helper
-        // For now, assuming it does some checks before actual deletion
-        if (!AuditorSaveDelete::deleteAuditor($auditor_id, $competition)) { // Assuming this returns bool
-            // Notification for this specific failure can be added if AuditorSaveDelete sets it or returns specific error
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateCustomNotifications('Failed pre-delete check for auditor.',"error"))
-            );
-            return false;
-        }
-
         try {
+            // AuditorSaveDelete logic - if it's complex, it might be its own service or helper
+            // For now, assuming it does some checks before actual deletion
+            if (!AuditorSaveDelete::deleteAuditor($auditor_id, $competition)) { // Assuming this returns bool
+                // Notification for this specific failure can be added if AuditorSaveDelete sets it or returns specific error
+                session()->flash(
+                    'messages',
+                    collect(session('messages', []))->merge($this->generateCustomNotifications('Failed pre-delete check for auditor.',"error"))
+                );
+                return false;
+            }
+
             $this->competitionRepository->removeAuditorFromCompetition($competition, $auditor_id);
             session()->flash(
                 'messages',
@@ -270,17 +260,8 @@ class CompetitionService
         }
     }
 
-    public function activateCompetition(int $competition_id): bool
+    public function activateCompetition(Competition $competition): bool
     {
-        $competition = $this->competitionRepository->findById($competition_id);
-        if (!$competition) {
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateCustomNotifications('Competition not found for activation.',"error"))
-            );
-            return false;
-        }
-
         // All business logic for activation, moved from repository
         if ($competition->start_date->greaterThanOrEqualTo(now())){
             session()->flash(
@@ -289,7 +270,7 @@ class CompetitionService
             );
             return false;
         }
-        if (!Competition::competitionMaxLevelNumbers($competition->id)){ // Assuming this is a static model method or needs context
+        if ($competition->levels->count() != $competition->levels_number){ // Assuming this is a static model method or needs context
             session()->flash(
                 'messages',
                 collect(session('messages', []))->merge($this->generateCustomNotifications(__('messages.validation.not_allow.competition_activate_match_levels'),"error"))
@@ -340,4 +321,5 @@ class CompetitionService
             return false;
         }
     }
+    
 }

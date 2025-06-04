@@ -71,12 +71,11 @@ class LevelRepository implements LevelRepositoryInterface
 
     /**
      * check if the competition already get maximum number of levels
-     * @param $competitionId
+     * @param Competition $competition
      * @return boolean
      */
-    public function checkCompetitionMaxLevelNumbers(int $competitionId): bool
+    public function checkCompetitionMaxLevelNumbers(Competition $competition): bool
     {
-        $competition = Competition::with('levels')->find($competitionId);
         if($competition->levels->count() == $competition->levels_number){
             return true;
         }

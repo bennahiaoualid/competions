@@ -21,12 +21,11 @@ class LevelService
     ) {
     }
 
-    public function create(array $data): array
+    public function create(array $data, Competition $competition): array
     {
         try {
-            $competition = Competition::find($data["competition_id"]);
 
-            if ($this->levelRepository->checkCompetitionMaxLevelNumbers($data["competition_id"])) {
+            if ($this->levelRepository->checkCompetitionMaxLevelNumbers($competition)) {
                 return ['status' => 'error', 'message_key' => 'messages.validation.not_allow.competition_max_levels'];
             }
 
@@ -34,17 +33,17 @@ class LevelService
                 return ['status' => 'error', 'message_key' => 'validation.custom.start_date_gt_competition'];
             }
 
-            if ($this->levelRepository->hasTimeConflict($data["competition_id"], $data["start_date"], $data["duration"])) {
+            if ($this->levelRepository->hasTimeConflict($competition->id, $data["start_date"], $data["duration"])) {
                 return ['status' => 'error', 'message_key' => 'messages.validation.not_allow.level_time_conflict'];
             }
 
-            $level = $this->levelRepository->create($data);
-            UserNotifyEmail::adminLevel($level);
+            $level = $this->levelRepository->create(array_merge($data, ['competition_id' => $competition->id]));
+            //UserNotifyEmail::adminLevel($level);
             return ['status' => 'success', 'level' => $level, 'message_key' => 'saved'];
 
         } catch (Exception $exception) {
             $this->registerLogs('LevelService creation error: ', $exception);
-            return ['status' => 'error', 'message_key' => 'saved_error', 'exception' => $exception];
+            return ['status' => 'exception', 'message_key' => 'saved'];
         }
     }
 
@@ -56,7 +55,7 @@ class LevelService
             return ['status' => 'success', 'level' => $level, 'admins' => $admins];
         } catch (Exception $exception) {
             $this->registerLogs('LevelService getEditData error: ', $exception);
-            return ['status' => 'error', 'message_key' => 'fetch_error', 'exception' => $exception];
+            return ['status' => 'error', 'message_key' => 'fetch_error', 'exception' => 'something_went_wrong'];
         }
     }
 
@@ -99,7 +98,7 @@ class LevelService
 
         } catch (Exception $exception) {
             $this->registerLogs('LevelService update error: ', $exception);
-            return ['status' => 'error', 'message_key' => 'updated_error', 'exception' => $exception];
+            return ['status' => 'exception', 'message_key' => 'updated'];
         }
     }
 
@@ -126,7 +125,7 @@ class LevelService
 
         } catch (Exception $exception) {
             $this->registerLogs('LevelService delete error: ', $exception);
-            return ['status' => 'error', 'message_key' => 'deleted_error', 'exception' => $exception];
+            return ['status' => 'exception', 'message_key' => 'deleted'];
         }
     }
 
@@ -173,7 +172,7 @@ class LevelService
 
         } catch (Exception $exception) {
             $this->registerLogs('LevelService activateLevel error: ', $exception);
-            return ['status' => 'error', 'message_key' => 'activated_error', 'exception' => $exception];
+            return ['status' => 'exception', 'message_key' => 'activated'];
         }
     }
 
@@ -209,7 +208,7 @@ class LevelService
         } catch (Exception $exception) {
             DB::rollBack();
             $this->registerLogs('LevelService finishLevel error: ', $exception);
-            return ['status' => 'error', 'message_key' => 'finish_error', 'exception' => $exception];
+            return ['status' => 'exception', 'message_key' => 'finish'];
         }
     }
 

@@ -23,7 +23,7 @@
                  @if($competition->canEdit())
                      {{-- show activation button --}}
                      @if($competition->status == 0)
-                         <form action="{{route('admin.competitions.activate')}}" method="post">
+                         <form action="{{route('admin.competitions.activate', ['competition' => $competition])}}" method="post">
                             @csrf
                              @method('post')
                              <input type="hidden" value="{{$competition->id}}" name="competition_id">
@@ -46,7 +46,6 @@
              <form id="edit-competition" method="post" action="{{ route('admin.competitions.update', ['competition' => $competition]) }}" class="space-y-2">
                  @csrf
                  @method('patch')
-                 <input type="hidden" name="id" value="{{ $competition->id }}">
                  <div>
                      <x-input-label for="title" :value=" ucwords(__('competition.info.title'))" />
                      <x-text-input id="title" type="text" class="mt-1 block w-full" :value="$competition->title" readonly />
@@ -174,10 +173,9 @@
      <x-slot:modalhead>
          {{__("form.level.add")}}
      </x-slot>
-     <form id="add_level_form" method="post" action="{{ route('admin.competitions.level.store') }}" class="space-y-2">
+     <form id="add_level_form" method="post" action="{{ route('admin.competitions.level.store', ['competition' => $competition]) }}" class="space-y-2">
          @csrf
          @method('post')
-         <input type="hidden" name="competition_id" value="{{$competition->id}}" >
          <div>
              <x-input-label for="name" :value=" ucwords(__('competition.level.name'))" />
              <x-text-input id="name" name="name" type="text" class="mt-1 block w-full"  />

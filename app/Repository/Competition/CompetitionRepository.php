@@ -23,18 +23,26 @@ class CompetitionRepository implements CompetitionRepositoryInterface
     use CrudOperationNotificationAlert;
 
 
-    public function findById(int|string $id): ?Competition
+    public function findById(int|string $id, bool $withLevels = false): ?Competition
     {
-        return Competition::with(["levels" => function ($q){
-            $q->orderBy("start_date");
-        }])->find($id);
+        $query = Competition::query();
+        if ($withLevels) {
+            $query->with(["levels" => function ($q){
+                $q->orderBy("start_date");
+            }]);
+        }
+        return $query->find($id);
     }
     
-    public function findOrFail(int|string $id): Competition
+    public function findOrFail(int|string $id, bool $withLevels = false): Competition
     {
-        return Competition::with(["levels" => function ($q){
-            $q->orderBy("start_date");
-        }])->findOrFail($id);
+        $query = Competition::query();
+        if ($withLevels) {
+            $query->with(["levels" => function ($q){
+                $q->orderBy("start_date");
+            }]);
+        }
+        return $query->findOrFail($id);
     }
 
     public function create(array $data): Competition
@@ -71,31 +79,76 @@ class CompetitionRepository implements CompetitionRepositoryInterface
         return $result;
     }
 
-    public function getCompetitionWithUsers(int|string $competition_id): ?Competition
-    {
-        return Competition::with('users')->find($competition_id);
-    }
-
-    public function removeUserFromCompetition(Competition $competition, int $user_id): bool
-    {
-        $competition->users()->detach($user_id);
-        return true;
-    }
-
+    /**
+     * Add users to a competition.
+     *
+     * @param Competition $competition The competition to add users to.
+     * @param array $user_ids The IDs of the users to add.
+     * @return bool True if the users were added successfully, false otherwise.
+     */
     public function addUsersToCompetition(Competition $competition, array $user_ids): bool
     {
-        $competition->users()->syncWithoutDetaching($user_ids);
+        // 1. Filter out empty/non-numeric IDs and get unique input IDs
+        $unique_input_user_ids = array_values(array_unique(array_filter($user_ids, 'is_numeric')));
+
+        if (empty($unique_input_user_ids)) {
+            return true; // No valid IDs to process
+        }
+
+        // 2. Get IDs of users already attached to the competition
+        $existing_user_ids = $competition->users()->allRelatedIds()->toArray();
+
+        // 3. Determine which IDs are genuinely new
+        $new_user_ids = array_diff($unique_input_user_ids, $existing_user_ids);
+
+        // 4. If there are new users to add, attach them.
+        if (!empty($new_user_ids)) {
+            $competition->users()->attach($new_user_ids);
+        }
+
         return true;
     }
 
-    public function getCompetitionWithAuditors(int|string $competition_id): ?Competition
+    /**
+     * Remove a user from a competition.
+     *
+     * @param Competition $competition The competition to remove the user from.
+     * @param int $user_id The ID of the user to remove.
+     * @return bool True if the user was removed successfully, false otherwise.
+     */   
+    public function removeUserFromCompetition(Competition $competition, int $user_id): bool
     {
-        return Competition::with('auditors')->find($competition_id);
+        try {
+            $competition->users()->detach($user_id);
+            return true;
+        } catch (Exception $e) {
+            $this->registerLogs('Error removing user from competition: ', $e);
+            return false;
+        }
     }
 
     public function addAuditorsToCompetition(Competition $competition, array $auditor_ids): bool
     {
-        $competition->auditors()->syncWithoutDetaching($auditor_ids);
+        // 1. Filter out empty/non-numeric IDs and get unique input IDs
+        $unique_input_auditor_ids = array_values(array_unique(array_filter($auditor_ids, 'is_numeric')));
+
+        if (empty($unique_input_auditor_ids)) {
+            return true; // No valid IDs to process
+        }
+
+        // 2. Get IDs of auditors already attached to the competition
+        $existing_auditor_ids = $competition->auditors()->allRelatedIds()->toArray();
+
+        // 3. Determine which IDs are genuinely new
+        $new_auditor_ids = array_diff($unique_input_auditor_ids, $existing_auditor_ids);
+
+        // 4. If there are new auditors to add, attach them.
+        // This will perform a bulk insert if the pivot model ('admin_competition')
+        // does not have timestamps or event listeners forcing individual inserts.
+        if (!empty($new_auditor_ids)) {
+            $competition->auditors()->attach($new_auditor_ids);
+        }
+
         return true;
     }
 
@@ -270,6 +323,8 @@ class CompetitionRepository implements CompetitionRepositoryInterface
         return $competition->isAllLevelAfterNow();
     }
 
+
+
     function activateCompetition($competition_id): void
     {
         $notifications[] = [];
@@ -323,25 +378,5 @@ class CompetitionRepository implements CompetitionRepositoryInterface
             }
 
         }
-    }
-
-    function detachUser(Competition $competition, $user_id): void
-    {
-        $competition->users()->detach($user_id);
-    }
-
-    function attachUsers(Competition $competition, array $user_ids): void
-    {
-        $competition->users()->syncWithoutDetaching($user_ids);
-    }
-
-    function attachAuditors(Competition $competition, array $auditor_ids): void
-    {
-        $competition->auditors()->syncWithoutDetaching($auditor_ids);
-    }
-
-    function detachAuditor(Competition $competition, $auditor_id): void
-    {
-        $competition->auditors()->detach($auditor_id);
     }
 }

@@ -62,9 +62,7 @@ class SyncCompetitionParticipants implements ShouldQueue
         // before sending notifications, especially if bulkAttach doesn't update the in-memory model.
         $this->competition = $this->competition->fresh('users');
 
-        // Send notifications only if this is not an update operation (i.e., for new competitions)
-        // Or, if you want to notify on updates too, you might call usersUpdateCompetition here.
-        // For now, sticking to the original request for new competition notifications.
+        // Send notifications
         if (!$this->isUpdate) {
             UserNotifyEmail::usersNewCompetition($this->competition);
         }else{

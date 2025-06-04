@@ -18,7 +18,7 @@ interface LevelRepositoryInterface
     public function update(Level $level, array $data): bool;
     public function delete(Level $level): bool;
 
-    public function checkCompetitionMaxLevelNumbers(int $competitionId): bool;
+    public function checkCompetitionMaxLevelNumbers(Competition $competition): bool;
     public function hasTimeConflict(int $competitionId, string $startDate, int $duration, ?int $excludeLevelId = null): bool;
 
     public function getQuestionsCount(Level $level): int;

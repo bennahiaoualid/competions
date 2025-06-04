@@ -10,6 +10,12 @@ use Illuminate\Support\Facades\DB;
 
 class AuditorSaveDelete
 {
+    /*
+        * Delete an auditor from a competition
+        * @param int $auditor_id The ID of the auditor to delete
+        * @param Competition|null $competition The competition to delete the auditor from
+        * @return bool True if the auditor was deleted successfully, false otherwise
+    */
     public static function deleteAuditor($auditor_id, $competition = null): bool
     {
         DB::beginTransaction();

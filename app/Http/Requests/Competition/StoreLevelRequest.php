@@ -32,7 +32,6 @@ class StoreLevelRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'competition_id' => 'required|integer|exists:competitions,id',
             'name' => 'required|string|min:3|max:40',
             'description' => 'nullable|string|min:3|max:100',
             'start_date' => 'required|date_format:Y-m-d H:i|after_or_equal:now',

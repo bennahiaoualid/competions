@@ -26,12 +26,12 @@
 
     <!-- ****************** Forms ***************** -->
     @if($competition->canEdit())
-        {{-- add users form --}}
+        {{-- add auditors form --}}
         <x-modal name="add_auditors" title="My Modal" :show="false">
             <x-slot:modalhead>
                 {{__("form.auditor.add")}}
             </x-slot>
-            <form id="add_auditors" method="post" action="{{route("admin.competitions.auditor.store")}}" class="space-y-2">
+            <form id="add_auditors" method="post" action="{{route("admin.competitions.auditor.store", ['competition' => $competition])}}" class="space-y-2">
                 @csrf
                 @method('post')
 

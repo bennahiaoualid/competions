@@ -22,8 +22,8 @@
         <div class="overflow-x-auto max-w-[90vw] pt-2 px-2">
             <livewire:competition-users-not-participate
                 competition_id="{{$competition->id}}"
-            ageMin="{{$competition->age_start}}"
-            ageMax="{{$competition->age_end}}"
+                ageMin="{{$competition->age_start}}"
+                ageMax="{{$competition->age_end}}"
             />
         </div>
     </div>
@@ -35,13 +35,12 @@
             <x-slot:modalhead>
                 {{__("form.competitor.add")}}
             </x-slot>
-            <form id="add_users" method="post" action="{{route("admin.competitions.users.store")}}" class="space-y-2">
+            <form id="add_users" method="post" action="{{route("admin.competitions.users.store", ['competition' => $competition])}}" class="space-y-2">
                 @csrf
                 @method('post')
 
                 <div>
                     <input type="hidden" name="user_ids" x-model="inputValue"/>
-                    <input type="hidden" name="competition_id" value="{{$competition->id}}"/>
                     <p class=""> {{__("form.actions.confirm_competitor_add")}}</p>
                 </div>
             </form>
