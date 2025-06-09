@@ -6,6 +6,8 @@ use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Competition\Competition;
+use App\Contracts\TransactionManagerInterface;
+use App\Contracts\FlasherInterface;
 use App\Traits\RegisterLogs; // For logging errors
 use App\Jobs\Competetion\SyncCompetitionParticipants;
 use App\Http\Helpers\UserNotifyEmail; // For sending emails
@@ -16,162 +18,165 @@ use App\Models\User; // For Auth::user() type hinting if specific methods are us
 
 class CompetitionService
 {
-    use CrudOperationNotificationAlert, RegisterLogs;
+    use CrudOperationNotificationAlert; 
+    use RegisterLogs;
 
+    /**
+     * Constructor for the CompetitionService.
+     *
+     * @param CompetitionRepositoryInterface $competitionRepository The repository for competition operations.
+     */
     public function __construct(
-        protected CompetitionRepositoryInterface $competitionRepository
+        protected CompetitionRepositoryInterface $competitionRepository,
+        protected TransactionManagerInterface $transactionManager,
+        protected FlasherInterface $flasher
     ) {
     }
 
+    /**
+     * Find a competition by ID.
+     *
+     * @param string $id The ID of the competition.
+     * @return Competition|null The competition object if found, null otherwise.
+     */
     public function findCompetitionById(string $id) // ID is base64 encoded as per original edit view
     {
         $decodedId = base64_decode($id);
         return $this->competitionRepository->findById($decodedId);
     }
 
+    /**
+     * Create a competition.
+     *
+     * @param array $data The data to create the competition with.
+     * @return bool True if the competition was created successfully, false otherwise.
+     */
     public function createCompetition(array $data): bool
     {
-        DB::beginTransaction();
         try {
-            $competition = $this->competitionRepository->create($data);
-
-            // Sync the participants of the competition
-            SyncCompetitionParticipants::dispatch($competition,isUpdate: false)->afterCommit();
-            
-            DB::commit();
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateNotifications(true, "saved"))
-            );
-            return true;
+            $result = $this->transactionManager->run(function () use ($data) {
+                $competition = $this->competitionRepository->create($data);
+                SyncCompetitionParticipants::dispatch($competition)->afterCommit();
+                return true;
+            });
+            $this->flasher->notifyCrudResult(true, 'saved');
+            return $result;
         } catch (Exception $exception) {
-            DB::rollback();
             $this->registerLogs('Competition creation error: ', $exception);
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateNotifications(false, "saved"))
-            );
+            $this->flasher->notifyCrudResult(false, 'saved');
             return false;
         }
     }
 
+    /**
+     * Update a competition.
+     *
+     * @param Competition $competition The competition object.
+     * @param array $data The data to update the competition with.
+     * @return bool True if the competition was updated successfully, false otherwise.
+     */
     public function updateCompetition(Competition $competition, array $data): bool
     {
-        if (!$competition) {
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateCustomNotifications('Competition not found.', "error"))
-            );
-            return false;
-        }
-
-        DB::beginTransaction();
         try {
-            $result = $this->competitionRepository->update($competition, $data);
-            $competition  = $result['competition'];
-            $resync = $result['resyncCompetitionParticipants'];
-             // Sync the participants of the competition
-            if($resync){
-                SyncCompetitionParticipants::dispatch($competition,isUpdate: true)->afterCommit();
-            }else{
-                UserNotifyEmail::usersUpdateCompetition($competition); // Notification
-            }
-            DB::commit();
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateNotifications(true, 'updated'))
-            );
-            return true;
+            $result = $this->transactionManager->run(function () use ($competition, $data) {
+                $result = $this->competitionRepository->update($competition, $data);
+                $competition = $result['competition'];
+                $resync = $result['resyncCompetitionParticipants'];
+                
+                if($resync){
+                    SyncCompetitionParticipants::dispatch($competition, isUpdate: true)->afterCommit();
+                } else {
+                    UserNotifyEmail::usersUpdateCompetition($competition);
+                }
+                return true;
+            });
+
+            $this->flasher->notifyCrudResult(true, 'updated');
+            return $result;
         } catch (Exception $exception) {
-            DB::rollback();
             $this->registerLogs('Competition updating error: ', $exception);
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateNotifications(false, "updated"))
-            );
+            $this->flasher->notifyCrudResult(false, 'updated');
             return false;
         }
     }
 
-    public function deleteCompetition(string $competitionId): bool
+    /**
+     * Delete a competition.
+     *
+     * @param int $competitionId The ID of the competition to delete.
+     * @return bool True if the competition was deleted successfully, false otherwise.
+     */
+    public function deleteCompetition(int $competitionId): bool
     {
-        $competition = $this->competitionRepository->findById($competitionId); // Assuming ID is not base64 here
-        if (!$competition) {
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateCustomNotifications('Competition not found.', "error"))
-            );
-            return false;
-        }
-
-        // Authorization check (moved from repository)
-        // Assuming User model has a hasRole method or similar, or use Gates/Policies
-        if (!($competition->canEdit() || (Auth::user() instanceof User && Auth::user()->hasRole('owner')))) {
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateCustomNotifications(__('messages.validation.not_allow.competition_delete'),"error"))
-            );
-            return false;
-        }
-
-        DB::beginTransaction();
         try {
+            $competition = $this->competitionRepository->findById($competitionId);
+            if (!$competition) {
+                $this->flasher->notify('Competition not found.', 'error');
+                return false;
+            }
+
+            if (!($competition->canEdit() || (Auth::user() instanceof User && Auth::user()->hasRole('owner')))) {
+                $this->flasher->notify(__('messages.validation.not_allow.competition_delete'), 'error');
+                return false;
+            }
+
             $this->competitionRepository->delete($competition);
-            DB::commit();
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateNotifications(true, "deleted"))
-            );
+            $this->flasher->notifyCrudResult(true, 'deleted');
             return true;
+
         } catch (Exception $exception) {
-            DB::rollback();
             $this->registerLogs('Competition deleting error: ', $exception);
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateNotifications(false, "deleted"))
-            );
+            $this->flasher->notifyCrudResult(false, 'deleted');
             return false;
         }
     }
 
+    /**
+     * Add users to a competition.
+     *
+     * @param Competition $competition The competition object.
+     * @param array $user_ids The IDs of the users to add.
+     * @return bool True if the users were added successfully, false otherwise.
+     */
     public function addCompetitionUsers(Competition $competition, array $user_ids): bool
     {
         try {
-            $this->competitionRepository->addUsersToCompetition($competition, $user_ids);
-            // UserNotifyEmail::usersAddedToCompetition($competition, $user_ids); // Example notification
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateNotifications(true, "saved"))
-            );
-            return true;
+            $result = $this->transactionManager->run(function () use ($competition, $user_ids) {
+                $this->competitionRepository->addUsersToCompetition($competition, $user_ids);
+                return true;
+            });
+
+            $this->flasher->notifyCrudResult(true, 'saved');
+            return $result;
         } catch (Exception $exception) {
             $this->registerLogs('Error adding users to competition: ', $exception);
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateNotifications(false, "saved"))
-            );
+            $this->flasher->notifyCrudResult(false, 'saved');
             return false;
         }
     }
-    
+
+    /**
+     * Remove a user from a competition.
+     *
+     * @param int $competition_id The ID of the competition.
+     * @param int $user_id The ID of the user to remove.
+     * @return bool True if the user was removed successfully, false otherwise.
+     */
     public function removeCompetitionUser(int $competition_id, int $user_id): bool
     {
-        $competition = $this->competitionRepository->findById($competition_id);
-        if (!$competition) return false; // Or throw exception
-
         try {
-            $this->competitionRepository->removeUserFromCompetition($competition, $user_id);
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateNotifications(true, "deleted"))
-            );
-            return true;
+            $competition = $this->competitionRepository->findById($competition_id);
+            if (!$competition) return false;
+            $result = $this->transactionManager->run(function () use ($competition, $user_id) {
+                $this->competitionRepository->removeUserFromCompetition($competition, $user_id);
+                return true;
+            });
+
+            $this->flasher->notifyCrudResult(true, 'deleted');
+            return $result;
         } catch (Exception $exception) {
             $this->registerLogs('Error removing user from competition: ', $exception);
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateNotifications(false, "deleted"))
-            );
+            $this->flasher->notifyCrudResult(false, 'deleted');
             return false;
         }
     }
@@ -185,139 +190,110 @@ class CompetitionService
      */
     public function addCompetitionAuditors(Competition $competition, array $auditor_ids): bool
     {
-
         if (!$competition->canEdit()) {
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateCustomNotifications(__('messages.validation.not_allow.competition_update'),"error"))
-            );
+            $this->flasher->notify(__('messages.validation.not_allow.competition_update'), 'error');
             return false;
         }
 
         try {
-            $this->competitionRepository->addAuditorsToCompetition($competition, $auditor_ids);
-            UserNotifyEmail::auditorNewCompetition($competition, $auditor_ids); // Notification
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateNotifications(true, "saved"))
-            );
-            return true;
+            $result = $this->transactionManager->run(function () use ($competition, $auditor_ids) {
+                $this->competitionRepository->addAuditorsToCompetition($competition, $auditor_ids);
+                UserNotifyEmail::auditorNewCompetition($competition, $auditor_ids);
+                return true;
+            });
+
+            $this->flasher->notifyCrudResult(true, 'saved');
+            return $result;
         } catch (Exception $exception) {
             $this->registerLogs('Error adding auditors to competition: ', $exception);
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateNotifications(false, "saved"))
-            );
+            $this->flasher->notifyCrudResult(false, 'saved');
             return false;
         }
     }
 
+    /**
+     * Remove an auditor from a competition.
+     *
+     * @param int $competition_id The ID of the competition.
+     * @param int $auditor_id The ID of the auditor to remove.
+     * @return bool True if the auditor was removed successfully, false otherwise.
+     */
     public function removeCompetitionAuditor(int $competition_id, int $auditor_id): bool
     {
-        $competition = $this->competitionRepository->findById($competition_id);
-        if (!$competition) return false;
-
-        if (!$competition->canEdit()) {
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateCustomNotifications(__('messages.validation.not_allow.competition_update'),"error"))
-            );
-            return false;
-        }
-        if($competition->auditors->count() <= 1){
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateCustomNotifications(__('messages.validation.not_allow.remove_auditor_only_one'),"error"))
-            );
-            return false;
-        }
-
         try {
-            // AuditorSaveDelete logic - if it's complex, it might be its own service or helper
-            // For now, assuming it does some checks before actual deletion
-            if (!AuditorSaveDelete::deleteAuditor($auditor_id, $competition)) { // Assuming this returns bool
-                // Notification for this specific failure can be added if AuditorSaveDelete sets it or returns specific error
-                session()->flash(
-                    'messages',
-                    collect(session('messages', []))->merge($this->generateCustomNotifications('Failed pre-delete check for auditor.',"error"))
-                );
+            $competition = $this->competitionRepository->findById($competition_id);
+            if (!$competition) return false;
+
+            if (!$competition->canEdit()) {
+                $this->flasher->notify(__('messages.validation.not_allow.competition_update'), 'error');
+                return false;
+            }
+            if($competition->auditors->count() <= 1){
+                $this->flasher->notify(__('messages.validation.not_allow.remove_auditor_only_one'), 'error');
                 return false;
             }
 
-            $this->competitionRepository->removeAuditorFromCompetition($competition, $auditor_id);
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateNotifications(true, "deleted"))
-            );
-            return true;
+            if (!AuditorSaveDelete::deleteAuditor($auditor_id, $competition)) {
+                $this->flasher->notify('Failed pre-delete check for auditor.', 'error');
+                return false;
+            }
+
+            $result = $this->transactionManager->run(function () use ($competition, $auditor_id) {
+                $this->competitionRepository->removeAuditorFromCompetition($competition, $auditor_id);
+                return true;
+            });
+
+            $this->flasher->notifyCrudResult(true, 'deleted');
+            return $result;
         } catch (Exception $exception) {
             $this->registerLogs('Error removing auditor from competition: ', $exception);
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateNotifications(false, "deleted"))
-            );
+            $this->flasher->notifyCrudResult(false, 'deleted');
             return false;
         }
     }
 
+    /**
+     * Activate a competition.
+     *
+     * @param Competition $competition The competition to activate.
+     * @return bool True if the competition was activated successfully, false otherwise.
+     */
     public function activateCompetition(Competition $competition): bool
     {
-        // All business logic for activation, moved from repository
-        if ($competition->start_date->greaterThanOrEqualTo(now())){
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateCustomNotifications(__('messages.validation.not_allow.competition_activate_early'),"error"))
-            );
-            return false;
-        }
-        if ($competition->levels->count() != $competition->levels_number){ // Assuming this is a static model method or needs context
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateCustomNotifications(__('messages.validation.not_allow.competition_activate_match_levels'),"error"))
-            );
-            return false;
-        }
-        if ($competition->users->count() <= 2){
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateCustomNotifications(__('messages.validation.not_allow.competition_activate_less_competitors'),"error"))
-            );
-            return false;
-        }
-        if ($competition->auditors->count() == 0){
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateCustomNotifications(__('messages.validation.not_allow.competition_activate_less_auditor'),"error"))
-            );
-            return false;
-        }
-        if(!$competition->isAllLevelAfterNow()){ // Model method
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateCustomNotifications(__('messages.validation.not_allow.competition_activate_level_pass'),"error"))
-            );
-            return false;
-        }
-
-        DB::beginTransaction();
         try {
-            $competition->start_date = now(); // Part of activation logic
-            // The repository's activate method now only sets status and saves.
-            $this->competitionRepository->activate($competition);
-            UserNotifyEmail::usersActivateCompetition($competition);
-            DB::commit();
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateNotifications(true, "activated"))
-            );
-            return true;
+            if ($competition->start_date->greaterThanOrEqualTo(now())){
+                $this->flasher->notify(__('messages.validation.not_allow.competition_activate_early'), 'error');
+                return false;
+            }
+            if ($competition->levels->count() != $competition->levels_number){
+                $this->flasher->notify(__('messages.validation.not_allow.competition_activate_match_levels'), 'error');
+                return false;
+            }
+            if ($competition->users->count() <= 2){
+                $this->flasher->notify(__('messages.validation.not_allow.competition_activate_less_competitors'), 'error');
+                return false;
+            }
+            if ($competition->auditors->count() == 0){
+                $this->flasher->notify(__('messages.validation.not_allow.competition_activate_less_auditor'), 'error');
+                return false;
+            }
+            if(!$competition->isAllLevelAfterNow()){
+                $this->flasher->notify(__('messages.validation.not_allow.competition_activate_level_pass'), 'error');
+                return false;
+            }
+
+            $result = $this->transactionManager->run(function () use ($competition) {
+                $competition->start_date = now();
+                $this->competitionRepository->activate($competition);
+                UserNotifyEmail::usersActivateCompetition($competition);
+                return true;
+            });
+
+            $this->flasher->notifyCrudResult(true, 'activated');
+            return $result;
         } catch (Exception $exception) {
-            DB::rollback();
             $this->registerLogs('Competition activation error: ', $exception);
-            session()->flash(
-                'messages',
-                collect(session('messages', []))->merge($this->generateNotifications(false, "activated"))
-            );
+            $this->flasher->notifyCrudResult(false, 'activated');
             return false;
         }
     }

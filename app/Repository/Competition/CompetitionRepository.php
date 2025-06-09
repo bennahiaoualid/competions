@@ -2,19 +2,12 @@
 
 namespace App\Repository\Competition;
 
-use App\Http\Helpers\AuditorSaveDelete;
-use App\Http\Helpers\UserNotifyEmail;
 use App\Interface\Competition\CompetitionRepositoryInterface;
-use App\Models\Admin\Admin;
 use App\Models\Competition\Competition;
-use App\Models\User;
 use App\Traits\CrudOperationNotificationAlert;
 use App\Traits\RegisterLogs;
 use Exception;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\View\View;
-use Illuminate\Database\Eloquent\Collection;
 
 
 class CompetitionRepository implements CompetitionRepositoryInterface
@@ -22,7 +15,12 @@ class CompetitionRepository implements CompetitionRepositoryInterface
     use RegisterLogs;
     use CrudOperationNotificationAlert;
 
-
+    /**
+     * Find a competition by its ID.
+     * @param int|string $id The ID of the competition to find.
+     * @param bool $withLevels Whether to include levels in the query.
+     * @return Competition|null The competition if found, null otherwise.
+     */
     public function findById(int|string $id, bool $withLevels = false): ?Competition
     {
         $query = Competition::query();
@@ -33,18 +31,13 @@ class CompetitionRepository implements CompetitionRepositoryInterface
         }
         return $query->find($id);
     }
-    
-    public function findOrFail(int|string $id, bool $withLevels = false): Competition
-    {
-        $query = Competition::query();
-        if ($withLevels) {
-            $query->with(["levels" => function ($q){
-                $q->orderBy("start_date");
-            }]);
-        }
-        return $query->findOrFail($id);
-    }
 
+    /**
+     * Create a new competition.
+     *
+     * @param array $data The data to create the competition with.
+     * @return Competition The created competition.
+     */
     public function create(array $data): Competition
     {
         $data["admin_id"] = Auth::id();
@@ -68,11 +61,17 @@ class CompetitionRepository implements CompetitionRepositoryInterface
         }
         $competition->save();
         return [
-            'resyncCompetitionParticipants' => $resyncCompetitionParticipants,
-            'competition' => $competition
-            ];
+                'resyncCompetitionParticipants' => $resyncCompetitionParticipants,
+                'competition' => $competition
+                ];
     }
 
+    /**
+     * Delete a competition.
+     *
+     * @param Competition $competition The competition to delete.
+     * @return bool True if the competition was deleted successfully, false otherwise.
+     */
     public function delete(Competition $competition): bool
     {
         $result = $competition->delete();
@@ -118,15 +117,17 @@ class CompetitionRepository implements CompetitionRepositoryInterface
      */   
     public function removeUserFromCompetition(Competition $competition, int $user_id): bool
     {
-        try {
             $competition->users()->detach($user_id);
             return true;
-        } catch (Exception $e) {
-            $this->registerLogs('Error removing user from competition: ', $e);
-            return false;
-        }
     }
 
+    /** 
+    * Add auditors to a competition.
+    *
+    * @param Competition $competition The competition to add auditors to.
+    * @param array $auditor_ids The IDs of the auditors to add.
+    * @return bool True if the auditors were added successfully, false otherwise.
+    */
     public function addAuditorsToCompetition(Competition $competition, array $auditor_ids): bool
     {
         // 1. Filter out empty/non-numeric IDs and get unique input IDs
@@ -152,231 +153,29 @@ class CompetitionRepository implements CompetitionRepositoryInterface
         return true;
     }
 
+    /**
+    * Remove an auditor from a competition.
+    *
+    * @param Competition $competition The competition to remove the auditor from.
+    * @param int $auditor_id The ID of the auditor to remove.
+    * @return bool True if the auditor was removed successfully, false otherwise.
+    */
     public function removeAuditorFromCompetition(Competition $competition, int $auditor_id): bool
     {
         $competition->auditors()->detach($auditor_id);
         return true;
     }
 
+    /**
+    * Activate a competition.
+    *
+    * @param Competition $competition The competition to activate.
+    * @return bool True if the competition was activated successfully, false otherwise.
+    */
     public function activate(Competition $competition): bool
     {
         $competition->status = "1";
         $result = $competition->save();
         return $result;
-    }
-
-    function getCompetitionUsers($competition_id) : View
-    {
-        // TODO: Implement getCompetitionUsers() method.
-        $competition = Competition::findorfail(base64_decode($competition_id));
-        return view("pages.admin.competitions.competition_users",compact("competition"));
-    }
-
-    function removeCompetitionUser($competition_id, $user_id): void
-    {
-        // TODO: Implement removeCompetitionUser() method.
-        $notifications[] = [];
-        try {
-
-            $competition = Competition::findorfail($competition_id);
-            $competition->users()->detach($user_id);
-            $notifications = $this->generateNotifications(true,"deleted");
-
-        }catch (Exception $exception){
-
-            $this->registerLogs('Questions creation error: ',$exception);
-            $notifications = $this->generateNotifications(false,"deleted");
-
-        } finally {
-
-            // Flash each message to the session
-            foreach ($notifications as $notification) {
-                session()->flash('messages', session('messages', collect())->push($notification));
-            }
-
-        }
-    }
-
-    function addCompetitionUsers($competition_id, array $user_ids): void
-    {
-        // TODO: Implement addCompetitionUsers() method.
-        $notifications[] = [];
-        try {
-            $competition = Competition::findorfail($competition_id);
-            $competition->users()->syncWithoutDetaching($user_ids);
-            $notifications = $this->generateNotifications(true,"saved");
-
-        }catch (Exception $exception){
-
-            $this->registerLogs('Questions creation error: ',$exception);
-            $notifications = $this->generateNotifications(false,"saved");
-
-        } finally {
-
-            // Flash each message to the session
-            foreach ($notifications as $notification) {
-                session()->flash('messages', session('messages', collect())->push($notification));
-            }
-
-        }
-    }
-
-    function getCompetitionAuditors($competition_id) : View
-    {
-        // TODO: Implement getCompetitionUsers() method.
-        $competition = Competition::findorfail(base64_decode($competition_id));
-        return view("pages.admin.competitions.competition_auditors",compact("competition"));
-    }
-
-    function addCompetitionAuditors($competition_id, array $auditor_ids): void
-    {
-        // TODO: Implement addCompetitionUsers() method.
-        $notifications[] = [];
-        try {
-            $competition = Competition::findorfail($competition_id);
-            if($competition->canEdit()){
-                $competition->auditors()->syncWithoutDetaching($auditor_ids);
-                UserNotifyEmail::auditorNewCompetition($competition,$auditor_ids);
-                $notifications = $this->generateNotifications(true,"saved");
-            }else{
-                $notifications = $this->generateCustomNotifications(__('messages.validation.not_allow.competition_update'),"error");;
-            }
-
-        }catch (Exception $exception){
-
-            $this->registerLogs('auditors creation error: ',$exception);
-            $notifications = $this->generateNotifications(false,"saved");
-
-        } finally {
-
-            // Flash each message to the session
-            foreach ($notifications as $notification) {
-                session()->flash('messages', session('messages', collect())->push($notification));
-            }
-
-        }
-    }
-
-    function removeCompetitionAuditor($competition_id, $auditor_id): void
-    {
-        // TODO: Implement removeCompetitionAuditor() method.
-        $notifications[] = [];
-        try {
-            $competition = Competition::findorfail($competition_id);
-            if($competition->canEdit()){
-                // check if competition have more the 1 auditor
-                if($competition->auditors->count() > 1){
-                    $prepare_deleting = AuditorSaveDelete::deleteAuditor($auditor_id, $competition);
-                    if ($prepare_deleting){
-                        $competition->auditors()->detach($auditor_id);
-                        $notifications = $this->generateNotifications(true,"deleted");
-                    }
-                }
-               else{
-                   $notifications = $this->generateCustomNotifications(__('messages.validation.not_allow.remove_auditor_only_one'),"error");;
-
-               }
-            }else{
-                $notifications = $this->generateCustomNotifications(__('messages.validation.not_allow.competition_update'),"error");;
-            }
-
-        }catch (Exception $exception){
-
-            $this->registerLogs('Auditor deleting error: ',$exception);
-            $notifications = $this->generateNotifications(false,"deleted");
-
-        } finally {
-
-            // Flash each message to the session
-            foreach ($notifications as $notification) {
-                session()->flash('messages', session('messages', collect())->push($notification));
-            }
-
-        }
-    }
-
-    function find($id)
-    {
-        return Competition::findOrFail($id);
-    }
-
-    function hasValidLevelNumbers($competition_id): bool
-    {
-        return Competition::competitionMaxLevelNumbers($competition_id);
-    }
-
-    function hasEnoughCompetitors($competition_id): bool
-    {
-        $competition = $this->find($competition_id);
-        return $competition->users->count() > 2;
-    }
-
-    function hasAuditors($competition_id): bool
-    {
-        $competition = $this->find($competition_id);
-        return $competition->auditors->count() > 0;
-    }
-
-    function areAllLevelsAfterNow($competition_id): bool
-    {
-        $competition = $this->find($competition_id);
-        return $competition->isAllLevelAfterNow();
-    }
-
-
-
-    function activateCompetition($competition_id): void
-    {
-        $notifications[] = [];
-        try{
-            $competition = Competition::findorfail($competition_id);
-            // check if competition start date is already passed
-            if ($competition->start_date->lessThan(now())){
-
-                // check if competition levels number match
-                if (Competition::competitionMaxLevelNumbers($competition_id)){
-
-                    // check if competition has at least 3 competitors
-                    if ($competition->users->count() > 2){
-
-                        // check if competition has at least 1 auditor
-                        if ($competition->auditors->count() > 0){
-                            // check if competition levels are still after the current time
-                            if($competition->isAllLevelAfterNow()){
-                                $competition->start_date = now();
-                                $competition->status = "1";
-                                $competition->save();
-                                UserNotifyEmail::usersActivateCompetition($competition);
-                                $notifications = $this->generateNotifications(true,"activated");
-                            }else{
-                                $notifications = $this->generateCustomNotifications(__('messages.validation.not_allow.competition_activate_level_pass'),"error");;
-                            }
-                        }else{
-                            $notifications = $this->generateCustomNotifications(__('messages.validation.not_allow.competition_activate_less_auditor'),"error");;
-                        }
-                    }else{
-                        $notifications = $this->generateCustomNotifications(__('messages.validation.not_allow.competition_activate_less_competitors'),"error");;
-                    }
-
-                }else{
-                    $notifications = $this->generateCustomNotifications(__('messages.validation.not_allow.competition_activate_match_levels'),"error");;
-                }
-
-            }else{
-                $notifications = $this->generateCustomNotifications(__('messages.validation.not_allow.competition_activate_early'),"error");;
-            }
-        }catch (Exception $exception){
-
-            $this->registerLogs('competition activation error: ',$exception);
-            $notifications = $this->generateNotifications(false,"activated");
-
-        } finally {
-
-            // Flash each message to the session
-            foreach ($notifications as $notification) {
-                session()->flash('messages', session('messages', collect())->push($notification));
-            }
-
-        }
     }
 }

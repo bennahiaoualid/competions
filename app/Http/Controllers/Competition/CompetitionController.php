@@ -67,7 +67,10 @@ class CompetitionController extends Controller
      * @param Request $request The incoming request containing admin data.
      */
     function delete(Request $request) : RedirectResponse {
-        $this->competitionService->deleteCompetition($request->id);
+        $validated = $request->validate([
+            'id' => 'required|integer',
+        ]);
+        $this->competitionService->deleteCompetition($validated['id']);
         return Redirect::back();
     }
 
@@ -100,7 +103,11 @@ class CompetitionController extends Controller
      * @param Request $request The incoming request containing admin data.
      */
     function removeCompetitionUser(Request $request) : RedirectResponse {
-        $this->competitionService->removeCompetitionUser((int)$request->competition_id, (int)$request->user_id);
+        $validated = $request->validate([
+            'competition_id' => 'required|integer',
+            'user_id' => 'required|integer',
+        ]);
+        $this->competitionService->removeCompetitionUser($validated['competition_id'], $validated['user_id']);
         return Redirect::back();
     }
 

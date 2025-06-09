@@ -2,41 +2,46 @@
 
 namespace App\Providers;
 
-use App\Interface\Admin\AdminProfileRepositoryInterface;
-use App\Interface\Admin\AdminRepositoryInterface;
-use App\Interface\Competition\CompetitionRepositoryInterface;
-use App\Interface\Competition\LevelRepositoryInterface;
-use App\Interface\Competition\QuestionRepositoryInterface;
-use App\Interface\GuestUsers\GlobalQuestionRepositoryInterface;
-use App\Interface\GuestUsers\UserGuestRepositoryInterface;
-use App\Interface\User\UserCompetitionRepositoryInterface;
-use App\Interface\User\UserRepositoryInterface;
-use App\Models\Admin\Admin;
-use App\Models\User;
-use App\Repository\Admin\AdminProfileRepository;
-use App\Repository\Admin\AdminRepository;
-use App\Repository\Competition\CompetitionRepository;
-use App\Repository\Competition\LevelRepository;
-use App\Repository\Competition\QuestionRepository;
-use App\Repository\GuestUsers\GlobalQuestionRepository;
-use App\Repository\GuestUsers\UserGuestRepository;
-use App\Repository\User\UserCompetitionRepository;
-use App\Repository\User\UserRepository;
-use App\Services\Admin\AdminProfileService;
-use App\Services\Admin\AdminService;
-use App\Services\Competition\CompetitionService;
-use App\Services\Competition\LevelService;
-use App\Services\Competition\QuestionService;
-use App\Services\GuestUsers\GlobalQuestionService;
-use App\Services\GuestUsers\UserGuestService;
-use App\Services\User\UserCompetitionService;
-use App\Services\User\UserService;
 use Carbon\Carbon;
-use Illuminate\Auth\Notifications\ResetPassword;
+use App\Models\User;
+use App\Models\Admin\Admin;
+use App\Services\User\UserService;
+use App\Contracts\FlasherInterface;
+use App\Providers\AllUsersProvider;
+use App\Services\Admin\AdminService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use App\Services\Notification\Flasher;
+use App\Repository\User\UserRepository;
 use Illuminate\Support\ServiceProvider;
+use App\Repository\Admin\AdminRepository;
 use Illuminate\Validation\Rules\Password;
+use App\Services\Competition\LevelService;
+use App\Services\Admin\AdminProfileService;
+use App\Services\Competition\QuestionService;
+use App\Services\Database\TransactionManager;
+use App\Services\GuestUsers\UserGuestService;
+use App\Services\User\UserCompetitionService;
+use App\Contracts\TransactionManagerInterface;
+use App\Interface\User\UserRepositoryInterface;
+use App\Repository\Competition\LevelRepository;
+use App\Repository\Admin\AdminProfileRepository;
+use App\Services\Competition\CompetitionService;
+use Illuminate\Auth\Notifications\ResetPassword;
+use App\Interface\Admin\AdminRepositoryInterface;
+use App\Repository\Competition\QuestionRepository;
+use App\Repository\GuestUsers\UserGuestRepository;
+use App\Repository\User\UserCompetitionRepository;
+use App\Services\GuestUsers\GlobalQuestionService;
+use App\Repository\Competition\CompetitionRepository;
+use App\Interface\Competition\LevelRepositoryInterface;
+use App\Repository\GuestUsers\GlobalQuestionRepository;
+use App\Interface\Admin\AdminProfileRepositoryInterface;
+use App\Interface\Competition\QuestionRepositoryInterface;
+use App\Interface\GuestUsers\UserGuestRepositoryInterface;
+use App\Interface\User\UserCompetitionRepositoryInterface;
+use App\Interface\Competition\CompetitionRepositoryInterface;
+use App\Interface\GuestUsers\GlobalQuestionRepositoryInterface;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -63,7 +68,11 @@ class AppServiceProvider extends ServiceProvider
         // competition
         $this->app->bind(CompetitionRepositoryInterface::class, CompetitionRepository::class);
         $this->app->bind(CompetitionService::class, function ($app) {
-            return new CompetitionService($app->make(CompetitionRepositoryInterface::class));
+            return new CompetitionService(
+                $app->make(CompetitionRepositoryInterface::class),
+                $app->make(TransactionManagerInterface::class),
+                $app->make(FlasherInterface::class)
+            );
         });
 
         // level
@@ -95,6 +104,12 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(UserGuestService::class, function ($app) {
             return new UserGuestService($app->make(UserGuestRepositoryInterface::class));
         });
+
+        // transaction manager
+        $this->app->bind(TransactionManagerInterface::class, TransactionManager::class);
+
+        // flasher
+        $this->app->bind(FlasherInterface::class, Flasher::class);
     }
 
     /**
@@ -129,13 +144,8 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Carbon::macro('inUserTimezone', function() {
-            return $this->tz(session()->get('timezone') ?? config('app.timezone_display'));
+            /** @var \Carbon\Carbon $this */
+            return $this->setTimezone(session()->get('timezone') ?? config('app.timezone_display'));
         });
-
-        /*Auth::provider('all-users', function ($app, $config) {
-            dd('lklk');
-            return new AllUsersProvider($app['hash'], $config['model']);
-
-        });*/
     }
 }
