@@ -148,23 +148,6 @@ class CompetitionRepositoryTest extends TestCase
         $this->assertTrue($result);
         $this->assertEquals(2, $competition->auditors()->count());
     }
-
-    
-    public function test_remove_auditor_from_competition_success()
-    {
-        // Arrange
-        $competition = Competition::factory()->create();
-        $auditor = Admin::factory()->create();
-        $competition->auditors()->attach($auditor->id);
-
-        // Act
-        $result = $this->repository->removeAuditorFromCompetition($competition, $auditor->id);
-
-        // Assert
-        $this->assertTrue($result);
-        $this->assertEquals(0, $competition->auditors()->count());
-    }
-
     
     public function test_activate_competition_success()
     {

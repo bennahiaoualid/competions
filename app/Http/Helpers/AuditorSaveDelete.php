@@ -2,8 +2,6 @@
 
 namespace App\Http\Helpers;
 
-
-use App\Models\Admin\Admin;
 use App\Models\Competition\Competition;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -67,6 +65,7 @@ class AuditorSaveDelete
         } catch (Exception $exception) {
             DB::rollBack();
             throw $exception;
+            return false;
         }
     }
 

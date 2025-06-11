@@ -6,7 +6,6 @@ use App\Interface\Competition\CompetitionRepositoryInterface;
 use App\Models\Competition\Competition;
 use App\Traits\CrudOperationNotificationAlert;
 use App\Traits\RegisterLogs;
-use Exception;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -150,19 +149,6 @@ class CompetitionRepository implements CompetitionRepositoryInterface
             $competition->auditors()->attach($new_auditor_ids);
         }
 
-        return true;
-    }
-
-    /**
-    * Remove an auditor from a competition.
-    *
-    * @param Competition $competition The competition to remove the auditor from.
-    * @param int $auditor_id The ID of the auditor to remove.
-    * @return bool True if the auditor was removed successfully, false otherwise.
-    */
-    public function removeAuditorFromCompetition(Competition $competition, int $auditor_id): bool
-    {
-        $competition->auditors()->detach($auditor_id);
         return true;
     }
 

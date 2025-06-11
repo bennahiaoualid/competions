@@ -15,6 +15,7 @@ use App\Interface\Competition\CompetitionRepositoryInterface;
 use App\Traits\CrudOperationNotificationAlert; // For notifications
 use App\Http\Helpers\AuditorSaveDelete; // For auditor specific logic
 use App\Models\User; // For Auth::user() type hinting if specific methods are used
+use App\Jobs\Competition\DeleteAuditorJob; // For deleting auditor
 
 class CompetitionService
 {
@@ -36,12 +37,17 @@ class CompetitionService
     /**
      * Find a competition by ID.
      *
-     * @param string $id The ID of the competition.
+     * @param string|int $id_b64 The ID of the competition.
+     * @param bool $base64 Whether the ID is base64 encoded.
      * @return Competition|null The competition object if found, null otherwise.
      */
-    public function findCompetitionById(string $id) // ID is base64 encoded as per original edit view
+    public function findCompetitionById(string|int $id_b64, bool $base64 = true) // ID is base64 encoded as per original edit view
     {
-        $decodedId = base64_decode($id);
+        if ($base64) {
+            $decodedId = base64_decode($id_b64);
+        } else {
+            $decodedId = $id_b64;
+        }
         return $this->competitionRepository->findById($decodedId);
     }
 
@@ -158,15 +164,17 @@ class CompetitionService
     /**
      * Remove a user from a competition.
      *
-     * @param int $competition_id The ID of the competition.
+     * @param Competition $competition The ID of the competition.
      * @param int $user_id The ID of the user to remove.
      * @return bool True if the user was removed successfully, false otherwise.
      */
-    public function removeCompetitionUser(int $competition_id, int $user_id): bool
+    public function removeCompetitionUser(Competition $competition, int $user_id): bool
     {
         try {
-            $competition = $this->competitionRepository->findById($competition_id);
-            if (!$competition) return false;
+            if(!$competition->canEdit()) {
+                $this->flasher->notify(__('messages.validation.not_allow.competition_update'), 'error');
+                return false;
+            };
             $result = $this->transactionManager->run(function () use ($competition, $user_id) {
                 $this->competitionRepository->removeUserFromCompetition($competition, $user_id);
                 return true;
@@ -190,12 +198,12 @@ class CompetitionService
      */
     public function addCompetitionAuditors(Competition $competition, array $auditor_ids): bool
     {
-        if (!$competition->canEdit()) {
-            $this->flasher->notify(__('messages.validation.not_allow.competition_update'), 'error');
-            return false;
-        }
-
         try {
+            if (!$competition->canEdit()) {
+                $this->flasher->notify(__('messages.validation.not_allow.competition_update'), 'error');
+                return false;
+            }
+            
             $result = $this->transactionManager->run(function () use ($competition, $auditor_ids) {
                 $this->competitionRepository->addAuditorsToCompetition($competition, $auditor_ids);
                 UserNotifyEmail::auditorNewCompetition($competition, $auditor_ids);
@@ -214,16 +222,13 @@ class CompetitionService
     /**
      * Remove an auditor from a competition.
      *
-     * @param int $competition_id The ID of the competition.
+     * @param Competition $competition The competition object.
      * @param int $auditor_id The ID of the auditor to remove.
      * @return bool True if the auditor was removed successfully, false otherwise.
      */
-    public function removeCompetitionAuditor(int $competition_id, int $auditor_id): bool
+    public function removeCompetitionAuditor(Competition $competition, int $auditor_id): bool
     {
-        try {
-            $competition = $this->competitionRepository->findById($competition_id);
-            if (!$competition) return false;
-
+        try {            
             if (!$competition->canEdit()) {
                 $this->flasher->notify(__('messages.validation.not_allow.competition_update'), 'error');
                 return false;
@@ -233,18 +238,9 @@ class CompetitionService
                 return false;
             }
 
-            if (!AuditorSaveDelete::deleteAuditor($auditor_id, $competition)) {
-                $this->flasher->notify('Failed pre-delete check for auditor.', 'error');
-                return false;
-            }
-
-            $result = $this->transactionManager->run(function () use ($competition, $auditor_id) {
-                $this->competitionRepository->removeAuditorFromCompetition($competition, $auditor_id);
-                return true;
-            });
-
+            DeleteAuditorJob::dispatch($auditor_id, $competition)->afterCommit();
             $this->flasher->notifyCrudResult(true, 'deleted');
-            return $result;
+            return true;
         } catch (Exception $exception) {
             $this->registerLogs('Error removing auditor from competition: ', $exception);
             $this->flasher->notifyCrudResult(false, 'deleted');

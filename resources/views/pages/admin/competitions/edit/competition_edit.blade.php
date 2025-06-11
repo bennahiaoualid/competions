@@ -26,10 +26,9 @@
                          <form action="{{route('admin.competitions.activate', ['competition' => $competition])}}" method="post">
                             @csrf
                              @method('post')
-                             <input type="hidden" value="{{$competition->id}}" name="competition_id">
-                             <x-button color_type="success">
+                             <x-button color_type="success" type="submit">
                                  <x-slot:icon>
-                                     <i class="fa-solid fa-circle-check fa-fw me-2"></i>
+                                    <i class="fa-solid fa-circle-check fa-fw me-2"></i>
                                  </x-slot:icon>
                                  {{__("form.actions.activate")}}
                              </x-button>

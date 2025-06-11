@@ -13,6 +13,5 @@ interface CompetitionRepositoryInterface
     function removeUserFromCompetition(Competition $competition, int $user_id): bool;
     function addUsersToCompetition(Competition $competition, array $user_ids): bool;
     function addAuditorsToCompetition(Competition $competition, array $auditor_ids): bool;
-    function removeAuditorFromCompetition(Competition $competition, int $auditor_id): bool;
     function activate(Competition $competition): bool;
 }

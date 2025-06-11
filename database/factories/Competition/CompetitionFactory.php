@@ -44,7 +44,7 @@ class CompetitionFactory extends Factory
             'age_start' => $this->faker->numberBetween(10, 15),
             'age_end' => $this->faker->numberBetween(16, 25),
             'levels_number' => $this->faker->numberBetween(1, 5),
-            'status' => $this->faker->randomElement([0, 1]), // 0: inactive, 1: active
+            'status' => 0, // 0: inactive, 1: active
         ];
     }
 

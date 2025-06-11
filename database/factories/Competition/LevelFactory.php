@@ -52,7 +52,7 @@ class LevelFactory extends Factory
             'start_date' => $this->faker->dateTimeBetween('+1 week', '+2 months'),
             'duration' => $this->faker->numberBetween(30, 120), // Duration in minutes
             'questions_number' => $this->faker->numberBetween(5, 20),
-            'status' => $this->faker->randomElement([0, 1]), // 0: inactive, 1: active
+            'status' => 0, 
         ];
     }
 

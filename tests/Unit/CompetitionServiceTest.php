@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use Bus;
 use Mockery;
 use Exception;
 use Tests\TestCase;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Queue;
 use App\Http\Helpers\AuditorSaveDelete;
 use App\Models\Competition\Competition;
 use Illuminate\Support\Facades\Session;
+use App\Jobs\Competition\DeleteAuditorJob;
 use App\Contracts\TransactionManagerInterface;
 use App\Services\Competition\CompetitionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -486,14 +488,9 @@ class CompetitionServiceTest extends TestCase
         foreach ($data as $key => $value) {
             $competition->$key = $value;
         }
-        
+        $competition->shouldReceive('canEdit')->andReturn(true);
+
         $user_id = 1;
-        
-        $this->competitionRepository
-            ->shouldReceive('findById')
-            ->with($competition->id)
-            ->once()
-            ->andReturn($competition);
             
         $this->competitionRepository
             ->shouldReceive('removeUserFromCompetition')
@@ -511,29 +508,10 @@ class CompetitionServiceTest extends TestCase
             ->once();
         
         // Act
-        $result = $this->competitionService->removeCompetitionUser($competition->id, $user_id);
+        $result = $this->competitionService->removeCompetitionUser($competition, $user_id);
         
         // Assert
         $this->assertTrue($result);
-    }
-
-    public function test_remove_competition_user_not_found()
-    {
-        // Arrange
-        $competition_id = 1;
-        $user_id = 1;
-        
-        $this->competitionRepository
-            ->shouldReceive('findById')
-            ->with($competition_id)
-            ->once()
-            ->andReturn(null);
-        
-        // Act
-        $result = $this->competitionService->removeCompetitionUser($competition_id, $user_id);
-        
-        // Assert
-        $this->assertFalse($result);
     }
 
     public function test_remove_competition_user_failure()
@@ -544,14 +522,9 @@ class CompetitionServiceTest extends TestCase
         foreach ($data as $key => $value) {
             $competition->$key = $value;
         }
+        $competition->shouldReceive('canEdit')->andReturn(true);
         
         $user_id = 1;
-        
-        $this->competitionRepository
-            ->shouldReceive('findById')
-            ->with($competition->id)
-            ->once()
-            ->andReturn($competition);
             
         $this->competitionRepository
             ->shouldReceive('removeUserFromCompetition')
@@ -570,7 +543,7 @@ class CompetitionServiceTest extends TestCase
             ->once();
         
         // Act
-        $result = $this->competitionService->removeCompetitionUser($competition->id, $user_id);
+        $result = $this->competitionService->removeCompetitionUser($competition, $user_id);
         
         // Assert
         $this->assertFalse($result);
@@ -681,6 +654,7 @@ class CompetitionServiceTest extends TestCase
     public function test_remove_competition_auditor_success()
     {
         // Arrange
+        Bus::fake();
         $data = $this->createCompetitionData();
         $competition = $this->competition_partial;
         foreach ($data as $key => $value) {
@@ -695,62 +669,25 @@ class CompetitionServiceTest extends TestCase
         
         $auditor_id = 1;
         
-        $this->competitionRepository
-            ->shouldReceive('findById')
-            ->with($competition->id)
-            ->once()
-            ->andReturn($competition);
-            
-        // Mock AuditorSaveDelete
-        $auditorSaveDelete = Mockery::mock('alias:' . AuditorSaveDelete::class);
-        $auditorSaveDelete->shouldReceive('deleteAuditor')
-            ->with($auditor_id, $competition)
-            ->once()
-            ->andReturn(true);
-            
-        $this->competitionRepository
-            ->shouldReceive('removeAuditorFromCompetition')
-            ->with($competition, $auditor_id)
-            ->once();
-        
-        $this->transactionManager
-            ->shouldReceive('run')
-            ->once()
-            ->andReturnUsing(function ($callback) { return $callback(); });
-        
         $this->flasher
             ->shouldReceive('notifyCrudResult')
             ->with(true, "deleted")
             ->once();
         
         // Act
-        $result = $this->competitionService->removeCompetitionAuditor($competition->id, $auditor_id);
+        $result = $this->competitionService->removeCompetitionAuditor($competition, $auditor_id);
         
         // Assert
         $this->assertTrue($result);
-    }
-
-    public function test_remove_competition_auditor_not_found()
-    {
-        // Arrange
-        $competition_id = 1;
-        $auditor_id = 1;
-        
-        $this->competitionRepository
-            ->shouldReceive('findById')
-            ->with($competition_id)
-            ->once()
-            ->andReturn(null);
-        
-        // Act
-        $result = $this->competitionService->removeCompetitionAuditor($competition_id, $auditor_id);
-        
-        // Assert
-        $this->assertFalse($result);
+        Bus::assertDispatched(DeleteAuditorJob::class, function ($job) use ($competition, $auditor_id) {
+            return $job->getCompetition()->id === $competition->id
+                && $job->getAuditorId() === $auditor_id;
+        });
     }
 
     public function test_remove_competition_auditor_unauthorized()
     {
+        Bus::fake();
         // Arrange
         $data = $this->createCompetitionData();
         $competition = $this->competition_partial;
@@ -761,12 +698,6 @@ class CompetitionServiceTest extends TestCase
         $competition->shouldReceive('canEdit')->andReturn(false);
         
         $auditor_id = 1;
-        
-        $this->competitionRepository
-            ->shouldReceive('findById')
-            ->with($competition->id)
-            ->once()
-            ->andReturn($competition);
             
         $this->flasher
             ->shouldReceive('notify')
@@ -774,15 +705,17 @@ class CompetitionServiceTest extends TestCase
             ->once();
         
         // Act
-        $result = $this->competitionService->removeCompetitionAuditor($competition->id, $auditor_id);
+        $result = $this->competitionService->removeCompetitionAuditor($competition, $auditor_id);
         
         // Assert
         $this->assertFalse($result);
+        Bus::assertNothingDispatched(DeleteAuditorJob::class);
     }
 
     public function test_remove_competition_auditor_last_auditor()
     {
         // Arrange
+        Bus::fake();
         $data = $this->createCompetitionData();
         $competition = $this->competition_partial;
         foreach ($data as $key => $value) {
@@ -796,12 +729,6 @@ class CompetitionServiceTest extends TestCase
         $competition->shouldReceive('getAttribute')->with('auditors')->andReturn($auditorsCollection);
         
         $auditor_id = 1;
-        
-        $this->competitionRepository
-            ->shouldReceive('findById')
-            ->with($competition->id)
-            ->once()
-            ->andReturn($competition);
             
         $this->flasher
             ->shouldReceive('notify')
@@ -809,63 +736,11 @@ class CompetitionServiceTest extends TestCase
             ->once();
         
         // Act
-        $result = $this->competitionService->removeCompetitionAuditor($competition->id, $auditor_id);
+        $result = $this->competitionService->removeCompetitionAuditor($competition, $auditor_id);
         
         // Assert
         $this->assertFalse($result);
-    }
-
-    public function test_remove_competition_auditor_failure()
-    {
-        // Arrange
-        $data = $this->createCompetitionData();
-        $competition = $this->competition_partial;
-        foreach ($data as $key => $value) {
-            $competition->$key = $value;
-        }
-        
-        $competition->shouldReceive('canEdit')->andReturn(true);
-        // Mock auditors collection with count = 2
-        $auditorsCollection = Mockery::mock();
-        $auditorsCollection->shouldReceive('count')->andReturn(2);
-        $competition->shouldReceive('getAttribute')->with('auditors')->andReturn($auditorsCollection);
-        
-        $auditor_id = 1;
-        
-        $this->competitionRepository
-            ->shouldReceive('findById')
-            ->with($competition->id)
-            ->once()
-            ->andReturn($competition);
-            
-        // Mock AuditorSaveDelete
-        $auditorSaveDelete = Mockery::mock('alias:' . AuditorSaveDelete::class);
-        $auditorSaveDelete->shouldReceive('deleteAuditor')
-            ->with($auditor_id, $competition)
-            ->once()
-            ->andReturn(true);
-            
-        $this->competitionRepository
-            ->shouldReceive('removeAuditorFromCompetition')
-            ->with($competition, $auditor_id)
-            ->once()
-            ->andThrow(new Exception('Database error'));
-        
-        $this->transactionManager
-            ->shouldReceive('run')
-            ->once()
-            ->andReturnUsing(function ($callback) { return $callback(); });
-        
-        $this->flasher
-            ->shouldReceive('notifyCrudResult')
-            ->with(false, "deleted")
-            ->once();
-        
-        // Act
-        $result = $this->competitionService->removeCompetitionAuditor($competition->id, $auditor_id);
-        
-        // Assert
-        $this->assertFalse($result);
+        Bus::assertNothingDispatched(DeleteAuditorJob::class);
     }
 
     public function test_activate_competition_success()

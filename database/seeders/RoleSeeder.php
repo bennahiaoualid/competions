@@ -45,8 +45,10 @@ class RoleSeeder extends Seeder
             'update user',
             'delete user',
             'view user');
-
-        $role_auditor = Role::create(['guard_name' => 'admin', 'name' => 'auditor']);
-        (Admin::where('email', '=', 'oualidbennahia@gmail.com')->first())->assignRole($role_owner);
+        
+        $admin_owner = Admin::where('email', '=', 'oualidbennahia@gmail.com')->first();
+        if ($admin_owner) {
+            $admin_owner->assignRole($role_owner);
+        }
     }
 }
