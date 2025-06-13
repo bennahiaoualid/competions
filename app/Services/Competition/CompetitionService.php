@@ -3,7 +3,6 @@
 namespace App\Services\Competition;
 
 use Exception;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Competition\Competition;
 use App\Contracts\TransactionManagerInterface;
@@ -13,7 +12,6 @@ use App\Jobs\Competetion\SyncCompetitionParticipants;
 use App\Http\Helpers\UserNotifyEmail; // For sending emails
 use App\Interface\Competition\CompetitionRepositoryInterface;
 use App\Traits\CrudOperationNotificationAlert; // For notifications
-use App\Http\Helpers\AuditorSaveDelete; // For auditor specific logic
 use App\Models\User; // For Auth::user() type hinting if specific methods are used
 use App\Jobs\Competition\DeleteAuditorJob; // For deleting auditor
 

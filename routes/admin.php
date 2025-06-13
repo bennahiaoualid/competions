@@ -59,10 +59,10 @@ Route::group(
             // levels
             Route::middleware("can_update_competition")->post('/competitions/{competition}/level/store', [\App\Http\Controllers\Competition\LevelController::class, "store"])->name("competitions.level.store");
             Route::get('/competitions/level/edit/{id}', [\App\Http\Controllers\Competition\LevelController::class, "edit"])->name("competitions.level.edit");
-            Route::middleware("can_update_competition")->patch('/competitions/level/update', [\App\Http\Controllers\Competition\LevelController::class, "update"])->name("competitions.level.update");
-            Route::get('/competitions/level/{id}/delete', [\App\Http\Controllers\Competition\LevelController::class, "delete"])->name("competitions.level.delete");
-            Route::post('/level/activate', [\App\Http\Controllers\Competition\LevelController::class, "activateLevel"])->name("competitions.level.activate");
-            Route::post('/level/finish', [\App\Http\Controllers\Competition\LevelController::class, "finishLevel"])->name("competitions.level.finish");
+            Route::patch('/competitions/level/{level}/update', [\App\Http\Controllers\Competition\LevelController::class, "update"])->name("competitions.level.update");
+            Route::delete('/competitions/level/{level}/delete', [\App\Http\Controllers\Competition\LevelController::class, "delete"])->name("competitions.level.delete");
+            Route::post('/competitions/level/{level}/activate', [\App\Http\Controllers\Competition\LevelController::class, "activateLevel"])->name("competitions.level.activate");
+            Route::post('/competitions/level/{level}/finish', [\App\Http\Controllers\Competition\LevelController::class, "finishLevel"])->name("competitions.level.finish");
 
             //questions
             Route::get('/competitions/level/{id}/question', [\App\Http\Controllers\Competition\QuestionController::class, "all"])->name("competitions.level.questions");

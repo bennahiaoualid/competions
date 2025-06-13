@@ -78,7 +78,11 @@ class AppServiceProvider extends ServiceProvider
         // level
         $this->app->bind(LevelRepositoryInterface::class, LevelRepository::class);
         $this->app->bind(LevelService::class, function ($app) {
-            return new LevelService($app->make(LevelRepositoryInterface::class));
+            return new LevelService(
+                $app->make(LevelRepositoryInterface::class),
+                $app->make(TransactionManagerInterface::class),
+                $app->make(FlasherInterface::class)
+            );
         });
 
         // question

@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use Mockery;
 use Tests\TestCase;
 use App\Models\User;
 use App\Models\Admin\Admin;
@@ -12,10 +11,8 @@ use Illuminate\Support\Facades\Bus;
 use App\Models\Competition\Competition;
 use App\Jobs\Competition\DeleteAuditorJob;
 use Illuminate\Foundation\Testing\WithFaker;
-use App\Services\Competition\CompetitionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Jobs\Competetion\SyncCompetitionParticipants;
-use App\Http\Controllers\Competition\CompetitionController;
 
 class CompetitionTest extends TestCase
 {

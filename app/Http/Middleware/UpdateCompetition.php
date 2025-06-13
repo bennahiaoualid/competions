@@ -33,9 +33,6 @@ class UpdateCompetition
                 ]
             );
         }
-
-        $routeName = Route::currentRouteName();
-
         // only the user who created the competition can update it
         if ($competition->admin_id !== Auth::guard('admin')->id()){
             return redirect()->back()->with(
@@ -45,7 +42,7 @@ class UpdateCompetition
             ) ;
         }
         // only the competition that not activated yet can be updated
-        elseif ($competition->status != 0 && $routeName != "admin.competitions.level.update"){
+        elseif ($competition->status != 0 ){
             return redirect()->back()->with(
                 [
                     "messages" => $this->generateCustomNotifications(__('messages.validation.not_allow.active_competition_update'),"error")

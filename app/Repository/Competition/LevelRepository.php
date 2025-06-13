@@ -21,12 +21,7 @@ class LevelRepository implements LevelRepositoryInterface
 
     public function create(array $data): Level
     {
-        try {
-            return Level::create($data);
-        } catch (Exception $exception) {
-            $this->registerLogs('Level creation DB error: ', $exception);
-            throw $exception; // Re-throw for service layer to handle
-        }
+        return Level::create($data);
     }
 
     public function findById(int $id): ?Level
@@ -83,7 +78,7 @@ class LevelRepository implements LevelRepositoryInterface
     }
 
     /**
-     * check if the timing of the new level is conflict with the previews level in the same competition
+     * check if the timing of the new level is conflict with the other levels in the same competition
      * @param Level $level
      * @param int $competitionId
      * @param string $startDate
@@ -120,36 +115,47 @@ class LevelRepository implements LevelRepositoryInterface
         return false; // No conflict
     }
 
-    public function getQuestionsCount(Level $level): int
-    {
-        return $level->questions()->count();
-    }
 
-    public function getUnansweredQuestionsForUser(Level $level, User $user): Collection
-    {
-        return Question::where('level_id', $level->id)
-            ->whereDoesntHave('responses', function ($query) use ($user) {
-                $query->where('user_id', $user->id);
-            })->get();
-    }
 
-    public function createMultipleResponses(array $responsesData): void
+    public function insertMissingResponsesForLevel(Level $level, int $batchSize = 500): void
     {
-        try {
-            // Assuming $responsesData is an array of arrays, each with keys for Response model
-            Response::insert($responsesData); // More efficient for multiple inserts
-        } catch (Exception $exception) {
-            $this->registerLogs('Error creating multiple responses: ', $exception);
-            throw $exception;
+        $rows = DB::table('competition_user as cu')
+            ->where('cu.competition_id', $level->competition_id)
+            ->crossJoin('questions as q', function ($join) use ($level) {
+                $join->on('q.level_id', DB::raw($level->id));
+            })
+            ->leftJoin('responses as r', function ($join) {
+                $join->on('r.user_id', '=', 'cu.user_id')
+                    ->on('r.question_id', '=', 'q.id');
+            })
+            ->whereNull('r.id')
+            ->select([
+                DB::raw("'' as response_text"),
+                'q.id as question_id',
+                'cu.user_id',
+                DB::raw('NULL as admin_id'),
+                DB::raw('CURRENT_TIMESTAMP as created_at'),
+                DB::raw('CURRENT_TIMESTAMP as updated_at'),
+            ])
+            ->cursor(); 
+    
+        $buffer = [];
+        foreach ($rows as $row) {
+            $buffer[] = (array) $row;
+    
+            if (count($buffer) >= $batchSize) {
+                DB::table('responses')->insert($buffer);
+                $buffer = [];
+            }
+        }
+    
+        if (!empty($buffer)) {
+            DB::table('responses')->insert($buffer);
         }
     }
 
     public function assignAuditorsToUsersInPivot(Level $level, Collection $users, Collection $auditors): void
     {
-        if ($users->isEmpty() || $auditors->isEmpty()) {
-            return;
-        }
-
         $assignments = [];
         $auditorCount = $auditors->count();
         $index = 0;
@@ -173,53 +179,6 @@ class LevelRepository implements LevelRepositoryInterface
             $this->registerLogs('Error assigning users to auditors in pivot: ', $exception);
             throw $exception;
         }
-    }
-
-    public function getUsersForCompetition(Competition $competition): Collection
-    {
-        return $competition->users; // Assumes 'users' relationship exists on Competition
-    }
-
-    public function getAuditorsForCompetition(Competition $competition): Collection
-    {
-        return $competition->auditors; // Assumes 'auditors' relationship exists on Competition
-    }
-
-    // Methods related to Level model's internal state checks.
-    // If these methods on the model itself perform DB queries, they should be here.
-    // If they are pure PHP logic on loaded attributes, the service can call them on the model instance.
-    // For now, assuming they might be complex or involve DB queries.
-
-    public function isLevelTheEarliest(Level $level): bool
-    {
-        return $level->isTheEarliest();
-    }
-
-    public function isPreviousLevelAudited(Level $level): bool
-    {
-        return $level->isThePreviousAudit();
-    }
-
-    public function areAllCompetitionLevelsAfterNow(Competition $competition, Level $currentLevel): bool
-    {
-        return $competition->isAllLevelAfterNow($currentLevel->id);
-    }
-
-    public function canLevelBeEdited(Level $level): bool
-    {
-        // This implies a check on the competition's state too.
-        // $level->canEdit() original implementation likely checks $level->competition->canEdit()
-        return $level->canEdit();
-    }
-
-    public function isLevelStillActive(Level $level): bool
-    {
-        return $level->isStillActive();
-    }
-    
-    public function canCompetitionBeEdited(Competition $competition): bool
-    {
-        return $competition->canEdit();
     }
 
 }

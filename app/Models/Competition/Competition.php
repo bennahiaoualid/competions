@@ -150,10 +150,12 @@ class Competition extends Model
 
     /**
      * check if all competition levels start_time are greater then now before competition activation
-     *
+     * we need to make now as new start date for the level
+     * so we make sure all the other levels are after now to avoid time conflict
+     * @param int|null $exclude_id the level being activated
      * @return bool
      */
-    function isAllLevelAfterNow($exclude_id = null): bool
+    function isAllLevelAfterNow(?int $exclude_id): bool
     {
         foreach ($this->levels as $level){
             if (($exclude_id == null || $level->id != $exclude_id) && $level->status = 0){

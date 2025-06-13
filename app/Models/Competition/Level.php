@@ -76,6 +76,8 @@ class Level extends Model
         return [
             'start_date' => 'datetime',
             'duration' => 'integer',
+            'status' => 'integer',
+            'questions_number' => 'integer',
         ];
     }
 
@@ -197,7 +199,7 @@ class Level extends Model
     }
 
     /**
-     * methode check if if the previous finished level already being audition .
+     * methode check if  the previous finished level already being audited .
      * @return bool
      */
     public function isThePreviousAudit(): bool
