@@ -79,7 +79,6 @@ class LevelRepository implements LevelRepositoryInterface
 
     /**
      * check if the timing of the new level is conflict with the other levels in the same competition
-     * @param Level $level
      * @param int $competitionId
      * @param string $startDate
      * @param int $duration
@@ -116,7 +115,13 @@ class LevelRepository implements LevelRepositoryInterface
     }
 
 
-
+    /**
+     * insert missing responses for level
+     * detect users who didn't respond to the level questions then fill them with empty responses
+     * @param Level $level
+     * @param int $batchSize default 500 to avoid memory issues
+     * @return void
+     */
     public function insertMissingResponsesForLevel(Level $level, int $batchSize = 500): void
     {
         $rows = DB::table('competition_user as cu')
