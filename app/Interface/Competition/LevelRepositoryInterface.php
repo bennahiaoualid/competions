@@ -2,19 +2,13 @@
 
 namespace App\Interface\Competition;
 
-use App\Models\Admin\Admin;
 use App\Models\Competition\Competition;
 use App\Models\Competition\Level;
-use App\Models\User;
 use Illuminate\Support\Collection;
 
 interface LevelRepositoryInterface
 {
     public function create(array $data): Level;
-    public function findById(int $id): ?Level;
-    public function findOrFail(int $id): Level;
-    public function findDecodedOrFail(string $encodedId): Level;
-    public function getAllAdmins(): Collection;
     public function update(Level $level, array $data): bool;
     public function delete(Level $level): bool;
 

@@ -4,6 +4,7 @@ namespace App\Services\Competition;
 
 use Exception;
 use Carbon\Carbon;
+use App\Models\Admin\Admin;
 use App\Traits\RegisterLogs;
 use App\Models\Competition\Level;
 use Illuminate\Support\Facades\DB;
@@ -71,8 +72,8 @@ class LevelService
     public function getEditData(string $encodedId): array
     {
         try {
-            $level = $this->levelRepository->findDecodedOrFail($encodedId);
-            $admins = $this->levelRepository->getAllAdmins();
+            $level = Level::findOrFail(base64_decode($encodedId));
+            $admins = Admin::all();
             return ['status' => 'success', 'level' => $level, 'admins' => $admins];
         } catch (Exception $exception) {
             $this->registerLogs('LevelService getEditData error: ', $exception);
@@ -176,7 +177,7 @@ class LevelService
             }
 
             if (!$level->canEdit()) {
-                $this->flasher->notify(__('messages.validation.not_allow.level_edit_restricted'), 'error');
+                $this->flasher->notify(__('messages.validation.not_allow.competition_update'), 'error');
                 return false;
             }
 

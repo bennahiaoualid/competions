@@ -24,26 +24,6 @@ class LevelRepository implements LevelRepositoryInterface
         return Level::create($data);
     }
 
-    public function findById(int $id): ?Level
-    {
-        return Level::find($id);
-    }
-
-    public function findOrFail(int $id): Level
-    {
-        return Level::findOrFail($id);
-    }
-    
-    public function findDecodedOrFail(string $encodedId): Level
-    {
-        return Level::findOrFail(base64_decode($encodedId));
-    }
-
-    public function getAllAdmins(): Collection
-    {
-        return Admin::all();
-    }
-
     public function update(Level $level, array $data): bool
     {
         try {
