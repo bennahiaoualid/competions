@@ -147,7 +147,7 @@
             <!-- section title -->
             <div class="flex justify-between items-center my-2 p-2 shadow-sm" >
                 <h2 class="text-xl font-bold capitalize">{{__('competition.level.information')}}</h2>
-                @can("add admin")
+                @can($competition->canEdit())
                     <div x-data>
                         <x-button
                             name="add_level-"

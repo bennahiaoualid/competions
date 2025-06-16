@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers\Competition;
 
-use Exception;
 use Illuminate\View\View;
-use Illuminate\Http\Request;
 use App\Models\Competition\Level;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;

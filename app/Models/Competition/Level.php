@@ -153,39 +153,6 @@ class Level extends Model
     }
 
     /**
-     * check if the timing of the new level is conflict with the previews level in the same competition
-     * @return boolean
-     */
-    public static function hasTimeConflict($competitionId, $newStartDate, $newDuration , $exclude_id = null):bool
-    {
-        $newStartDate = Carbon::parse($newStartDate);
-        $newDuration = intval($newDuration);
-        $newEndDate = $newStartDate->copy()->addMinutes($newDuration);
-
-        $existingLevels = self::where('competition_id', $competitionId)->get();
-
-        foreach ($existingLevels as $level) {
-            if($exclude_id != null && $level->id == $exclude_id) {
-                continue;
-            }
-                $levelStartDate = $level->start_date;
-                $levelEndDate = $level->start_date->copy()->addMinutes($level->duration);
-                // Check if the new level overlaps with the existing level
-                if (
-                    ($newStartDate->between($levelStartDate, $levelEndDate)) ||
-                    ($newEndDate->between($levelStartDate, $levelEndDate)) ||
-                    ($levelStartDate->between($newStartDate, $newEndDate)) ||
-                    ($levelEndDate->between($newStartDate, $newEndDate))
-                ) {
-                    return true; // Conflict found
-                }
-
-        }
-
-        return false; // No conflict
-    }
-
-    /**
      * methode check if all earliest level are already finished .
      * @return bool
      */

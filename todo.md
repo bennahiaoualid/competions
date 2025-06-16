@@ -1,0 +1,1 @@
+1 - change image avatar in E:\PROJECTS\laravel projects\competions\resources\views\layouts\admin\main-header.blade.php to storage image

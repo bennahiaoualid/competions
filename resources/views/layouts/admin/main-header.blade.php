@@ -30,7 +30,7 @@
         <x-dropdown alignment="right">
             <x-slot name="trigger">
                 <button id="userMenuButton" class="flex items-center text-gray-600 focus:outline-none">
-                    <img src="https://via.placeholder.com/150" alt="User Avatar" class="h-8 w-8 rounded-full">
+                    <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name ?? 'User') }}" alt="User Avatar" class="h-8 w-8 rounded-full">
                 </button>
             </x-slot>
             <x-dropdown-item :active="false" class="flex items-center" href="#">

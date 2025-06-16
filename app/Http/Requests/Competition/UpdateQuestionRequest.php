@@ -40,8 +40,7 @@ class UpdateQuestionRequest extends FormRequest
     }
     public function withValidator($validator)
     {
-        $this->setErrorBag("updateQuestion".$this->input("id"));
-        //dd($this->errorBag);
+        $this->setErrorBag("updateQuestion".$this->question->id);
     }
 
 }

@@ -24,6 +24,9 @@ return [
         'add' => "add new level",
         'delete' => "delete level"
     ],
+    'question' => [
+        'add' => "add new question",
+    ],
     'global_question' => [
         'add' => "add new global question",
         'delete' => "delete global question"

@@ -66,8 +66,8 @@ Route::group(
 
             //questions
             Route::get('/competitions/level/{id}/question', [\App\Http\Controllers\Competition\QuestionController::class, "all"])->name("competitions.level.questions");
-            Route::post('/competitions/level/question/store', [\App\Http\Controllers\Competition\QuestionController::class, "store"])->name("competitions.level.question.store");
-            Route::patch('/competitions/level/question/update', [\App\Http\Controllers\Competition\QuestionController::class, "update"])->name("competitions.level.question.update");
+            Route::post('/competitions/level/question/{level}/store', [\App\Http\Controllers\Competition\QuestionController::class, "store"])->name("competitions.level.question.store");
+            Route::patch('/competitions/level/question/{question}/update', [\App\Http\Controllers\Competition\QuestionController::class, "update"])->name("competitions.level.question.update");
 
             // competitions users
             Route::get('/competitions/{id}/users', [\App\Http\Controllers\Competition\CompetitionController::class, "getCompetitionUsers"])->name("competitions.users");

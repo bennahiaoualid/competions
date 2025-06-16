@@ -43,6 +43,7 @@ return [
             "competition_max_levels" => 'competition has maximum levels number',
             'active_level_update' => 'you cant update a level that already activated',
             'question_update' => 'you have no permission to update or create a question for level you are not responsible on it',
+            'question_update_max_number' => 'you cant add more than :number questions',
             'active_level_question_update' => 'you cant update or create a question for level already activated',
             'competition_activate_less_auditor' => 'competition cant activate, should at least 1 auditor',
             'competition_activate_less_competitors' => 'competition cant activate, should at least has 3 competitors',
