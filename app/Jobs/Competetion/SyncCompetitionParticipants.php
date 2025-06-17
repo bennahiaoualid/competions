@@ -11,7 +11,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
-use App\Http\Helpers\UserNotifyEmail;
+use App\Helpers\UserNotifyEmail;
 
 class SyncCompetitionParticipants implements ShouldQueue
 {

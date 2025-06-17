@@ -101,25 +101,5 @@ class AdminController extends Controller
         }
         return Redirect::back();
     }
-    function auditCompetitions(FilterCompetitionRequest $request) {
-        $data = $request->validated();
-        $data['get'] = $request->isMethod('get');
-        return $this->adminService->auditCompetitions($data);
-    }
-
-    function auditUsers($level_id) {
-        return $this->adminService->auditUsers($level_id);
-    }
-
-    function auditUserResponses($level_id,$user_id) {
-        return $this->adminService->auditUserResponses($level_id, $user_id);
-    }
-    public function submitAudit(AuditUserResponsesScoreRequest $request){
-        $responses = $request->input('scores', []);
-        $user_id = Crypt::decrypt($request->input('user_id'));
-        $level_id = Crypt::decrypt($request->input('level_id'));
-        $this->adminService->submitAudit($responses, $user_id, $level_id);
-        return Redirect::back();
-    }
 
 }

@@ -155,7 +155,7 @@ class Competition extends Model
      * @param int|null $exclude_id the level being activated
      * @return bool
      */
-    function isAllLevelAfterNow(?int $exclude_id): bool
+    function isAllLevelAfterNow(?int $exclude_id = null): bool
     {
         foreach ($this->levels as $level){
             if (($exclude_id == null || $level->id != $exclude_id) && $level->status = 0){

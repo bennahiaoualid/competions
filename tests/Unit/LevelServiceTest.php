@@ -13,7 +13,7 @@ use App\Models\Competition\Level;
 use Illuminate\Support\Collection;
 use App\Contracts\FlasherInterface;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Helpers\UserNotifyEmail;
+use App\Helpers\UserNotifyEmail;
 use App\Models\Competition\Competition;
 use App\Jobs\Competition\FinishLevelJob;
 use App\Services\Competition\LevelService;

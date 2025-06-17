@@ -7,7 +7,7 @@ use Throwable;
 use Illuminate\Bus\Queueable;
 use App\Models\Competition\Level;
 use App\Contracts\FlasherInterface;
-use App\Http\Helpers\UserNotifyEmail;
+use App\Helpers\UserNotifyEmail;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;

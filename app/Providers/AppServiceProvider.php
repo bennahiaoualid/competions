@@ -16,6 +16,7 @@ use App\Repository\User\UserRepository;
 use Illuminate\Support\ServiceProvider;
 use App\Repository\Admin\AdminRepository;
 use Illuminate\Validation\Rules\Password;
+use App\Services\Competition\AuditService;
 use App\Services\Competition\LevelService;
 use App\Services\Admin\AdminProfileService;
 use App\Services\Competition\QuestionService;
@@ -24,6 +25,7 @@ use App\Services\GuestUsers\UserGuestService;
 use App\Services\User\UserCompetitionService;
 use App\Contracts\TransactionManagerInterface;
 use App\Interface\User\UserRepositoryInterface;
+use App\Repository\Competition\AuditRepository;
 use App\Repository\Competition\LevelRepository;
 use App\Repository\Admin\AdminProfileRepository;
 use App\Services\Competition\CompetitionService;
@@ -34,6 +36,7 @@ use App\Repository\GuestUsers\UserGuestRepository;
 use App\Repository\User\UserCompetitionRepository;
 use App\Services\GuestUsers\GlobalQuestionService;
 use App\Repository\Competition\CompetitionRepository;
+use App\Interface\Competition\AuditRepositoryInterface;
 use App\Interface\Competition\LevelRepositoryInterface;
 use App\Repository\GuestUsers\GlobalQuestionRepository;
 use App\Interface\Admin\AdminProfileRepositoryInterface;
@@ -98,7 +101,21 @@ class AppServiceProvider extends ServiceProvider
         // user competition
         $this->app->bind(UserCompetitionRepositoryInterface::class, UserCompetitionRepository::class);
         $this->app->bind(UserCompetitionService::class, function ($app) {
-            return new UserCompetitionService($app->make(UserCompetitionRepositoryInterface::class));
+            return new UserCompetitionService(
+                $app->make(UserCompetitionRepositoryInterface::class),
+                $app->make(TransactionManagerInterface::class),
+                $app->make(FlasherInterface::class)
+            );
+        });
+
+        // auditing
+        $this->app->bind(AuditRepositoryInterface::class, AuditRepository::class);
+        $this->app->bind(AuditService::class, function ($app) {
+            return new AuditService(
+                $app->make(AuditRepositoryInterface::class),
+                $app->make(TransactionManagerInterface::class),
+                $app->make(FlasherInterface::class)
+            );
         });
 
         // global questions

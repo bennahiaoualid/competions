@@ -53,10 +53,9 @@
             <!-- Your content for the second column -->
             <x-collapsible-card :title="__('competition.response.response')" type="info">
 
-                <form id="response_form" method="post" action="{{ route('user.competitions.level.response.store') }}" class="space-y-2">
+                <form id="response_form" method="post" action="{{ route('user.competitions.level.response.store',['question' => $question]) }}" class="space-y-2">
                     @csrf
                     @method('post')
-                    <input type="hidden" name="question_id" value="{{$question->id}}">
                     <div>
                         <x-input-label for="response_text" :value=" ucwords(__('competition.response.response_text'))" />
                         <x-text-area id="response_text" name="response_text"  class="mt-1 block w-full">

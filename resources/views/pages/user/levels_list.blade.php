@@ -4,7 +4,7 @@
         <thead>
         <tr>
             <th class="px-6 bg-slate-300 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-center">
-               {{__('competition.level.name')}}
+                {{__('competition.level.name')}}
             </th>
             <th class="px-6 bg-slate-300 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-center">
                 {{__('competition.info.start_date')}}
@@ -39,7 +39,7 @@
             </td>
             <td>
                 <x-button :islink="true" color_type="info" size="sm" title="{{__('messages.global.detail')}}"
-                          :outline="true" href='{{route("competitions.level", ["id" => base64_encode($level->id)])}}' target="_blank">
+                        :outline="true" href='{{route("competitions.level", ["level" => $level])}}' target="_blank">
                     <x-slot:icon>
                         <i class="fa-regular fa-pen-to-square"></i>
                     </x-slot:icon>

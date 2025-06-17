@@ -32,7 +32,7 @@
             </x-collapsible-card>
         @endforeach
         <div class="mt-6">
-            {{ $competitions->links() }}
+            <x-pagination :paginator="$competitions" />
         </div>
     </div>
 
@@ -41,7 +41,7 @@
         <x-slot:modalhead>
             {{__("form.filter.filter")}}
         </x-slot>
-        <form id="filter" method="post" action="{{ route('admin.auditor') }}" class="space-y-2">
+        <form id="filter" method="post" action="{{ route('admin.auditor.competition.filtred') }}" class="space-y-2">
             @csrf
             @method('post')
 

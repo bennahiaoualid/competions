@@ -125,7 +125,7 @@
                 {{__('competition.question.list')}}
                 <span class="me-2">({{$level->questions->count() .'/'. $level->questions_number}})</span>
             </h2>
-            <x-button :islink="true" href='{{route("admin.competitions.level.questions",["id"=>base64_encode($level->id)])}}'>
+            <x-button :islink="true" href='{{route("admin.competitions.level.questions",["level"=>$level])}}'>
                 <x-slot:icon>
                     <i class="fa-solid fa-eye me-2"></i>
                 </x-slot:icon>

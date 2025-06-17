@@ -2,18 +2,15 @@
 
 namespace App\Repository\GuestUsers;
 
-use App\Http\Helpers\UsersGlobalOrder;
+use App\Helpers\UsersGlobalOrder;
 use App\Interface\GuestUsers\UserGuestRepositoryInterface;
-use App\Models\Competition\Question;
 use App\Models\GuestUsers\Choice;
 use App\Models\GuestUsers\GlobalQuestion;
 use App\Models\GuestUsers\GlobalResponse;
 use App\Traits\CrudOperationNotificationAlert;
 use App\Traits\RegisterLogs;
 use Exception;
-use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
-use function PHPUnit\Framework\isNull;
 
 class UserGuestRepository implements UserGuestRepositoryInterface
 {

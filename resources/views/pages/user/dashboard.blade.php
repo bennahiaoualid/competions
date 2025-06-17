@@ -10,24 +10,24 @@
 @section('content')
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <x-info-card class="max-w-sm" type="success" size="md"
-                     :content="__('competition.info.active')"
-                     value="{{$data['active_comp']}}"
-                     :link="route('competitions')">
+                    :content="__('competition.info.active')"
+                    value="{{$data['active_comp']}}"
+                    :link="route('competitions')">
             <x-slot:icon>
                 <i class="fa-solid fa-ranking-star"></i>
             </x-slot:icon>
         </x-info-card>
         <x-info-card class="max-w-sm" type="warning" size="md"
-                     :content="__('competition.info.coming')"
-                     value="{{$data['coming_comp']}}"
-                     :link="route('competitions')">
+                    :content="__('competition.info.coming')"
+                    value="{{$data['coming_comp']}}"
+                    :link="route('competitions')">
             <x-slot:icon>
                 <i class="fa-solid fa-ranking-star"></i>
             </x-slot:icon>
         </x-info-card>
         <x-info-card class="max-w-sm" type="info" size="md"
-                     :content="__('competition.info.finished')"
-                     value="{{$data['finished_comp']}}"
+                    :content="__('competition.info.finished')"
+                    value="{{$data['finished_comp']}}"
                     :link="route('competitions')">
             <x-slot:icon>
                 <i class="fa-solid fa-ranking-star"></i>
@@ -74,7 +74,7 @@
                 </table>
             </div>
             <div class="mt-2 flex justify-center">
-                <x-button :islink="true" href="{{route('competitions.detail',['id'=>base64_encode($competition['competition']->id)])}}">
+                <x-button :islink="true" href="{{route('competitions.detail',['competition'=>$competition['competition']])}}">
                     {{__('messages.global.see_all')}}
                 </x-button>
             </div>

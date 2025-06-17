@@ -9,7 +9,7 @@ use App\Contracts\TransactionManagerInterface;
 use App\Contracts\FlasherInterface;
 use App\Traits\RegisterLogs; // For logging errors
 use App\Jobs\Competetion\SyncCompetitionParticipants;
-use App\Http\Helpers\UserNotifyEmail; // For sending emails
+use App\Helpers\UserNotifyEmail; // For sending emails
 use App\Interface\Competition\CompetitionRepositoryInterface;
 use App\Traits\CrudOperationNotificationAlert; // For notifications
 use App\Models\User; // For Auth::user() type hinting if specific methods are used

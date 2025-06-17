@@ -17,7 +17,7 @@
                     <div class="flex justify-between">
                         <h2 class=" sm:text-xl text-sky-600 font-bold capitalize">{{$level->name}}</h2>
                         <x-status-widget :status="$level->getStatus()" :outline="false"
-                                         :text="__('competition.info.status.' . $level->getStatus())">
+                                        :text="__('competition.info.status.' . $level->getStatus())">
                         </x-status-widget>
                     </div>
 
@@ -47,7 +47,7 @@
             <x-collapsible-card :title="__('competition.result.level')" type="info">
                 @include("pages.user.users_order_list")
                 <div class="mt-4 flex gap-4 justify-center items-center text-sm">
-                    <x-button :islink="true" href="{{route('competitions.level.order',['id'=>base64_encode($level->id)])}}">
+                    <x-button :islink="true" href="{{route('competitions.level.order',['level'=>$level])}}">
                         {{__('messages.global.see_all')}}
                     </x-button>
                 </div>
@@ -59,7 +59,7 @@
                         @if($level->isStillActive())
                             <div class="flex justify-between items-center my-4 p-2 border border-primary rounded" >
                                 <p class="text-lg font-bold capitalize text-primary">{{__('competition.question.start_solve')}}</p>
-                                <x-button :islink="true" href='{{route("user.competitions.level.response",["id"=>base64_encode($level->id)])}}'>
+                                <x-button :islink="true" href='{{route("user.competitions.level.response",["level"=>$level])}}'>
                                     <x-slot:icon>
                                         <i class="fa-solid fa-eye me-2"></i>
                                     </x-slot:icon>
@@ -102,7 +102,7 @@
                     <x-collapsible-card :title="__('competition.response.info')" type="info">
                         <div class="flex justify-between items-center my-4 p-2 border border-primary rounded" >
                             <p class="text-lg font-bold capitalize text-primary">{{__('competition.response.response')}}</p>
-                            <x-button :islink="true" href='{{route("user.competitions.response",["id"=>base64_encode($level->id)])}}'>
+                            <x-button :islink="true" href='{{route("user.competitions.response",["level"=>$level])}}'>
                                 <x-slot:icon>
                                     <i class="fa-solid fa-eye me-2"></i>
                                 </x-slot:icon>

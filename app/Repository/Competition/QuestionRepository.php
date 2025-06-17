@@ -3,10 +3,11 @@
 namespace App\Repository\Competition;
 
 use App\Traits\RegisterLogs;
+use App\Helpers\PaginationHelper;
 use App\Models\Competition\Level;
 use App\Models\Competition\Question;
-use Illuminate\Database\Eloquent\Collection;
 
+use Illuminate\Database\Eloquent\Collection;
 use App\Traits\CrudOperationNotificationAlert;
 use App\Interface\Competition\QuestionRepositoryInterface;
 
@@ -20,14 +21,13 @@ class QuestionRepository implements QuestionRepositoryInterface
      * Get all questions for a specific level
      * 
      * @param int $levelId
-     * @param int $perPage
      * @return Paginator
      */
-    public function getQuestionsByLevel(int $levelId, int $perPage)
+    public function getQuestionsByLevel(Level $level)
     {
         return Question::with("level")
-            ->where("level_id", $levelId)
-            ->paginate($perPage);
+            ->where("level_id", $level->id)
+            ->paginate(PaginationHelper::perPage());
     }
 
     /**

@@ -22,6 +22,6 @@ class AdminSeeder extends Seeder
             'gender' => "male",
             'password' => Hash::make('12345678'),
         ]);
-        Admin::factory(4)->create();
+        //Admin::factory(4)->create();
     }
 }

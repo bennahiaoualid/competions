@@ -2,6 +2,7 @@
 
 namespace App\Interface\Competition;
 
+use App\Models\Competition\Level;
 use App\Models\Competition\Question;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -10,11 +11,10 @@ interface QuestionRepositoryInterface
     /**
      * Get all questions for a specific level
      * 
-     * @param int $levelId
-     * @param int $perPage
+     * @param Level $level
      * @return Paginator
      */
-    public function getQuestionsByLevel(int $levelId, int $perPage);
+    public function getQuestionsByLevel(Level $level);
 
     /**
      * Find a level by ID or throw an exception if not found

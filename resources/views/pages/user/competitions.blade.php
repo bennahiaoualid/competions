@@ -25,33 +25,33 @@
 
     @if($competitions->count() > 0)
     <div class="grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 max-w-full mt-4">
-       @foreach($competitions as $competition)
-           <div class="bg-white border shadow-md p-4 space-y-2">
+        @foreach($competitions as $competition)
+            <div class="bg-white border shadow-md p-4 space-y-2">
 
-               <p class=" sm:text-lg text-sky-600 font-bold capitalize sm:truncate">{{$competition->title}}</p>
+                <p class=" sm:text-lg text-sky-600 font-bold capitalize sm:truncate">{{$competition->title}}</p>
 
-               <p class="text-sm text-gray-400 leading-6 truncate max-w-[40ch]">{{$competition->description}}</p>
+                <p class="text-sm text-gray-400 leading-6 truncate max-w-[40ch]">{{$competition->description}}</p>
 
-               <div class="flex justify-between items-center">
-                   <p class="capitalize">
-                       <span class="font-bold text-sky-600"> {{__('competition.info.users_age')}} :</span>
-                       {{$competition->age_start}}
-                       {{__('competition.info.to') . ' ' . $competition->age_end}}
+                <div class="flex justify-between items-center">
+                    <p class="capitalize">
+                        <span class="font-bold text-sky-600"> {{__('competition.info.users_age')}} :</span>
+                        {{$competition->age_start}}
+                        {{__('competition.info.to') . ' ' . $competition->age_end}}
 
-                   </p>
-                   <x-status-widget :status="$competition->getStatus()" :outline="false"
+                    </p>
+                    <x-status-widget :status="$competition->getStatus()" :outline="false"
                                     :text="__('competition.info.status.' . $competition->getStatus())">
-                   </x-status-widget>
-               </div>
+                    </x-status-widget>
+                </div>
 
-               <div class="flex justify-between items-center">
-                   <p class="py-1 px-2 border border-sky-600 text-sky-600" class="">{{$competition->start_date->inUserTimezone()}}</p>
-                   <x-button :islink="true" href="{{route('competitions.detail',['id'=>base64_encode($competition->id)])}}">
-                       {{__('messages.global.details')}}
-                   </x-button>
-               </div>
-           </div>
-       @endforeach
+                <div class="flex justify-between items-center">
+                    <p class="py-1 px-2 border border-sky-600 text-sky-600" class="">{{$competition->start_date->inUserTimezone()}}</p>
+                    <x-button :islink="true" href="{{route('competitions.detail',['competition'=>$competition])}}">
+                        {{__('messages.global.details')}}
+                    </x-button>
+                </div>
+            </div>
+        @endforeach
     </div>
     @else
         <div class="text-center">
@@ -70,14 +70,14 @@
             {{__("form.filter.filter")}}
         </x-slot>
         @php
-            $url = 'competitions';
-            $user = null;
+            $url = 'competitions.filtred';
             if(\Illuminate\Support\Facades\Auth::guard('web')->check() && ! \Illuminate\Support\Facades\Auth::user()->guest){
-                $url = 'user.competitions';
-                $user = base64_encode(Auth::user()->anonymized_identifier);
+                if(request()->routeIs('user.competitions') || request()->routeIs('user.competitions.filtred')){
+                    $url = 'user.competitions.filtred';
+                }
             }
         @endphp
-        <form id="filter" method="post" action="{{ route($url,['user'=>$user]) }}" class="space-y-2">
+        <form id="filter" method="post" action="{{ route($url) }}" class="space-y-2">
             @csrf
             @method('post')
 

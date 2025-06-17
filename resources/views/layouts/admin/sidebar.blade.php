@@ -13,7 +13,7 @@
             </li>
             <x-nav-dropdown :title="__('links.admin.admins')"
                             :active="request()->is(App::currentLocale() . '/admin/admins/*')
-                                     or request()->is(App::currentLocale() . '/admin/admins')" :sub="false"
+                                    or request()->is(App::currentLocale() . '/admin/admins')" :sub="false"
                             :links="[
                     ['url' => route('admin.list'), 'title' => __('links.admin.list') , 'active' => request()->routeIs('admin.list'), 'subnav' => true],
                     ['url' => '#', 'title' => 'Tool 2', 'active' => false, 'subnav' => true],
@@ -43,7 +43,7 @@
             </li>
 
             <li class="mb-2">
-                <x-nav-link href="{{route('admin.auditor')}}" :active="request()->routeIs('admin.auditor')" :sub="false">
+                <x-nav-link href="{{route('admin.auditor.competitions')}}" :active="request()->routeIs('admin.auditor.competitions')" :sub="false">
                     <x-slot:icon>
                         <i class="fas fa-home me-3"></i>
                     </x-slot:icon>

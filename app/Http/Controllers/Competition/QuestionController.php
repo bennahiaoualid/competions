@@ -25,13 +25,12 @@ class QuestionController extends Controller
     /**
      * Get all questions for a specific level
      *
-     * @param string $level_id_base64 Base64 encoded level ID
-     * @param Request $request The incoming request containing admin data.
+     * @param Level $level The level to get the questions for.
      * @return View
      */
-    function all(string $level_id_base64, Request $request) : View{
-        $perPage = $request->input('perPage', 5);
-        return $this->questionService->all($level_id_base64, $perPage);
+    function all(Level $level) : View{
+        $questions = $this->questionService->all($level);
+        return view("pages.admin.competitions.questions", compact("questions", "level"));
     }
 
     /**

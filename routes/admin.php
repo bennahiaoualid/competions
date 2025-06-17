@@ -1,8 +1,8 @@
 <?php
 
-use Barryvdh\Debugbar\Facades\Debugbar;
-use Illuminate\Support\Facades\Route;
 use Livewire\Livewire;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Competition\AuditController;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
 /*
@@ -27,7 +27,7 @@ Route::group(
         Route::middleware('auth:admin')->group(function () {
 
             Route::get('/', [\App\Http\Controllers\Admin\AdminController::class, "index"])->name("index");
-            Route::get('/admins/', [\App\Http\Controllers\Admin\AdminController::class, "getAdminList"])->name("list");
+            Route::get('/admins', [\App\Http\Controllers\Admin\AdminController::class, "getAdminList"])->name("list");
 
             // only admin with role owner and super_admin can access to this routs
             Route::group(['middleware' => ['role:owner|super_admin']], function (){
@@ -65,7 +65,7 @@ Route::group(
             Route::post('/competitions/level/{level}/finish', [\App\Http\Controllers\Competition\LevelController::class, "finishLevel"])->name("competitions.level.finish");
 
             //questions
-            Route::get('/competitions/level/{id}/question', [\App\Http\Controllers\Competition\QuestionController::class, "all"])->name("competitions.level.questions");
+            Route::get('/competitions/level/{level}/question', [\App\Http\Controllers\Competition\QuestionController::class, "all"])->name("competitions.level.questions");
             Route::post('/competitions/level/question/{level}/store', [\App\Http\Controllers\Competition\QuestionController::class, "store"])->name("competitions.level.question.store");
             Route::patch('/competitions/level/question/{question}/update', [\App\Http\Controllers\Competition\QuestionController::class, "update"])->name("competitions.level.question.update");
 
@@ -80,10 +80,11 @@ Route::group(
             Route::post('/competitions/auditors/delete', [\App\Http\Controllers\Competition\CompetitionController::class, "removeCompetitionAuditor"])->name("competitions.auditor.delete");
 
             // competitions auditing responses
-            Route::match(['get', 'post'],'/competitions/audit', [\App\Http\Controllers\Admin\AdminController::class, "auditCompetitions"])->name("auditor");
-            Route::get('/competitions/level/{id}/audit', [\App\Http\Controllers\Admin\AdminController::class, "auditUsers"])->name("auditor.users");
-            Route::get('/competitions/auditing/level/{level_id}/{user_id}', [\App\Http\Controllers\Admin\AdminController::class, "auditUserResponses"])->name("auditor.users.responses");
-            Route::post('/competitions/auditing/level/user-score/store', [\App\Http\Controllers\Admin\AdminController::class, "submitAudit"])->name("auditor.users.responses.audit_score");
+            Route::get('/competitions/audit/competitions', [AuditController::class, "auditCompetitions"])->name("auditor.competitions");
+            Route::post('/competitions/audit/competitions', [AuditController::class, "auditCompetitions"])->name("auditor.competition.filtred");
+            Route::get('/competitions/level/{id}/audit', [AuditController::class, "auditUsers"])->name("auditor.users");
+            Route::get('/competitions/auditing/level/{level_id}/{user_id}', [AuditController::class, "auditUserResponses"])->name("auditor.users.responses");
+            Route::post('/competitions/auditing/level/user-score/store', [AuditController::class, "submitAudit"])->name("auditor.users.responses.audit_score");
 
             // guest users == global questions
             Route::get('/global-questions', [\App\Http\Controllers\GuestUsers\GlobalQuestionController::class, "all"])->name("global_questions");

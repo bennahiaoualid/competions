@@ -5,10 +5,11 @@ namespace App\Services\Competition;
 use Exception;
 use Illuminate\View\View;
 use App\Traits\RegisterLogs;
+use Illuminate\Http\Request;
 use App\Models\Competition\Level;
 use App\Contracts\FlasherInterface;
-use Illuminate\Http\Request;
 use App\Models\Competition\Question;
+use Illuminate\Pagination\Paginator;
 use App\Contracts\TransactionManagerInterface;
 use App\Interface\Competition\QuestionRepositoryInterface;
 
@@ -26,16 +27,11 @@ class QuestionService
     /**
      * Get all questions for a specific level
      * 
-     * @param string $level_id_base64 Base64 encoded level ID
-     * @param int $perPage The number of questions to display per page
-     * @return View
+     * @param Level $level The level to get the questions for.
      */
-    public function all($level_id_base64, int $perPage): View
+    public function all(Level $level)
     {
-        $level = $this->questionRepository->findOrFailLevel(base64_decode($level_id_base64));
-
-        $questions = $this->questionRepository->getQuestionsByLevel($level->id, $perPage);
-        return view("pages.admin.competitions.questions", compact("questions", "level"));
+        return $this->questionRepository->getQuestionsByLevel($level);
     }
 
     /**

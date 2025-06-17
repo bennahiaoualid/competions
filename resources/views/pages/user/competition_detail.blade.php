@@ -17,7 +17,7 @@
                     <div class="flex justify-between">
                         <h1 class=" sm:text-xl text-sky-600 font-bold capitalize">{{$competition->title}}</h1>
                         <x-status-widget :status="$competition->getStatus()" :outline="false"
-                                         :text="__('competition.info.status.' . $competition->getStatus())">
+                                        :text="__('competition.info.status.' . $competition->getStatus())">
                         </x-status-widget>
                     </div>
 
@@ -42,14 +42,14 @@
         <div class="w-full sm:w-[50%]">
             <!-- Your content for the second column -->
             <x-collapsible-card :title="(__('competition.level.information'))" type="info">
-               @include("pages.user.levels_list")
+                @include("pages.user.levels_list")
             </x-collapsible-card>
             <!-- users order list -->
             <x-collapsible-card :title="__('competition.result.competition')" type="info">
                 @include("pages.user.users_order_list")
                 @if($users->count() > 0)
                     <div class="mt-4 flex gap-4 justify-center items-center text-sm">
-                        <x-button :islink="true" href="{{route('competitions.order',['id'=>base64_encode($competition->id)])}}">
+                        <x-button :islink="true" href="{{route('competitions.order',['competition'=>$competition])}}">
                             {{__('messages.global.see_all')}}
                         </x-button>
                     </div>

@@ -2,58 +2,49 @@
 
 namespace App\Repository\User;
 
-use App\Http\Helpers\CompetitionsOrder;
-use App\Interface\User\UserCompetitionRepositoryInterface;
-use App\Models\Competition\Competition;
+use Exception;
+use App\Models\User;
+use Illuminate\View\View;
+use App\Traits\RegisterLogs;
 use App\Models\Competition\Level;
 use App\Models\Competition\Question;
 use App\Models\Competition\Response;
-use App\Traits\CrudOperationNotificationAlert;
-use App\Traits\RegisterLogs;
-use Exception;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
-
+use App\Helpers\CompetitionsOrder;
+use App\Models\Competition\Competition;
+use Illuminate\Database\Eloquent\Collection;
+use App\Traits\CrudOperationNotificationAlert;
+use App\Interface\User\UserCompetitionRepositoryInterface;
+use App\Traits\Filterable;
 class UserCompetitionRepository implements UserCompetitionRepositoryInterface
 {
-    use RegisterLogs , CrudOperationNotificationAlert;
-    function all(array $data,$user): View
-    {
-        // TODO: Implement all() method.
-        $auth_user = Auth::user();
-        if (count($data) < 1) {
-            if ($user && Auth::check()){
-                $competitions = $auth_user->competitions()->orderBy('start_date', 'desc')->get();
+    use RegisterLogs, 
+    CrudOperationNotificationAlert,
+    Filterable;
 
-            }else{
-                $competitions = Competition::orderBy('start_date', 'desc')->get();
-            }
-        }else{
-            if ($user && Auth::check()){
-                $competitions = $auth_user->competitions()
-                    ->title($data['title'])
-                    ->startDate($data['start_date_from'], $data['start_date_to'])
-                    ->ageRange($data['age_start'], $data['age_end'])
-                    ->status($data['status'])
-                    ->orderBy('start_date', 'desc')
-                    ->get();
-            }else{
-                $competitions = Competition::query()
-                    ->title($data['title'])
-                    ->startDate($data['start_date_from'], $data['start_date_to'])
-                    ->ageRange($data['age_start'], $data['age_end'])
-                    ->status($data['status'])
-                    ->orderBy('start_date', 'desc')
-                    ->get();
-            }
-        }
-        // Return the view with competitions data
-        return view('pages.user.competitions', compact('competitions'));
+    /**
+     * Get all public competitions with optional filters
+     * @param array $filters
+     * @return Collection
+     */
+    public function getAllPublicCompetitions(array $filters = []): Collection
+    {
+        return $this->applyFilters(Competition::query(), $filters)
+            ->orderByDesc('start_date')
+            ->get();
     }
 
-    function userCompetition($competition_id)
+    /**
+     * Get user competitions with optional filters
+     * @param User $user
+     * @param array $filters
+     * @return Collection
+     */
+    public function getUserCompetitions(User $user, array $filters = []): Collection
     {
-        // TODO: Implement userCompetition() method.
+        return $this->applyFilters($user->competitions(), $filters)
+            ->orderByDesc('start_date')
+            ->get();
     }
 
     function competitionDetail($competition_id): View
@@ -81,7 +72,7 @@ class UserCompetitionRepository implements UserCompetitionRepositoryInterface
         $level_id = base64_decode($level_id);
         $level = Level::findorfail($level_id);
 
-        $user = auth()->user();
+        $user = Auth::user();
         // get the question
         $questions = Question::where('level_id', $level_id)
             ->whereDoesntHave('responses', function ($query) use ($user) {
@@ -111,7 +102,7 @@ class UserCompetitionRepository implements UserCompetitionRepositoryInterface
     public function storeResponse(array $data): \Illuminate\Http\RedirectResponse
     {
         try {
-            $user = auth()->user();
+            $user = Auth::user();
 
             // Retrieve the start time and response ID from the session
             $startTime = session('start_time');
@@ -122,7 +113,7 @@ class UserCompetitionRepository implements UserCompetitionRepositoryInterface
             // Update the response record
             $response = Response::where([
                 'question_id' => $data['question_id'],
-                'user_id' => auth()->id(),
+                'user_id' => $user->id,
             ])->first();
             $response->update([
                 'response_text' => $data['response_text'] ?? '',
@@ -210,4 +201,71 @@ class UserCompetitionRepository implements UserCompetitionRepositoryInterface
         return view('pages.user.competitors_competition_order', compact('competition','users','audit_finish'));
     }
 
+    public function getCompetitionWithLevels(int $competitionId): Competition
+    {
+        return Competition::with('levels')->findOrFail($competitionId);
+    }
+
+    /**
+     * Get unanswered questions for a level and user
+     * @param int $levelId
+     * @param int $userId
+     * @return Collection
+     */
+    public function getUnansweredQuestions(int $levelId, int $userId): Collection
+    {
+        return Question::where('level_id', $levelId)
+            ->whereDoesntHave('responses', function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
+            ->get();
+    }
+
+    /**
+     * Create a new response
+     * @param array $data
+     * @return Response
+     */
+    public function createResponse(array $data): Response
+    {
+        return Response::create($data);
+    }
+
+    /**
+     * Update a response
+     * @param int $question_id
+     * @param array $data
+     * @return bool
+     */
+    public function updateResponse(int $question_id, array $data): bool
+    {
+        try {
+            $response = Response::where([
+                'question_id' => $question_id,
+                'user_id' => Auth::id(),
+            ])->first();
+            $response->update($data);
+            return true;
+        } catch (Exception $exception) {
+            $this->registerLogs('ٌUser Response Update error: ',$exception);
+            throw $exception;
+        }
+    }
+
+    /**
+     * Get user responses for a level
+     * @param int $levelId
+     * @param int $userId
+     * @return Collection of responses
+     */
+    public function getUserLevelResponses(int $levelId, int $userId): Collection
+    {
+        return Response::whereHas('question', function ($query) use ($levelId) {
+            $query->where('level_id', $levelId);
+        })
+        ->with('question')
+        ->where('user_id', $userId)
+        ->get();
+    }
+    
 }

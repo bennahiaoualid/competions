@@ -16,9 +16,6 @@
                 {{__('competition.question.list')}}
                 <span> : {{$level->name}}</span>
             </h1>
-            {{-- @if($questions->count() == 0)
-                <x-button form="add" color_type="success" >{{ __('form.actions.save') }}</x-button>
-            @endif --}}
             @can($level->canEditQuestion())
                 <div x-data>
                     <x-button
@@ -37,22 +34,7 @@
             @include("pages.admin.competitions.questions_list")
         </div>
 
-        <div class="flex justify-end items-center gap-4 mt-4 flex-wrap">
-            {{-- Laravel Pagination --}}
-            {{ $questions->appends(['perPage' => request('perPage')])->links() }}
-        
-            {{-- Per Page Dropdown --}}
-            <form method="GET">
-                <x-form.select-box name="perPage" onchange="this.form.submit()"  :options="[
-                    ['value' => 5, 'text' => __('Show') . ' 5', 'selected' => request('perPage', 5) == 5],
-                    ['value' => 10, 'text' => __('Show') . ' 10', 'selected' => request('perPage', 5) == 10],
-                    ['value' => 25, 'text' => __('Show') . ' 25', 'selected' => request('perPage', 5) == 25],
-                    ['value' => 50, 'text' => __('Show') . ' 50', 'selected' => request('perPage', 5) == 50],
-                    ['value' => 100, 'text' => __('Show') . ' 100', 'selected' => request('perPage', 5) == 100],
-                ]">
-                </x-form.select-box>
-            </form>
-        </div>
+        <x-pagination :paginator="$questions" />
         
     </div>
 

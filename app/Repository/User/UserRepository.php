@@ -2,8 +2,8 @@
 
 namespace App\Repository\User;
 
-use App\Http\Helpers\CompetitionsOrder;
-use App\Http\Helpers\UserSafeDelete;
+use App\Helpers\CompetitionsOrder;
+use App\Helpers\UserSafeDelete;
 use App\Interface\User\UserRepositoryInterface;
 use App\Models\User;
 use Exception;

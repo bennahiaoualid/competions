@@ -151,7 +151,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * The roles that belong to the user.
      */
-    public function Competitions(): BelongsToMany
+    public function competitions(): BelongsToMany
     {
         return $this->belongsToMany(Competition::class);
     }
