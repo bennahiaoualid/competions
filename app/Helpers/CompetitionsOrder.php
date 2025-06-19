@@ -29,7 +29,7 @@ class CompetitionsOrder
         ];
     }
 
-    private static function fetchUserScores(Model $model, bool $isCompetition, bool $limit, bool $paginate): Collection|LengthAwarePaginator
+    private static function fetchUserScores(Model $model, bool $isCompetition, bool $limit, bool $paginate)
     {
         $query = User::withSum(['responses as total_score' => function ($q) use ($model, $isCompetition) {
             $q->whereHas('question', function ($q2) use ($model, $isCompetition) {
@@ -53,7 +53,7 @@ class CompetitionsOrder
 
         return $limit
             ? $query->limit(3)->get()
-            : ($paginate ? $query->paginate(10) : $query->get());
+            : ($paginate ? $query->paginate(PaginationHelper::perPage(set_default:10)) : $query->get());
     }
 
     private static function checkAuditStatus(Model $model, bool $isCompetition): bool

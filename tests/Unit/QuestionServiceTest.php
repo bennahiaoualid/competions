@@ -79,7 +79,7 @@ class QuestionServiceTest extends TestCase
             ->andReturn($questions);
 
         // Act
-        $result = $this->questionService->all($levelIdBase64, $perPage);
+        $result = $this->questionService->all($this->level);
 
         // Assert
         $this->assertInstanceOf(\Illuminate\View\View::class, $result);

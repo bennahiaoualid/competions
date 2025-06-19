@@ -3,11 +3,13 @@
 namespace App\Jobs\Competition;
 
 
+use Cache;
 use Throwable;
 use Illuminate\Bus\Queueable;
+use App\Helpers\UserNotifyEmail;
 use App\Models\Competition\Level;
 use App\Contracts\FlasherInterface;
-use App\Helpers\UserNotifyEmail;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -23,7 +25,7 @@ class FinishLevelJob implements ShouldQueue
 
     public function __construct(Level $level)
     {
-        $this->level = $level->fresh('competition.users', 'competition.auditors');
+        $this->level = $level;
     }
 
     public function handle(
@@ -32,16 +34,18 @@ class FinishLevelJob implements ShouldQueue
         FlasherInterface $flasher,
     ): void {
 
-        $result = $transactionManager->run(function () use ($levelRepository) {
-            $levelRepository->insertMissingResponsesForLevel($this->level);
+        $level = $this->level->load('competition.users', 'competition.auditors');
+
+        $result = $transactionManager->run(function () use ($levelRepository, $level) {
+            $levelRepository->insertMissingResponsesForLevel($level);
             $this->assignUsersToAuditors($levelRepository);
 
-            $updated = $levelRepository->update($this->level, ['status' => 2]);
+            $updated = $levelRepository->update($level, ['status' => "2"]);
 
             if ($updated) {
-                UserNotifyEmail::auditorsFinishLevel($this->level->competition, $this->level);
+                UserNotifyEmail::auditorsFinishLevel($level->competition, $level);
             }
-
+            \Log::info('تم تحديث المستوى؟', ['updated' => $updated]);
             return $updated;
         });
 
@@ -67,6 +71,7 @@ class FinishLevelJob implements ShouldQueue
         $auditors = $this->level->competition->auditors;
 
         $levelRepository->assignAuditorsToUsersInPivot($this->level, $users, $auditors);
+        Cache::forget('assigned_user_count_admin_' . Auth::id());
     }
 
     public function getLevel(): Level

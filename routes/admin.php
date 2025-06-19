@@ -82,9 +82,9 @@ Route::group(
             // competitions auditing responses
             Route::get('/competitions/audit/competitions', [AuditController::class, "auditCompetitions"])->name("auditor.competitions");
             Route::post('/competitions/audit/competitions', [AuditController::class, "auditCompetitions"])->name("auditor.competition.filtred");
-            Route::get('/competitions/level/{id}/audit', [AuditController::class, "auditUsers"])->name("auditor.users");
-            Route::get('/competitions/auditing/level/{level_id}/{user_id}', [AuditController::class, "auditUserResponses"])->name("auditor.users.responses");
-            Route::post('/competitions/auditing/level/user-score/store', [AuditController::class, "submitAudit"])->name("auditor.users.responses.audit_score");
+            Route::get('/competitions/level/{level}/audit', [AuditController::class, "auditUsers"])->name("auditor.users");
+            Route::get('/competitions/auditing/level/{level}/{user_id}', [AuditController::class, "auditUserResponses"])->name("auditor.users.responses");
+            Route::post('/competitions/auditing/level/{level}/{user}/store', [AuditController::class, "submitAudit"])->name("auditor.users.responses.audit_score");
 
             // guest users == global questions
             Route::get('/global-questions', [\App\Http\Controllers\GuestUsers\GlobalQuestionController::class, "all"])->name("global_questions");

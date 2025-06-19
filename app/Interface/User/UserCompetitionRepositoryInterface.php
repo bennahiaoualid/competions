@@ -3,11 +3,7 @@
 namespace App\Interface\User;
 
 use App\Models\User;
-use Illuminate\View\View;
-use App\Models\Competition\Level;
-use App\Models\Competition\Question;
 use App\Models\Competition\Response;
-use App\Models\Competition\Competition;
 use Illuminate\Database\Eloquent\Collection;
 
 interface UserCompetitionRepositoryInterface
@@ -16,17 +12,12 @@ interface UserCompetitionRepositoryInterface
     /**
      * Get all public competitions with optional filters
      */
-    public function getAllPublicCompetitions(array $filters = []): Collection;
+    public function getAllPublicCompetitions(array $filters = []);
 
     /**
      * Get user competitions with optional filters
      */
-    public function getUserCompetitions(User $user, array $filters = []): Collection;
-
-    /**
-     * Get competition by ID with its levels
-     */
-    public function getCompetitionWithLevels(int $competitionId): Competition;
+    public function getUserCompetitions(User $user, array $filters = []);
 
     /**
      * Get unanswered questions for a level and user
@@ -46,6 +37,6 @@ interface UserCompetitionRepositoryInterface
     /**
      * Get user responses for a level
      */
-    public function getUserLevelResponses(int $levelId, int $userId): Collection;
+    public function getUserLevelResponses(int $levelId, int $userId);
 
 }

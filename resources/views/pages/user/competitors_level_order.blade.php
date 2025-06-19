@@ -17,9 +17,6 @@
     <div class="mt-4 max-w-2xl mx-auto">
         @include('pages.user.users_order_list')
     </div>
-    <div class="mt-2">
-        {{$users->links()}}
-    </div>
 
 @endsection
 

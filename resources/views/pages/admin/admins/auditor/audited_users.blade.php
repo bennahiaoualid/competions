@@ -16,8 +16,7 @@
             {{ __('competition.level.level') . ' : ' . $level->name }}
         </h1>
     </div>
-
     <div class="overflow-x-auto max-w-[90vw] pt-2">
-        <livewire:users-audited-by-admin admin_id="{{$admin_id}}" level_id="{{$level->id}}"/>
+        <livewire:user-response-auditing-table :admin_id="$admin_id" :level="$level" />
     </div>
 @endsection

@@ -36,26 +36,6 @@ class RunningCompetitionSeeder extends Seeder
             ]
         );
 
-        $auditor1 = Admin::firstOrCreate(
-            ['email' => 'test.running_competition.auditor1@example.com'],
-            [
-                'name' => 'Test Running Auditor One',
-                'password' => Hash::make('password'),
-                'birthdate' => '1991-01-01',
-                'gender' => 'female',
-            ]
-        );
-
-        $auditor2 = Admin::firstOrCreate(
-            ['email' => 'test.running_competition.auditor2@example.com'],
-            [
-                'name' => 'Test Running Auditor Two',
-                'password' => Hash::make('password'),
-                'birthdate' => '1992-01-01',
-                'gender' => 'male',
-            ]
-        );
-
         // Create running competition
         $competition = Competition::firstOrCreate(
             ['title' => 'Running Test Competition'],
@@ -117,7 +97,7 @@ class RunningCompetitionSeeder extends Seeder
         $competition->users()->syncWithoutDetaching([$user->id]);
 
         // Add auditors to competition
-        $competition->auditors()->syncWithoutDetaching([$auditor1->id, $auditor2->id]);
+        $competition->auditors()->syncWithoutDetaching([$admin->id]);
 
     }
 } 

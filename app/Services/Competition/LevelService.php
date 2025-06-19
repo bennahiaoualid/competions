@@ -238,7 +238,6 @@ class LevelService
             $this->flasher->notify(__('messages.validation.not_allow.level_finish_still_active'), 'error');
             return false;
         }
-    
         FinishLevelJob::dispatchSync($level);
         return true;
     }

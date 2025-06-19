@@ -8,8 +8,8 @@ use App\Traits\RegisterLogs;
 use App\Traits\RoleManipulation;
 use App\Helpers\PaginationHelper;
 use App\Models\Competition\Level;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Contracts\View\View;
 use App\Models\Competition\Question;
 use App\Models\Competition\Response;
 use Illuminate\Support\Facades\Auth;
@@ -18,10 +18,7 @@ use App\Interface\Competition\AuditRepositoryInterface;
 
 class AuditRepository implements AuditRepositoryInterface
 {
-    use RegisterLogs, 
-    RoleManipulation, 
-    CrudOperationNotificationAlert,
-    Filterable;
+    use RegisterLogs, Filterable;
 
     function getCompetitionsForAudit(array $filters = [])
     {
@@ -31,68 +28,62 @@ class AuditRepository implements AuditRepositoryInterface
                     ->paginate(PaginationHelper::perPage());
     }
 
-    function auditUsers($level_id): View
+    public function getUser(string $userIdentifier): User
     {
-        $level_id = base64_decode($level_id);
-        $level = Level::findorfail($level_id);
-        $admin_id = Auth::id();
-        return view("pages.admin.admins.auditor.audited_users", compact('level', 'admin_id'));
+        return User::where("anonymized_identifier",$userIdentifier)->first();
     }
 
-    function auditUserResponses($level_id, $user_identifier): View|\Illuminate\Http\RedirectResponse
+    public function getLevelQuestionsWithUserResponses(int $levelId, int $userId)
     {
-        $level_id = base64_decode($level_id);
-        $user_id = base64_decode($user_identifier);
-        $level = Level::findorfail($level_id);
-        $user = User::findorfail($user_id);
-        $questions = Question::where('level_id', $level_id)->get();
-        $responses = Response::where('user_id', $user_id)
-            ->whereIn('question_id', $questions->pluck('id'))
-            ->get();
-        return view("pages.admin.admins.auditor.audited_responses", compact('level', 'user', 'questions', 'responses'));
+        return Question::where('level_id', $levelId)
+            ->with(['responses' => function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            }])
+            ->paginate(PaginationHelper::perPage());
     }
 
-    public function submitAudit(array $responses, $user_id, $level_id)
+    /**
+     * Check if the current admin is allowed to audit the user
+     * @param Level $level
+     * @param User $user
+     * @return bool
+     */
+    public function isAdminAllowedToAuditUser(Level $level, User $user): bool
     {
-        try {
-            DB::beginTransaction();
-            foreach ($responses as $response) {
-                $responseModel = Response::findorfail($response['id']);
-                $responseModel->score = $response['score'];
-                $responseModel->save();
-            }
-            DB::commit();
+        $audit_admin = DB::table('level_admin_user')
+        ->where('user_id',$user->id)
+        ->where('level_id',$level->id)
+        ->first();
+        if($audit_admin && $audit_admin->admin_id == Auth::id()){
             return true;
-        } catch (\Exception $exception) {
-            DB::rollBack();
-            $this->registerLogs('Audit submission error: ', $exception);
-            return false;
+        }
+        return false;
+    }
+
+    /**
+     * Get targeted user responses
+     * @param int $levelId
+     * @param int $userId
+     * @param array $responseIds
+     * @return Collection
+     */
+    public function getTargetedUserResponses($levelId, $userId, $responseIds) : Collection
+    {
+        try{
+            $responses = Response::where('user_id', $userId)
+                ->where('admin_id', null)
+                ->whereIn('id', array_keys($responseIds))
+                ->whereHas('question', function ($query) use ($levelId) {
+                    $query->where('level_id', $levelId);
+                })
+                ->get();
+            return $responses;
+        }catch(\Exception $e){
+            $this->registerLogs('AuditRepository@getTargetedUserResponses', $e);
+            throw $e;
         }
     }
-
-    public function getLevel(int $levelId): Level
-    {
-        return Level::findOrFail($levelId);
-    }
-
-    public function getUser(int $userId): User
-    {
-        return User::findOrFail($userId);
-    }
-
-    public function getLevelQuestions(int $levelId): array
-    {
-        return Question::where('level_id', $levelId)->get()->toArray();
-    }
-
-    public function getUserResponses(int $userId, array $questionIds): array
-    {
-        return Response::where('user_id', $userId)
-            ->whereIn('question_id', $questionIds)
-            ->get()
-            ->toArray();
-    }
-
+    
     public function updateResponseScores(array $responses): bool
     {
         foreach ($responses as $response) {

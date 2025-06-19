@@ -2,15 +2,20 @@
 
 namespace App\Services\Competition;
 
+use App\Models\User;
+use Illuminate\View\View;
+use App\Models\Admin\Admin;
+use App\Models\Competition\Level;
 use App\Contracts\FlasherInterface;
+use Illuminate\Support\Facades\Auth;
 use App\Contracts\TransactionManagerInterface;
 use App\Interface\Competition\AuditRepositoryInterface;
-use App\Models\Admin\Admin;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
+use App\Traits\RegisterLogs;
+use App\Traits\UserResponseCalculation;
 
 class AuditService
 {
+    use UserResponseCalculation, RegisterLogs;
     public function __construct(
         protected AuditRepositoryInterface $auditRepository,
         protected TransactionManagerInterface $transactionManager,
@@ -29,45 +34,55 @@ class AuditService
     /**
      * Get users for a specific level audit
      */
-    public function auditUsers(string $levelId): View
+    public function auditUsersList(Level $level): array
     {
-        $decodedLevelId = base64_decode($levelId);
-        $level = $this->auditRepository->getLevel($decodedLevelId);
-        $adminId = Auth::id();
+        $admin_id = Auth::id();
+
+        return [
+            'level' => $level,
+            'admin_id' => $admin_id
+        ];
         
-        return view("pages.admin.admins.auditor.audited_users", compact('level', 'adminId'));
     }
 
     /**
      * Get user responses for audit
      */
-    public function auditUserResponses(string $levelId, string $userIdentifier): View
+    public function auditUserResponses(Level $level, string $userIdentifier): array
     {
-        $decodedLevelId = base64_decode($levelId);
-        $decodedUserId = base64_decode($userIdentifier);
+        $user = $this->auditRepository->getUser($userIdentifier);
+        $questions = $this->auditRepository->getLevelQuestionsWithUserResponses($level->id, $user->id);
         
-        $level = $this->auditRepository->getLevel($decodedLevelId);
-        $user = $this->auditRepository->getUser($decodedUserId);
-        
-        $questions = $this->auditRepository->getLevelQuestions($decodedLevelId);
-        $responses = $this->auditRepository->getUserResponses(
-            $decodedUserId,
-            array_column($questions, 'id')
-        );
-        
-        return view("pages.admin.admins.auditor.audited_responses", compact('level', 'user', 'questions', 'responses'));
+        return [
+            'level' => $level,
+            'user' => $user,
+            'questions' => $questions
+        ];
     }
 
     /**
      * Submit audit scores for user responses
      */
-    public function submitAudit(array $responses, int $userId, int $levelId): bool
+    public function submitAudit(array $responses, Level $level, User $user)
     {
-        return $this->transactionManager->run(function () use ($responses) {
-            $result = $this->auditRepository->updateResponseScores($responses);
-            $this->flasher->notifyCrudResult($result, "updated");
-            return $result;
-        });
+        try {
+            if(!$this->auditRepository->isAdminAllowedToAuditUser($level, $user)){
+                $this->flasher->notifyCrudResult(false, "error");
+                return false;
+            }
+            $messages = $this->transactionManager->run(function () use ($responses, $level, $user) {
+                // get the targeted responses from db
+                $responses_origin = $this->auditRepository->getTargetedUserResponses($level->id, $user->id, $responses['scores']);
+                return $this->calculateUserResponseFinalScores($responses_origin,$responses['scores']);
+            });
+            foreach($messages as $message){
+                $this->flasher->notify($message[0], $message[1]);
+            }
+        } catch (\Exception $e) {
+            $this->registerLogs('Audit Service : SubmitAudit', $e);
+            $this->flasher->notifyCrudResult(false, "error");
+            return false;
+        }
     }
 
 } 

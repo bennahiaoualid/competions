@@ -50,6 +50,9 @@ class Response extends Model
         'admin_id',
         'score',
         'response_duration',
+        'keystrokes',
+        'penalty',
+        'flags'
     ];
 
     /**
@@ -61,7 +64,11 @@ class Response extends Model
     {
         return [
             'score' => 'float',
+            'final_score' => 'float',
             'response_duration' => 'integer',
+            'keystrokes' => 'integer',
+            'penalty' => 'float',
+            'flags' => 'array',
         ];
     }
 

@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers\Competition;
 
+use App\Models\User;
+use Illuminate\View\View;
+use App\Models\Competition\Level;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\AuditUserResponsesScoreRequest;
-use App\Http\Requests\Competition\FilterCompetitionRequest;
-use App\Services\Competition\AuditService;
-use App\Traits\CrudOperationNotificationAlert;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\View\View;
+use App\Services\Competition\AuditService;
+use App\Traits\CrudOperationNotificationAlert;
+use App\Http\Requests\Admin\AuditUserResponsesScoreRequest;
+use App\Http\Requests\Competition\FilterCompetitionRequest;
 
 class AuditController extends Controller
 {
@@ -32,35 +34,35 @@ class AuditController extends Controller
     /**
      * Display users for a specific level audit
      */
-    public function auditUsers(string $levelId): View
+    public function auditUsers(Level $level): View
     {
-        return $this->auditService->auditUsers($levelId);
+        $data = $this->auditService->auditUsersList($level);
+        return view("pages.admin.admins.auditor.audited_users", $data);
+
     }
 
     /**
      * Display user responses for audit
+     * 
      */
-    public function auditUserResponses(string $levelId, string $userId): View
+    public function auditUserResponses(Level $level, string $userId): View
     {
-        return $this->auditService->auditUserResponses($levelId, $userId);
+        
+        $data =  $this->auditService->auditUserResponses($level, $userId);
+        return view("pages.admin.admins.auditor.audited_user_responses_submit", $data);
+
     }
 
     /**
      * Submit audit scores for user responses
      */
-    public function submitAudit(AuditUserResponsesScoreRequest $request): RedirectResponse
+    public function submitAudit(AuditUserResponsesScoreRequest $request, Level $level, User $user): RedirectResponse
     {
         $result = $this->auditService->submitAudit(
-            $request->responses,
-            $request->user_id,
-            $request->level_id
+            $request->validated(),
+            $level,
+            $user
         );
-
-        $notifications = $this->generateNotifications($result, "updated");
-
-        foreach ($notifications as $notification) {
-            session()->flash('messages', session('messages', collect())->push($notification));
-        }
 
         return Redirect::back();
     }

@@ -20,6 +20,7 @@ return [
             'finish' => 'finish operation done',
             'response_audited' => 'response number :number score updated',
             'approved' => 'approved',
+            'response_audited' => 'response number :number has been audited',
         ],
         'fail' =>[
             'saved' => 'something went wrong while saving',
@@ -80,6 +81,7 @@ return [
             'leave_without_response'=>'closing the browser or leaving the page mark your response as empty',
             'you_cant_change_audited_responses' => 'you cant change the giving scores after saving',
             'response_final_score_calc' => 'final score = score - (response duration / duration * (score / 2))',
+            'response_penalty_calc' => 'the score will by decreased by percentage of the penalty',
             'delete_competition' => 'This process will remove competition and its information including levels competitors auditors and results, you cant undo ',
             'correct_choice' => 'the first choice will be chose as the correct one'
         ]

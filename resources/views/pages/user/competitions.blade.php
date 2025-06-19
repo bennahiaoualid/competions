@@ -53,6 +53,7 @@
             </div>
         @endforeach
     </div>
+    <x-pagination :paginator="$competitions" />
     @else
         <div class="text-center">
             <div class="text-gray-500 mb-4">

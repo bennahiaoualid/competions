@@ -11,7 +11,7 @@ export default {
         "./resources/**/*.js",
         "./resources/**/*.vue",
         './app/Livewire/**/*Table.php',
-        './vendor/power-components/livewire-powergrid/resources/views/**/*.php',
+        '.resources/vendor/power-components/livewire-powergrid/**/*.php',
         './vendor/power-components/livewire-powergrid/src/Themes/Tailwind.php',
         'app/PowerGridThemes/*.php',
         'app/Livewire/*.php',

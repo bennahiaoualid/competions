@@ -30,6 +30,7 @@ class StoreResponseRequest extends FormRequest
     {
         return [
             'response_text' => 'nullable|string|min:3',
+            'keystrokes' => 'nullable|integer',
         ];
     }
 }

@@ -60,7 +60,10 @@ Route::group(
             Route::get('/competition/{level}/response', [\App\Http\Controllers\User\UserCompetitionController::class, 'levelStart'])->name('competitions.level.response');
             Route::post('/competition/{question}/response/store', [\App\Http\Controllers\User\UserCompetitionController::class, 'storeResponse'])->name('competitions.level.response.store');
             Route::get('/competition/user/{level}/responses', [\App\Http\Controllers\User\UserCompetitionController::class, 'userResponses'])->name('competitions.response');
-
+            Route::post('/record-tab-switch', function () {
+                session(['tab_switched' => true]);
+                return response()->json(['ok' => true]);
+            });
         });
         // global questions
         Route::get('/questions/response/', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'getRandomQuestion'])->name('global_questions.response');

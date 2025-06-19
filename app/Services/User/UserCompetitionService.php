@@ -14,10 +14,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Collection;
 use App\Contracts\TransactionManagerInterface;
 use App\Interface\User\UserCompetitionRepositoryInterface;
+use App\Traits\UserResponseCalculation;
 
 class UserCompetitionService
 {
-    use RegisterLogs;
+    use RegisterLogs, UserResponseCalculation;
     public function __construct(
         protected UserCompetitionRepositoryInterface $userCompetitionRepository,
         protected TransactionManagerInterface $transactionManager,
@@ -28,9 +29,8 @@ class UserCompetitionService
     /**
      * Get all public competitions with optional filters
      * @param array $filters
-     * @return Collection of competitions
      */
-    public function getAllPublicCompetitions(array $filters = []): Collection
+    public function getAllPublicCompetitions(array $filters = [])
     {
         return $this->userCompetitionRepository->getAllPublicCompetitions($filters);
     }
@@ -38,9 +38,8 @@ class UserCompetitionService
     /**
      * Get user competitions with optional filters
      * @param array $filters
-     * @return Collection of competitions
      */
-    public function getUserCompetitions(array $filters = []): Collection
+    public function getUserCompetitions(array $filters = [])
     {
         return $this->userCompetitionRepository->getUserCompetitions(Auth::user(), $filters);
     }
@@ -122,14 +121,14 @@ class UserCompetitionService
             $question = $questions->random();
 
             // Initialize response in transaction
-           /* $this->transactionManager->run(function () use ($question) {
+            $this->transactionManager->run(function () use ($question) {
                 $this->userCompetitionRepository->createResponse([
                     'response_text' => '',
                     'question_id' => $question->id,
                     'user_id' => Auth::id(),
                     'admin_id' => null,
                 ]);
-            });*/
+            });
             $data = [
                 'status' => 'success',
                 'question' => $question,
@@ -160,16 +159,22 @@ class UserCompetitionService
     public function storeResponse(Question $question, array $data): bool
     {
         try {
+            // prepare data
             $startTime = session('start_time');
             $responseTime = $startTime->diffInUTCSeconds(now());
+            $keystrokes = $data['keystrokes'] ?? 0;
+            $answer = $data['response_text'] ?? '';
+            
+            $penalty_flags = $this->calculatePenalty($responseTime, $keystrokes, $answer);
 
-            /*$this->transactionManager->run(function () use ($question, $data, $responseTime) {
+            $this->transactionManager->run(function () use ($question, $answer, $responseTime, $keystrokes, $penalty_flags) {
 
-                $this->userCompetitionRepository->updateResponse($question->id, [
-                    'response_text' => $data['response_text'] ?? '',
+                $this->userCompetitionRepository->updateResponse($question->id, array_merge($penalty_flags, [
+                    'response_text' => $answer,
                     'response_duration' => round($responseTime, 2),
-                ]);
-            });*/
+                    'keystrokes' => $keystrokes,
+                ]));
+            });
 
             session()->forget(['start_time']);
 

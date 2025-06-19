@@ -2,8 +2,9 @@
 
 namespace App\Interface\Competition;
 
-use App\Models\Competition\Level;
 use App\Models\User;
+use App\Models\Competition\Level;
+use Illuminate\Support\Collection;
 
 interface AuditRepositoryInterface
 {
@@ -13,31 +14,34 @@ interface AuditRepositoryInterface
     public function getCompetitionsForAudit(array $filters = []);
 
     /**
-     * Get level by ID
+     * Get user by uuid
      */
-    public function getLevel(int $levelId): Level;
+    public function getUser(string $userIdentifier): User;
 
     /**
-     * Get user by ID
+     * Get user responses for specific level
      */
-    public function getUser(int $userId): User;
+    public function getLevelQuestionsWithUserResponses(int $levelId, int $userId);
 
     /**
-     * Get questions for a level
+     * Check if the current admin is allowed to audit the user
+     * @param Level $level
+     * @param User $user
+     * @return bool
      */
-    public function getLevelQuestions(int $levelId): array;
+    public function isAdminAllowedToAuditUser(Level $level, User $user): bool;
 
     /**
-     * Get user responses for specific questions
+     * Get targeted user responses
+     * @param int $levelId
+     * @param int $userId
+     * @param array $responseIds
+     * @return Collection
      */
-    public function getUserResponses(int $userId, array $questionIds): array;
+    public function getTargetedUserResponses($levelId, $userId, $responseIds) : Collection;
 
     /**
      * Update response scores
      */
     public function updateResponseScores(array $responses): bool;
-
-    function auditUsers($level_id);
-    function auditUserResponses($level_id, $user_identifier);
-    function submitAudit(array $responses, $user_id, $level_id);
 } 

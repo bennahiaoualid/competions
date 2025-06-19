@@ -82,6 +82,23 @@ return [
         'failed' => 'oops! that\' not right',
         'try_again' => 'try again',
         'play_more' => 'keep playing',
+        'penalty' => 'penalty',
+        'flag' => [
+            'tab_switch' => 'switching tabs',
+            'copy_paste' => 'copying and pasting',
+            'low_keystrokes' => 'low keystrokes number',
+            'suspicious_wpm' => 'suspicious wpm number',
+            'too_fast_long_answer' => 'too fast writing long answer',
+        ],
+        'rules' => [
+            'title' => 'response rules',
+            'close_browser' => 'closing the browser will sent an empty response',
+            'switch_tab' => 'switching tabs will be penalized, decrease the score by 15%',
+            'copy_paste' => 'copying and pasting will be penalized, decrease the score by 20%',
+            'low_keystrokes' => 'if the answer is too long and the number of keystrokes is too low, it will be penalized, decrease the score by 20%',
+            'suspicious_wpm' => 'if the number of words in the answer per minute is too high (more than 90 : words number / duration), it will be penalized, decrease the score by 10%',
+            'too_fast_long_answer' => 'if the number of characters in the answer per second is too high (more than 10 : characters number / duration), it will be penalized, decrease the score by 20%',
+        ],
     ],
     'result' => [
         'level' => 'the level results',

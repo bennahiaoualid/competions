@@ -52,10 +52,46 @@
                     </x-button>
                 </div>
             </x-collapsible-card>
+
             <!-- competitors response and question answers section -->
             @auth('web')
+                {{-- show question list and start solve button --}}
                 <x-collapsible-card :title="__('competition.question.list')" type="info">
                     @if($level->userCanParticipate())
+
+                        {{-- show response rules --}}
+                        <x-collapsible-card :title="__('competition.response.rules.title')" type="warning" :isopen="false">
+                            <div class="flex justify-between items-center my-4 p-2 border border-primary rounded" >
+                                <ul class="space-y-2 md:space-y-6">
+                                    <li class="py-1 px-2 rounded-sm shadow-sm flex gap-4 items-center">
+                                        <i class="fa-regular fa-circle-check"></i>
+                                        {{__('competition.response.rules.close_browser')}}
+                                    </li>
+                                    <li class="py-1 px-2 rounded-sm shadow-sm flex gap-4 items-center">
+                                        <i class="fa-regular fa-circle-check"></i>
+                                        {{__('competition.response.rules.switch_tab')}}
+                                    </li>
+                                    <li class="py-1 px-2 rounded-sm shadow-sm flex gap-4 items-center">
+                                        <i class="fa-regular fa-circle-check"></i>
+                                        {{__('competition.response.rules.copy_paste')}}
+                                    </li>
+                                    <li class="py-1 px-2 rounded-sm shadow-sm flex gap-4 items-center">
+                                        <i class="fa-regular fa-circle-check"></i>
+                                        {{__('competition.response.rules.low_keystrokes')}}
+                                    </li>
+                                    <li class="py-1 px-2 rounded-sm shadow-sm flex gap-4 items-center">
+                                        <i class="fa-regular fa-circle-check"></i>
+                                        {{__('competition.response.rules.suspicious_wpm')}}
+                                    </li>
+                                    <li class="py-1 px-2 rounded-sm shadow-sm flex gap-4 items-center">
+                                        <i class="fa-regular fa-circle-check"></i>
+                                        {{__('competition.response.rules.too_fast_long_answer')}}
+                                    </li>
+                                </ul>
+                            </div>
+                        </x-collapsible-card>
+
+                        {{-- show start solve button if the level is still active --}}
                         @if($level->isStillActive())
                             <div class="flex justify-between items-center my-4 p-2 border border-primary rounded" >
                                 <p class="text-lg font-bold capitalize text-primary">{{__('competition.question.start_solve')}}</p>
@@ -98,6 +134,8 @@
                         </x-alert>
                     @endif
                 </x-collapsible-card>
+
+                {{-- show competitor responses list --}}
                 @if($level->userCanParticipate() && $level->status != 0 && !$level->isStillActive() )
                     <x-collapsible-card :title="__('competition.response.info')" type="info">
                         <div class="flex justify-between items-center my-4 p-2 border border-primary rounded" >
@@ -111,6 +149,7 @@
                         </div>
                     </x-collapsible-card>
                 @endif
+                
             @endauth
         </div>
     </div>
