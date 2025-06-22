@@ -16,7 +16,7 @@ interface AuditRepositoryInterface
     /**
      * Get user by uuid
      */
-    public function getUser(string $userIdentifier): User;
+    public function getUser(string $userIdentifier): ?User;
 
     /**
      * Get user responses for specific level

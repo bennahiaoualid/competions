@@ -142,7 +142,7 @@ class UserCompetitionService
             return $data;
             
         } catch (\Exception $e) {
-            $this->registerLogs('UserCompetitionService : levelStart', $e);
+            $this->registerLogs('UserCompetitionService : levelStart ', $e);
             $this->flasher->notifyCrudResult(false, 'something_went_wrong');
             return [
                 'status' => 'error',
@@ -161,6 +161,9 @@ class UserCompetitionService
         try {
             // prepare data
             $startTime = session('start_time');
+            if (!$startTime instanceof \Carbon\Carbon) {
+                throw new \Exception("Start time not found in session");
+            }
             $responseTime = $startTime->diffInUTCSeconds(now());
             $keystrokes = $data['keystrokes'] ?? 0;
             $answer = $data['response_text'] ?? '';
@@ -181,6 +184,7 @@ class UserCompetitionService
             return true;
 
         } catch (\Exception $e) {
+            $this->registerLogs('UserCompetitionService : storeResponse ', $e);
             $this->flasher->notifyCrudResult(false, 'something_went_wrong');
             return false;
         }

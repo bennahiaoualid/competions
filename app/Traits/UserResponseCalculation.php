@@ -21,6 +21,13 @@ trait UserResponseCalculation
     
         $length = strlen($answer);
         $wordCount = str_word_count(strip_tags($answer));
+
+        if($length == 0){
+            return [
+                'flags' => json_encode($flags),
+                'penalty' => 0
+            ];
+        }
     
         // Penalty: Answer too fast and long => likely copy/paste
         $cps = $length / max($duration, 0.01); // characters per second

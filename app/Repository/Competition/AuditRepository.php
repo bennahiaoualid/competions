@@ -28,7 +28,7 @@ class AuditRepository implements AuditRepositoryInterface
                     ->paginate(PaginationHelper::perPage());
     }
 
-    public function getUser(string $userIdentifier): User
+    public function getUser(string $userIdentifier): ?User
     {
         return User::where("anonymized_identifier",$userIdentifier)->first();
     }

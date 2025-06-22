@@ -51,6 +51,9 @@ class AuditService
     public function auditUserResponses(Level $level, string $userIdentifier): array
     {
         $user = $this->auditRepository->getUser($userIdentifier);
+        if(!$user){
+            abort(404, "User not found");
+        }
         $questions = $this->auditRepository->getLevelQuestionsWithUserResponses($level->id, $user->id);
         
         return [
@@ -78,6 +81,7 @@ class AuditService
             foreach($messages as $message){
                 $this->flasher->notify($message[0], $message[1]);
             }
+            return true;
         } catch (\Exception $e) {
             $this->registerLogs('Audit Service : SubmitAudit', $e);
             $this->flasher->notifyCrudResult(false, "error");
