@@ -8,10 +8,12 @@ use Carbon\Carbon;
 use Tests\TestCase;
 use App\Models\User;
 use App\Models\Competition\Level;
+use Illuminate\Support\Collection;
 use App\Contracts\FlasherInterface;
 use App\Models\Competition\Question;
 use App\Models\Competition\Response;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Competition\Competition;
 use Illuminate\Foundation\Testing\WithFaker;
 use App\Services\User\UserCompetitionService;
 use App\Contracts\TransactionManagerInterface;
@@ -21,11 +23,17 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 class UserCompetitionServiceTest extends TestCase
 {
     use WithFaker;
-
+    /** @var UserCompetitionRepositoryInterface | Mockery\MockInterface */
     protected $userCompetitionRepository;
+    /** @var TransactionManagerInterface | Mockery\MockInterface */
     protected $transactionManager;
+    /** @var FlasherInterface | Mockery\MockInterface */
     protected $flasher;
+    /** @var UserCompetitionService */
     protected $userCompetitionService;
+    /** @var Competition | Mockery\MockInterface */
+    protected $competition;
+    /** @var Level | Mockery\MockInterface */
     protected $level;
     protected $userId;
 
@@ -47,11 +55,18 @@ class UserCompetitionServiceTest extends TestCase
 
         // Setup test data
         $this->userId = 1;
+
+        // Mock Competition model
+        $this->competition = Mockery::mock(Competition::class);
+        $this->competition->shouldReceive('getAttribute')->with('id')->andReturn(1);
         
         // Mock Level model
         $this->level = Mockery::mock(Level::class)->makePartial();
         $this->level->shouldReceive('getAttribute')->with('id')->andReturn(1);
-        $this->level->shouldReceive('questions_number')->andReturn(10);
+        $this->level->shouldReceive('getAttribute')->with('questions_number')->andReturn(10);
+        $this->level->shouldReceive('getAttribute')->with('status')->andReturn(1);
+        $this->level->shouldReceive('getAttribute')->with('competition')->andReturn($this->competition);
+
 
         // Mock Auth facade
         $user = Mockery::mock(User::class);
@@ -88,6 +103,12 @@ class UserCompetitionServiceTest extends TestCase
     public function test_level_start_success_with_questions()
     {
          // Arrange
+        $mockUsers = Mockery::mock(Collection::class);
+        $mockUsers->shouldReceive('contains')
+            ->with($this->userId)
+            ->andReturn(true);
+        $this->competition->shouldReceive('getAttribute')->with('users')->andReturn($mockUsers);
+
         $selectedQuestion = $this->prepareQuestions();
         $questions = Mockery::mock(EloquentCollection::class)->makePartial();
         $questions->shouldReceive('count')->andReturn(3);
@@ -137,6 +158,12 @@ class UserCompetitionServiceTest extends TestCase
     public function test_level_start_empty_questions()
     {
         // Arrange
+        $mockUsers = Mockery::mock(Collection::class);
+        $mockUsers->shouldReceive('contains')
+            ->with($this->userId)
+            ->andReturn(true);
+        $this->competition->shouldReceive('getAttribute')->with('users')->andReturn($mockUsers);
+
         $questions = Mockery::mock(EloquentCollection::class)->makePartial();
         $questions->shouldReceive('isEmpty')->andReturn(true);
         $this->userCompetitionRepository->shouldReceive('getUnansweredQuestions')
@@ -149,12 +176,37 @@ class UserCompetitionServiceTest extends TestCase
 
         // Assert
         $this->assertEquals('empty', $result['status']);
-        $this->assertEquals($this->level, $result['level']);
+    }
+
+    public function test_level_start_user_not_participate_in_this_level_competition()
+    {
+        // Arrange
+        $mockUsers = Mockery::mock(Collection::class);
+        $mockUsers->shouldReceive('contains')
+            ->with($this->userId)
+            ->andReturn(false);
+
+        $this->competition->shouldReceive('getAttribute')->with('users')->andReturn($mockUsers);
+        
+        $this->flasher->shouldReceive('notifyCrudResult')
+            ->with(false, 'something_went_wrong')
+            ->once();
+        // Act
+        $result = $this->userCompetitionService->levelStart($this->level);
+
+        // Assert
+        $this->assertEquals('error', $result['status']);
     }
 
     public function test_level_start_exception_handling()
     {
         // Arrange
+        $mockUsers = Mockery::mock(Collection::class);
+        $mockUsers->shouldReceive('contains')
+            ->with($this->userId)
+            ->andReturn(true);
+        $this->competition->shouldReceive('getAttribute')->with('users')->andReturn($mockUsers);
+
         $this->userCompetitionRepository->shouldReceive('getUnansweredQuestions')
             ->once()
             ->with($this->level->id, 1)

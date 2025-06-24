@@ -42,6 +42,9 @@ class ResponseFactory extends Factory
             'admin_id' => $adminId, // Or Admin::factory() if an admin should always be associated
             'score' => $this->faker->optional(0.7, 0)->randomFloat(2, 0, 20), // 70% chance of having a score, otherwise 0
             'response_duration' => $this->faker->numberBetween(10, 100), // Duration in seconds
+            'keystrokes' => $this->faker->numberBetween(10, 100),
+            'penalty' => 0,
+            'flags' => json_encode([]),
         ];
     }
 

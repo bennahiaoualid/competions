@@ -49,6 +49,7 @@ class UserFactory extends Factory
             'gender' => $this->faker->randomElement(['male', 'female']),
             'email_verified_at' => $this->faker->optional()->dateTime(),
             'password' => static::$password ??= Hash::make('password'),
+            'guest' => false,
             'remember_token' => Str::random(10),
         ];
 

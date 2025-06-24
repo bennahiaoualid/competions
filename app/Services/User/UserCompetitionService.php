@@ -105,6 +105,18 @@ class UserCompetitionService
     public function levelStart(Level $level): array|bool
     {
         try {
+            // Check if the level is available
+            if($level->status != 1){
+                throw new \Exception("trying to respond to non active level questions");
+                return ['status' => 'error'];
+            }
+
+            // user is not part of the level competition
+            if(!$level->competition->users->contains(Auth::id())){
+                throw new \Exception("user is not part of the level competition");
+                return ['status' => 'error'];
+            }
+
             // Get unanswered questions
             $questions = $this->userCompetitionRepository->getUnansweredQuestions($level->id, Auth::id());
             
@@ -114,7 +126,7 @@ class UserCompetitionService
             ];
 
             if ($questions->isEmpty()) {
-                return ['status' => 'empty', 'level' => $level];
+                return ['status' => 'empty'];
             }
 
             // Get a random question

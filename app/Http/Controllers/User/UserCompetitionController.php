@@ -65,7 +65,7 @@ class UserCompetitionController extends Controller
     }
 
     /**
-     * Start a competition level
+     * Start a competition level : the user get random question each time to answer
      * @param Level $level
      * @return View|RedirectResponse
      */
@@ -76,10 +76,10 @@ class UserCompetitionController extends Controller
             return view('pages.user.question_response', $request_result);
         }
         elseif($request_result['status'] == 'empty'){
-            return redirect()->route('user.competitions.response', ['level' => $request_result['level']]);
+            return redirect()->route('user.competitions.response', ['level' => $level]);
         }
         else{
-            return redirect()->back();
+            return redirect()->route('competitions.level', ['level' => $level]);
         }
 
     }

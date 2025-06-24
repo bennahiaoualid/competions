@@ -2,9 +2,10 @@
 
 namespace App\Models\Competition;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * 
@@ -16,6 +17,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $admin_id
  * @property float $score
  * @property int $response_duration
+ * @property int $keystrokes
+ * @property float $penalty
+ * @property array $flags
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Competition\Question $question
@@ -78,5 +82,13 @@ class Response extends Model
     public function question() :BelongsTo
     {
         return $this->belongsTo(Question::class);
+    }
+
+    /**
+     * the user that this response belong to
+     */
+    public function user() :BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }
