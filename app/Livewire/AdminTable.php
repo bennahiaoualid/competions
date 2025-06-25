@@ -38,12 +38,12 @@ final class AdminTable extends PowerGridComponent
     {
         if (Auth::user()->hasRole('owner')){
             return Admin::query()
-                ->select('id','name', 'email', 'birthdate', 'gender')
+                ->select('id', 'name', 'email', 'birthdate', 'gender')
                 ->where('id', '!=', Auth::id());
         }
         else{
             return Admin::withoutRoles(['owner', 'super_admin'])
-                ->select('name', 'email', 'birthdate', 'gender')
+                ->select('id', 'name', 'email', 'birthdate', 'gender')
                 ->where('id', '!=', Auth::id());
         }
     }
@@ -88,7 +88,7 @@ final class AdminTable extends PowerGridComponent
         ];
     }
 
-    public function actions($row): array
+    public function actions(Admin $row): array
     {
         return [
             Button::add('my-custom-button')

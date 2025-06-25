@@ -13,10 +13,12 @@ return new class extends Migration
     {
         Schema::table('admins', function (Blueprint $table) {
             $table->softDeletes();
+            $table->index('deleted_at');
         });
 
         Schema::table('users', function (Blueprint $table) {
             $table->softDeletes();
+            $table->index('deleted_at');
         });
     }
 

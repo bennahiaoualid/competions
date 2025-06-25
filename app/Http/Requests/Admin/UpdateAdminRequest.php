@@ -11,7 +11,7 @@ use Illuminate\Validation\Rule;
 class UpdateAdminRequest extends FormRequest
 {
     use RoleManipulation;
-    protected $errorBag = 'createAdmin';
+    protected $errorBag = 'updateAdmin';
     /**
      * Determine if the user is authorized to make this request.
      */

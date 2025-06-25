@@ -5,13 +5,14 @@ namespace App\Services\Competition;
 use App\Models\User;
 use Illuminate\View\View;
 use App\Models\Admin\Admin;
+use App\Traits\RegisterLogs;
 use App\Models\Competition\Level;
 use App\Contracts\FlasherInterface;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Traits\UserResponseCalculation;
 use App\Contracts\TransactionManagerInterface;
 use App\Interface\Competition\AuditRepositoryInterface;
-use App\Traits\RegisterLogs;
-use App\Traits\UserResponseCalculation;
 
 class AuditService
 {
@@ -70,6 +71,13 @@ class AuditService
     {
         try {
             if(!$this->auditRepository->isAdminAllowedToAuditUser($level, $user)){
+                Log::warning("Unauthorized audit submission attempt", [
+                    'admin_id' => Auth::id(),
+                    'target_user_id' => $user->id,
+                    'level_id' => $level->id,
+                    'ip' => request()->ip(),
+                    'reason' => 'Admin not authorized to audit this user-level combo',
+                ]);
                 $this->flasher->notifyCrudResult(false, "error");
                 return false;
             }

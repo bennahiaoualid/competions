@@ -2,45 +2,130 @@
 
 namespace App\Services\Admin;
 
-use App\Interface\Admin\AdminRepositoryInterface;
-use App\Models\Admin\Admin;
 use Exception;
+use Illuminate\View\View;
+use App\Models\Admin\Admin;
+use App\Traits\RegisterLogs;
+use App\Traits\RoleManipulation;
+use App\Contracts\FlasherInterface;
+use Illuminate\Support\Facades\Auth;
+use App\Jobs\Competition\DeleteAuditorJob;
+use App\Services\Tracking\JobTrackingService;
+use App\Contracts\TransactionManagerInterface;
+use App\Jobs\Competition\SafeDeleteAuditorJob;
+use App\Traits\CrudOperationNotificationAlert;
+use App\Interface\Admin\AdminRepositoryInterface;
 
 class AdminService
 {
+    use CrudOperationNotificationAlert, RoleManipulation, RegisterLogs;
+
     public function __construct(
-        protected AdminRepositoryInterface $adminRepository
+        protected AdminRepositoryInterface $adminRepository,
+        protected TransactionManagerInterface $transactionManager,
+        protected FlasherInterface $flasher,
+        protected JobTrackingService $jobTrackingService
     ) {
     }
 
-    public function index()
+    /**
+     * Show dashboard with admin/user counts.
+     * Business logic .
+     */
+    public function index(): array
     {
-        return $this->adminRepository->index();
+        $count = [
+            'admin' => $this->adminRepository->getAdminCount(),
+            'user' => $this->adminRepository->getUserCount(),
+        ];
+        return ['count' => $count];
     }
 
-    public function all()
+    /**
+     * Show admin list with possible roles.
+     * Business logic.
+     * @return array roles
+     */
+    public function all(): array
     {
-        return $this->adminRepository->all();
+        $roles = $this->possibleRoles();
+        return ['roles' => $roles];
     }
 
-    public function create(array $data)
+    /**
+     * Create an admin with transaction and notification.
+     */
+    public function create(array $data): bool
     {
-        return $this->adminRepository->create($data);
+        try {
+            $result = $this->transactionManager->run(function () use ($data) {
+                $admin = $this->adminRepository->create($data);
+                $admin->roles()->sync($data['role']);
+                return true;
+            });
+            $this->flasher->notifyCrudResult(true, 'saved');
+            return $result;
+        } catch (\Exception $exception) {
+            $this->registerLogs('Admin creation error: ', $exception);
+            $this->flasher->notifyCrudResult(false, 'saved');
+            return false;
+        }
     }
 
-    public function edit(Admin $admin)
+    /**
+     * Show edit admin form with possible roles.
+     * Business logic.
+     */
+    public function edit(Admin $admin): array
     {
-        return $this->adminRepository->edit($admin);
+        $roles = $this->possibleRoles();
+        return ['admin' => $admin, 'roles' => $roles];
     }
 
-    public function update(Admin $admin, array $data)
+    /**
+     * Update an admin with transaction and notification.
+     */
+    public function update(Admin $admin, array $data): bool
     {
-        return $this->adminRepository->update($admin, $data);
+        try {
+            $result = $this->transactionManager->run(function () use ($admin, $data) {
+                $admin = $this->adminRepository->update($admin, [
+                    'name' => $data['name'],
+                    'email' => $data['email'],
+                ]);
+                $admin->roles()->sync($data['role']);
+                return true;
+            });
+            $this->flasher->notifyCrudResult(true, 'updated');
+            return $result;
+        } catch (\Exception $exception) {
+            $this->registerLogs('Admin updating error: ', $exception);
+            $this->flasher->notifyCrudResult(false, 'updated');
+            return false;
+        }
     }
 
-    public function delete(Admin $admin)
+    /**
+     * Delete an admin with transaction and notification.
+     */
+    public function delete(Admin $admin): bool
     {
-        return $this->adminRepository->delete($admin);
+        try {
+            $result = $this->transactionManager->run(function () use ($admin) {
+                $job = new SafeDeleteAuditorJob(
+                    auditorId: $admin->id,
+                    userId: Auth::id()
+                );
+                $trackingId = $this->jobTrackingService->dispatchWithTracking($job);
+                //$this->adminRepository->delete($admin);
+                return true;
+            });
+            $this->flasher->notifyCrudResult(true, 'deleted');
+            return $result;
+        } catch (\Exception $exception) {
+            $this->registerLogs('Admin deleting error: ', $exception);
+            $this->flasher->notifyCrudResult(false, 'deleted');
+            return false;
+        }
     }
-
 }

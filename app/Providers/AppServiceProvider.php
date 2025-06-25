@@ -22,6 +22,7 @@ use App\Services\Admin\AdminProfileService;
 use App\Services\Competition\QuestionService;
 use App\Services\Database\TransactionManager;
 use App\Services\GuestUsers\UserGuestService;
+use App\Services\Tracking\JobTrackingService;
 use App\Services\User\UserCompetitionService;
 use App\Contracts\TransactionManagerInterface;
 use App\Interface\User\UserRepositoryInterface;
@@ -59,7 +60,12 @@ class AppServiceProvider extends ServiceProvider
         });
         $this->app->bind(AdminRepositoryInterface::class, AdminRepository::class);
         $this->app->bind(AdminService::class, function ($app) {
-            return new AdminService($app->make(AdminRepositoryInterface::class));
+            return new AdminService(
+                $app->make(AdminRepositoryInterface::class),
+                $app->make(TransactionManagerInterface::class),
+                $app->make(FlasherInterface::class),
+                $app->make(JobTrackingService::class)
+            );
         });
 
         // user

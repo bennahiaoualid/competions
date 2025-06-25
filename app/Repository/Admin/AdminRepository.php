@@ -2,77 +2,60 @@
 
 namespace App\Repository\Admin;
 
-use App\Helpers\AuditorSaveDelete;
 use App\Interface\Admin\AdminRepositoryInterface;
 use App\Models\Admin\Admin;
 use App\Models\User;
-use App\Traits\CrudOperationNotificationAlert;
-use App\Traits\RoleManipulation;
-use Exception;
-use App\Traits\RegisterLogs;
-use Illuminate\Support\Facades\DB;
 
 
 class AdminRepository implements AdminRepositoryInterface
 {
-    use RegisterLogs, RoleManipulation, CrudOperationNotificationAlert;
-    function index(){
-        $count = [
-            "admin" => Admin::all()->count(),
-            "user" => User::all()->count(),
-        ];
-
-        return view("pages.admin.dashboard",compact('count'));
+    /**
+     * Get the count of admins and users.
+     * Data access only. No business logic or view rendering.
+     */
+    public function getAdminCount(): int
+    {
+        return Admin::count();
     }
 
-    function all(){
-        $roles = $this->possibleRoles();
-        return view("pages.admin.admins.list", compact("roles"));
+    public function getUserCount(): int
+    {
+        return User::count();
     }
 
-    public function create(array $data){
-        try {
-            DB::beginTransaction();
-            $admin =  Admin::create($data);
-            $admin->roles()->sync([$data['role']]);
-            DB::commit();
-            return true;
-        }
-        catch (Exception $exception){
-            DB::rollBack();
-            $this->registerLogs('Admin creation error: ',$exception);
-            return false;
-        }
-
+    /**
+     * Get all roles (data access only).
+     * The business logic for filtering roles should be in the service.
+     */
+    public function getAllRoles()
+    {
+        // This should be called with any filtering already done in the service.
+        return \Spatie\Permission\Models\Role::all();
     }
 
-    function edit(Admin $user){
-        $roles = $this->possibleRoles();
-        return view("pages.admin.admins.edit-admin", compact("user", "roles"));
+    /**
+     * Create an admin (data access only).
+     */
+    public function create(array $data)
+    {
+        return Admin::create($data);
     }
 
-    function update(Admin $admin, array $data){
-        try {
-            $admin->name = $data['name'];
-            $admin->email = $data['email'];
-            $admin->roles()->sync([$data['role']]);
-            $admin->save();
-            return true;
-        }catch (Exception $exception){
-            $this->registerLogs('Admin updating error: ',$exception);
-            return false;
-        }
+    /**
+     * Update admin fields (data access only).
+     */
+    public function update(Admin $admin, array $data)
+    {
+        $admin->fill($data);
+        $admin->save();
+        return $admin;
     }
 
-    function delete(Admin $admin){
-        try {
-            // remove admin from binning auditor in a competitions
-            AuditorSaveDelete::deleteAuditor($admin->id);
-            $admin->delete();
-            return true;
-        }catch (Exception $exception){
-            $this->registerLogs('Admin deleting error: ',$exception);
-            return false;
-        }
+    /**
+     * Delete an admin (data access only).
+     */
+    public function delete(Admin $admin)
+    {
+        return $admin->delete();
     }
 }

@@ -27,13 +27,13 @@ Route::group(
         Route::middleware('auth:admin')->group(function () {
 
             Route::get('/', [\App\Http\Controllers\Admin\AdminController::class, "index"])->name("index");
-            Route::get('/admins', [\App\Http\Controllers\Admin\AdminController::class, "getAdminList"])->name("list");
+            Route::get('/admins', [\App\Http\Controllers\Admin\AdminController::class, "getAdminListView"])->name("list");
 
             // only admin with role owner and super_admin can access to this routs
             Route::group(['middleware' => ['role:owner|super_admin']], function (){
                 Route::post('/store', [\App\Http\Controllers\Admin\AdminController::class, "store"])->name("store");
-                Route::middleware('auth_user_profile')->get('/admins/edit/{id}', [\App\Http\Controllers\Admin\AdminController::class, "edit"])->name("edit");
-                Route::patch('/update', [\App\Http\Controllers\Admin\AdminController::class, "update"])->name("update");
+                Route::middleware('prevent_unauthorized_admin_edit')->get('/admins/edit/{id}', [\App\Http\Controllers\Admin\AdminController::class, "edit"])->name("edit");
+                Route::middleware('prevent_unauthorized_admin_edit')->patch('/update', [\App\Http\Controllers\Admin\AdminController::class, "update"])->name("update");
                 Route::post('/delete', [\App\Http\Controllers\Admin\AdminController::class, "delete"])->middleware("can_delete_admin")->name("delete");
                 Route::get('/activity', [\App\Http\Controllers\Admin\AdminController::class, "showActivity"])->name("activity");
 

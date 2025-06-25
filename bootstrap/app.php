@@ -8,6 +8,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
+        channels: __DIR__.'/../routes/channels.php',
         health: '/up',
 
     )
@@ -21,8 +22,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
-            'auth_user_profile' => \App\Http\Middleware\AuthUserRedirectToProfile::class,
-            'can_delete_admin' => \App\Http\Middleware\RightsToDeleteAdmin::class,
+            'prevent_unauthorized_admin_edit' => \App\Http\Middleware\PreventUnauthorizedAdminEdit::class,
+            'can_delete_admin' => \App\Http\Middleware\EnsureAdminCanDeleteAdmin::class,
             'can_delete_user' => \App\Http\Middleware\RightsToDeleteUser::class,
             'can_update_competition' => \App\Http\Middleware\UpdateCompetition::class,
             'guest.guard' => \App\Http\Middleware\GuestWithGuard::class,

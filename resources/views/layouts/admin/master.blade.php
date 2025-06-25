@@ -7,11 +7,11 @@
 @endif
 
 <head>
+    <meta name="user-id" content="{{ Auth::id() }}">
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="keywords" content="HTML5 Template" />
-    <meta name="description" content="Webmin - Bootstrap 4 & Angular 5 Admin Dashboard Template" />
-    <meta name="author" content="potenzaglobalsolutions.com" />
+    <meta name="keywords" content="Competition Management System" />
+    <meta name="author" content="oualid bennahia" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
     @include('layouts.admin.head')
 </head>

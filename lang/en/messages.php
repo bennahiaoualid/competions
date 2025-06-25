@@ -123,6 +123,15 @@ return [
         'new_auditor' => 'you have been added as an auditor in new Competition :competition',
         'finish_level' =>  'a competition that you are an auditor on it :competition has been finish the level :level you can start checking responses',
 
+    ],
+    'job' => [
+        'completed' => 'job completed successfully',
+        'failed' => 'job failed',
+        'auditor_deleted' => 'auditor :admin has been deleted successfully',
+        'auditor_delete_failed' => 'auditor :admin has been deleted but failed to remove as an auditor',
+        'admin_deleted' => 'admin :admin has been deleted and removed as an auditor successfully',
+        'admin_delete_failed' => 'admin :admin has been deleted but failed to remove as an auditor',
+        'admin_restored' => 'admin :admin has been restored',
     ]
 
 ];
