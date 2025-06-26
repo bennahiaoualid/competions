@@ -154,7 +154,7 @@ final class GlobalQuestionsTable extends PowerGridComponent
         return [
             Rule::button('approve')
                 ->when(fn($question) => $question->approved != null)
-                ->hide()
+                ->hide(),
         ];
     }
 

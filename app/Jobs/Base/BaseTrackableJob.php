@@ -5,12 +5,14 @@ namespace App\Jobs\Base;
 use Throwable;
 use Illuminate\Support\Str;
 use Illuminate\Bus\Queueable;
-use App\Events\JobStatusUpdated;
-use App\Models\Tracking\JobTracking;
+use Illuminate\Support\Facades\Log;
+use App\Models\Monitoring\JobTracking;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
+use App\Events\Monitoring\JobStatusUpdated;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use App\Events\Monitoring\JobRetriedSuccessfully;
 
 abstract class BaseTrackableJob implements ShouldQueue
 {
@@ -21,25 +23,37 @@ abstract class BaseTrackableJob implements ShouldQueue
 
     protected $trackingId;
     protected $jobType;
+    protected $jobClass;
     protected $userId;
     protected $entityType;
     protected $entityId;
+    protected bool $skipTrackingCreation = false;
 
-    public function __construct($userId = null, $entityType = null, $entityId = null)
-    {
+    public function __construct(
+        $userId = null, 
+        $entityType = null, 
+        $entityId = null, 
+        $jobType,
+        $skipTrackingCreation = false
+    ) {
         $this->trackingId = Str::uuid();
-        $this->jobType = static::class;
+        $this->jobType = $jobType;
+        $this->jobClass = static::class;
         $this->userId = $userId;
         $this->entityType = $entityType;
         $this->entityId = $entityId;
-
-        $this->createTrackingRecord();
+        $this->skipTrackingCreation = $skipTrackingCreation;
+        if (!$this->skipTrackingCreation) {
+            $this->createTrackingRecord();
+        }
     }
 
     protected function createTrackingRecord()
     {
+        Log::info("Creating tracking record for job: " . $this->jobClass .'jj'. $this->skipTrackingCreation);
         JobTracking::create([
             'job_id' => $this->trackingId,
+            'job_class' => $this->jobClass,
             'job_type' => $this->jobType,
             'status' => 'pending',
             'payload' => $this->getPayloadData(),
@@ -84,11 +98,11 @@ abstract class BaseTrackableJob implements ShouldQueue
     {
         $isLastAttempt = $tracking->attempts >= $this->tries;
 
-        $this->updateJobStatus($tracking, [
+        $tracking->update([
             'status' => $isLastAttempt ? 'failed' : 'pending',
             'error_message' => $e->getMessage(),
             'failed_at' => $isLastAttempt ? now() : null,
-        ], $this->getCustomMessage()['error']);
+        ]);
 
         if ($isLastAttempt) {
             $this->onFinalFailure($e, $tracking);
@@ -106,7 +120,16 @@ abstract class BaseTrackableJob implements ShouldQueue
     abstract protected function executeJob();
     abstract protected function getPayloadData(): array;
 
-    protected function onSuccess($result) {}
+    protected function onSuccess($result): void
+    {
+        event(new JobRetriedSuccessfully(
+            jobId: $this->trackingId,
+            userId: $this->userId,
+            jobType: $this->jobType,
+            entityId: $this->entityId,
+            entityType: $this->entityType,
+        ));
+    }
     protected function onFinalFailure(Throwable $e, JobTracking $tracking) {}
 
     abstract public static function fromTrackingPayload(array $payload, ?int $userId, string $trackingId): static;

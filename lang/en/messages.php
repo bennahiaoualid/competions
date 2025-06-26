@@ -111,6 +111,7 @@ return [
         'text_dir' => 'text direction',
         'ltr' => 'left to right',
         'rtl' => 'right to left',
+        'action' => 'action',
     ],
     'mail' => [
         'welcome' => 'Welcome dear :user',
@@ -124,14 +125,4 @@ return [
         'finish_level' =>  'a competition that you are an auditor on it :competition has been finish the level :level you can start checking responses',
 
     ],
-    'job' => [
-        'completed' => 'job completed successfully',
-        'failed' => 'job failed',
-        'auditor_deleted' => 'auditor :admin has been deleted successfully',
-        'auditor_delete_failed' => 'auditor :admin has been deleted but failed to remove as an auditor',
-        'admin_deleted' => 'admin :admin has been deleted and removed as an auditor successfully',
-        'admin_delete_failed' => 'admin :admin has been deleted but failed to remove as an auditor',
-        'admin_restored' => 'admin :admin has been restored',
-    ]
-
 ];

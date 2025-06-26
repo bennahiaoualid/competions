@@ -14,8 +14,10 @@ return new class extends Migration
         Schema::create('job_trackings', function (Blueprint $table) {
             $table->id();
             $table->string('job_id')->unique();
+            $table->string('job_class');
             $table->string('job_type');
-            $table->enum('status', ['pending', 'processing', 'completed', 'failed'])->default('pending');            $table->json('payload')->nullable();
+            $table->enum('status', ['pending', 'processing', 'completed', 'failed'])->default('pending');            
+            $table->json('payload')->nullable();
             $table->json('result')->nullable();
             $table->text('error_message')->nullable();
             $table->integer('attempts')->default(0);
@@ -28,8 +30,10 @@ return new class extends Migration
             $table->unsignedBigInteger('entity_id')->nullable();
             $table->timestamps();
 
+            $table->unique('job_id');
             $table->index(['status', 'created_at']);
-            $table->index(['user_id', 'status']);
+            $table->index(['user_id', 'status', 'created_at']);
+            $table->index(['entity_type', 'entity_id']);
         });
     }
 

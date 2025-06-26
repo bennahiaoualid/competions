@@ -3,14 +3,12 @@
 namespace App\Services\Admin;
 
 use Exception;
-use Illuminate\View\View;
 use App\Models\Admin\Admin;
 use App\Traits\RegisterLogs;
 use App\Traits\RoleManipulation;
 use App\Contracts\FlasherInterface;
 use Illuminate\Support\Facades\Auth;
-use App\Jobs\Competition\DeleteAuditorJob;
-use App\Services\Tracking\JobTrackingService;
+use App\Services\Monitoring\JobTrackingService;
 use App\Contracts\TransactionManagerInterface;
 use App\Jobs\Competition\SafeDeleteAuditorJob;
 use App\Traits\CrudOperationNotificationAlert;
@@ -113,11 +111,11 @@ class AdminService
         try {
             $result = $this->transactionManager->run(function () use ($admin) {
                 $job = new SafeDeleteAuditorJob(
-                    auditorId: $admin->id,
+                    auditor: $admin,
                     userId: Auth::id()
                 );
                 $trackingId = $this->jobTrackingService->dispatchWithTracking($job);
-                //$this->adminRepository->delete($admin);
+                $this->adminRepository->delete($admin);
                 return true;
             });
             $this->flasher->notifyCrudResult(true, 'deleted');

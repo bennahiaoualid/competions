@@ -3,6 +3,7 @@
 use Livewire\Livewire;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Competition\AuditController;
+use App\Http\Controllers\Monitoring\MonitoringController;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
 /*
@@ -36,9 +37,13 @@ Route::group(
                 Route::middleware('prevent_unauthorized_admin_edit')->patch('/update', [\App\Http\Controllers\Admin\AdminController::class, "update"])->name("update");
                 Route::post('/delete', [\App\Http\Controllers\Admin\AdminController::class, "delete"])->middleware("can_delete_admin")->name("delete");
                 Route::get('/activity', [\App\Http\Controllers\Admin\AdminController::class, "showActivity"])->name("activity");
+            });
 
-                // global question ==> approve
-                Route::get('/global-question/{id}/approve', [\App\Http\Controllers\GuestUsers\GlobalQuestionController::class, "approve"])->name("global_question.approve");
+            // Monitoring routes belongs to owner and super_admin
+            Route::group(['middleware' => ['role:owner|super_admin']], function (){
+                Route::get('/monitoring', [MonitoringController::class, "JobTrackingList"])->name("monitoring");
+                Route::get('/monitoring/job/{jobId}', [MonitoringController::class, "jobRetry"])->name("monitoring.job.retry");
+            
             });
 
             // users manipulation
@@ -90,7 +95,9 @@ Route::group(
             Route::get('/global-questions', [\App\Http\Controllers\GuestUsers\GlobalQuestionController::class, "all"])->name("global_questions");
             Route::post('/global-questions/store', [\App\Http\Controllers\GuestUsers\GlobalQuestionController::class, "store"])->name("global_questions.store");
             Route::post('/global-question/delete', [\App\Http\Controllers\GuestUsers\GlobalQuestionController::class, "delete"])->name("global_question.delete");
-
+            // global question ==> approve
+            Route::middleware('role:owner|super_admin')->get('/global-question/{id}/approve', [\App\Http\Controllers\GuestUsers\GlobalQuestionController::class, "approve"])->name("global_question.approve");
+           
             Route::get('/profile', [\App\Http\Controllers\Admin\AdminProfileController::class, 'edit'])->name('profile.edit');
            // Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
            // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

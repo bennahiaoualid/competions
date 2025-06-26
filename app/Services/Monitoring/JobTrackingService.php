@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Services\Tracking;
+namespace App\Services\Monitoring;
 
 use Illuminate\Support\Collection;
 
 use App\Jobs\Base\BaseTrackableJob;
-use App\Models\Tracking\JobTracking;
+use App\Models\Monitoring\JobTracking;
 
 class JobTrackingService
 {
@@ -18,17 +18,6 @@ class JobTrackingService
     public function getJobStatus(string $trackingId): ?JobTracking
     {
         return JobTracking::where('job_id', $trackingId)->first();
-    }
-
-    public function getUserJobs(int $userId, string $status = null): Collection
-    {
-        $query = JobTracking::forUser($userId);
-
-        if ($status) {
-            $query->where('status', $status);
-        }
-
-        return $query->orderBy('created_at', 'desc')->get();
     }
 
     public function retryFailedJob(string $trackingId): bool
@@ -53,7 +42,7 @@ class JobTrackingService
 
     private function redispatchJob(JobTracking $tracking): void
     {
-        $jobClass = $tracking->job_type;
+        $jobClass = $tracking->job_class;
         $payload = $tracking->payload;
     
         if (!class_exists($jobClass)) {
@@ -69,15 +58,4 @@ class JobTrackingService
         dispatch($job);
     }
     
-
-    public function getFailedJobs(int $userId = null): Collection
-    {
-        $query = JobTracking::failed();
-
-        if ($userId) {
-            $query->forUser($userId);
-        }
-
-        return $query->orderBy('failed_at', 'desc')->get();
-    }
 }

@@ -7,14 +7,20 @@
         if (window.Echo) {
             window.Echo.private(`job.admin.${userId}`)
                 .listen('.JobUpdated', (e) => {
-                    console.log(e);
                     toastr.options.timeOut = 10000;
                     toastr.options.progressBar = true;
+
                     if (document.documentElement.dir === "rtl")
                         toastr.options.positionClass = "toast-top-left";
 
                     const method = e.status === 'completed' ? toastr.success : toastr.error;
                     e.messages.forEach(message => method(message));
+
+                    if (/\/admin\/admins$/.test(window.location.pathname)) {
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 6000);
+                    }
                 });
         } else {
             console.error("Echo not available");

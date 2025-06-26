@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Events;
+namespace App\Events\Monitoring;
 
-use App\Models\Tracking\JobTracking;
+use App\Models\Monitoring\JobTracking;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;

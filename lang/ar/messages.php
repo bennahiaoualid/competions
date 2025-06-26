@@ -111,6 +111,7 @@ return [
         'text_dir' => 'إتجاه النص',
         'ltr' => 'من اليسار لليمين',
         'rtl' => 'من اليمين الى اليسار',
+        'action' => 'الاجراء',
     ],
     'mail' => [
         'welcome' => 'مرحبا :user',
@@ -123,14 +124,5 @@ return [
         'new_auditor' => 'تم اضافتك كمصحح في المسابقة :competition',
         'finish_level' =>  'مسابقة انت مصصح فيها :competition قد تم انهاء مرحلتها :level يمكنك البدء في تصحيح اجابات المتسابقين',
     ],
-    'job' => [
-        'completed' => 'تم العملية بنجاح',
-        'failed' => 'فشل العملية',
-        'auditor_deleted' => 'تم حذف المصحح :admin بنجاح',
-        'auditor_delete_failed' => 'فشل حذف المصحح :admin',
-        'admin_deleted' => 'تم حذف المدير :admin وازالته كمصحح بنجاح',
-        'admin_delete_failed' => 'تم حذف المدير :admin ولكن فشل ازالته كمصحح',
-        'admin_restored' => 'تم استرجاع المدير :admin',
-    ]
 
 ];
