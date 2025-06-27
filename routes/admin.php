@@ -41,9 +41,10 @@ Route::group(
 
             // Monitoring routes belongs to owner and super_admin
             Route::group(['middleware' => ['role:owner|super_admin']], function (){
-                Route::get('/monitoring', [MonitoringController::class, "JobTrackingList"])->name("monitoring");
+                Route::get('/monitoring', [MonitoringController::class, "JobTrackingList"])->name("monitoring.job.tracking");
+                
                 Route::get('/monitoring/job/{jobId}', [MonitoringController::class, "jobRetry"])->name("monitoring.job.retry");
-            
+                Route::get('/monitoring/job/{jobId}/delete', [MonitoringController::class, "jobDelete"])->name("monitoring.job.delete");
             });
 
             // users manipulation

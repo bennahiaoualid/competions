@@ -2,13 +2,13 @@
 
 namespace App\Livewire;
 
+use Auth;
+use Carbon\Carbon;
 use App\Enums\JobTypeEnum;
 use App\Enums\JobStatusEnum;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Blade;
 use App\Models\Monitoring\JobTracking;
-use Auth;
 use Illuminate\Database\Eloquent\Builder;
+use Carbon\Exceptions\InvalidFormatException;
 use PowerComponents\LivewirePowerGrid\Button;
 use PowerComponents\LivewirePowerGrid\Column;
 use PowerComponents\LivewirePowerGrid\Facades\Rule;
@@ -60,6 +60,7 @@ final class JobTrackingTable extends PowerGridComponent
                 'text' => JobStatusEnum::from($job->status)->label()
             ]))
             ->add('attempts')
+            ->add('started_at') // original for search
             ->add('started_at_local')
             ->add('status_timestamp', function ($job) {
                 if ($job->status === 'completed') {
@@ -68,7 +69,9 @@ final class JobTrackingTable extends PowerGridComponent
                     return $job->failed_at_local;
                 }
                 return '-';
-            });
+            })
+            ->add('completed_at') // original for search
+            ->add('failed_at'); // original for search
     }
 
     public function columns(): array
@@ -76,27 +79,44 @@ final class JobTrackingTable extends PowerGridComponent
         return [
 
             Column::make(__('job.fields.job_type'), 'job_type')
-                ->sortable()
-                ->searchable(),
+                ->sortable(),
 
-            Column::make(__('job.fields.status'), 'status')
-                ->sortable()
-                ->searchable(),
+            Column::make(__('job.fields.status'), 'status'),
 
-            Column::make(__('job.fields.attempts'), 'attempts')
-                ->sortable()
-                ->searchable(),
+            Column::make(__('job.fields.attempts'), 'attempts'),
 
             Column::make(__('job.fields.started_at'), 'started_at_local')
-                ->sortable()
-                ->searchable(),
+                ->sortable(),
 
             Column::make(__('job.fields.completed_at'), 'status_timestamp')
-                ->sortable()
+                ->sortable(),
+
+            // hidden coulumns for search
+            Column::make('started_at', 'started_at')
+                ->hidden(isHidden: true, isForceHidden: true)
                 ->searchable(),
+            Column::make('completed_at', 'completed_at')
+                ->hidden(isHidden: true, isForceHidden: true),
+            Column::make('failed_at', 'failed_at')
+                ->hidden(isHidden: true, isForceHidden: true),
 
             Column::action(__('messages.global.action'))
         ];
+    }
+
+    public function beforeSearch(?string $field, ?string $search)
+    {
+        if (in_array($field, ['started_at', 'completed_at', 'failed_at'])) {
+            try {
+                return Carbon::parse($search, config('app.timezone_display', 'UTC'))
+                    ->setTimezone('UTC')
+                    ->format('Y-m-d H:i');
+            } catch (InvalidFormatException $e) {
+                return ''; 
+            }
+        }
+
+        return $search;
     }
 
     public function filters(): array
@@ -134,11 +154,18 @@ final class JobTrackingTable extends PowerGridComponent
     public function actions(JobTracking $row): array
     {
         return [
-            Button::add('edit')
-                ->slot('Edit: ')
-                ->id()
-                ->class('pg-btn-white dark:ring-pg-primary-600 dark:border-pg-primary-600 dark:hover:bg-pg-primary-700 dark:ring-offset-pg-primary-800 dark:text-pg-primary-300 dark:bg-pg-primary-700')
+            Button::add('retry_job')
+                ->slot(' <i class="fa-solid fa-rotate"></i>')
+                ->class('px-2 py-1 text-xs inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150
+                bg-transparent text-warning border-warning hover:bg-warning hover:text-white focus:bg-warning focus:text-white active:bg-warning active:text-white focus:ring-warning')
                 ->route('admin.monitoring.job.retry', ['jobId' => $row->job_id])
-            ];
+                ->can($row->status === 'failed'),
+
+            Button::add('delete_job')
+                ->slot(' <i class="fa-solid fa-unlock text-base"></i>')
+                ->class('px-2 py-1 text-xs inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150
+                bg-transparent text-danger border-danger hover:bg-danger hover:text-white focus:bg-danger focus:text-white active:bg-danger active:text-white focus:ring-danger')
+                ->route('admin.monitoring.job.delete', ['jobId' => $row->job_id]),
+        ];
     }
 }

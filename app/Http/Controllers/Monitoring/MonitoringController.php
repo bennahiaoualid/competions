@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Monitoring;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Services\Monitoring\JobTrackingService;
 
@@ -22,5 +21,11 @@ class MonitoringController extends Controller
     {
         $this->jobTrackingService->retryFailedJob($jobId);
         return redirect()->back()->with('success', __('messages.job_tracking.retry_success'));
+    }   
+
+    public function jobDelete(string $jobId)
+    {
+        $this->jobTrackingService->deleteJob($jobId);
+        return redirect()->back();
     }
 }

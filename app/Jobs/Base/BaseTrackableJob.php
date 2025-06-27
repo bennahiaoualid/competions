@@ -132,7 +132,7 @@ abstract class BaseTrackableJob implements ShouldQueue
     }
     protected function onFinalFailure(Throwable $e, JobTracking $tracking) {}
 
-    abstract public static function fromTrackingPayload(array $payload, ?int $userId, string $trackingId): static;
+    abstract public static function fromTrackingPayload(array $payload, ?int $userId, string $trackingId): ?static;
 
     public function getTrackingId(): string
     {

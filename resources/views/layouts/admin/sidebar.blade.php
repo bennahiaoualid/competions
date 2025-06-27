@@ -24,6 +24,16 @@
                 </x-slot:icon>
             </x-nav-dropdown>
 
+            {{-- Monitoring job tracking list --}}
+            <li class="mb-2">
+                <x-nav-link href="{{route('admin.monitoring.job.tracking')}}" :active="request()->routeIs('admin.monitoring.job.tracking')" :sub="false">
+                    <x-slot:icon>
+                        <i class="fas fa-home me-3"></i>
+                    </x-slot:icon>
+                    {{__("links.monitoring.job_tracking")}}
+                </x-nav-link>
+            </li>
+
             <li class="mb-2">
                 <x-nav-link href="{{route('admin.users')}}" :active="request()->routeIs('admin.users')" :sub="false">
                     <x-slot:icon>

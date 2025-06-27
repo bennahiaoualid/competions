@@ -19,6 +19,8 @@ return [
         'admin_deleted' => 'تم حذف المسؤول :admin وازالته كمصحح بنجاح',
         'admin_delete_failed' => 'تم حذف المسؤول :admin ولكن فشل ازالته كمصحح',
         'admin_restored' => 'تم استرجاع المسؤول :admin',
+        'success_duplicate_job_found' => 'تم العثور على عملية مكررة ناجحة في الوقت :time',
+        'already_handled' => 'تم التنفيذ هاته العملية',
     ],
     'status' => [
         'pending' => 'قيد الانتظار',
@@ -29,5 +31,14 @@ return [
     'job_type' => [ 
         'delete_auditor' => 'حذف المصحح',
         'delete_admin' => 'حذف المسؤول',
+    ],
+    'result_keys' => [
+        'auditor_id' => 'معرف المصحح',
+        'auditor' => 'المصحح',
+        'competition_id' => 'معرف المسابقة',
+        'competition' => 'المسابقة',
+        'completed_at' => 'وقت انهاء العملية',
+        'deleted_admin_id' => 'معرف المسؤول المحذوف',
+        'notice' => 'ملاحظة',
     ],
 ];

@@ -8,6 +8,7 @@ use App\Jobs\Base\BaseTrackableJob;
 use Illuminate\Support\Facades\Log;
 use App\Models\Monitoring\JobTracking;
 use App\Models\Competition\Competition;
+use App\Services\Monitoring\DuplicateJobChecker;
 
 class SafeDeleteAuditorJob extends BaseTrackableJob
 {
@@ -33,15 +34,14 @@ class SafeDeleteAuditorJob extends BaseTrackableJob
         );
     }
 
+    /**
+     * The keys returned here are shown to end-users.
+     * ⚠️ Keep translation consistency:
+     * If you add/remove keys, update the translation in job.result_keys.
+     */
     protected function executeJob(): array
     {
         return DB::transaction(function () {
-
-
-            // check if the admin is still exists before starting the job
-            if (!Admin::where('id', $this->auditor->id)->exists() && $this->jobType === 'admin') {
-                throw new \RuntimeException("Cannot retry: Admin already deleted.");
-            }
 
             $competitions = $this->getCompetitionsToProcess();
 
@@ -55,11 +55,18 @@ class SafeDeleteAuditorJob extends BaseTrackableJob
                 $this->removeAuditorFromCompetitions();
             }
 
-            return [
+            $result = [
                 'auditor_id' => $this->auditor->id,
+                'auditor' => $this->auditor->name,
                 'competition_id' => $this->competition?->id,
+                'competition' => $this->competition?->name,
                 'completed_at' => now(),
             ];
+            if ($this->jobType === 'admin') {
+                $result['deleted_admin_id'] = $this->auditor->id;
+            }
+
+            return $result;
         });
     }
 
@@ -74,6 +81,7 @@ class SafeDeleteAuditorJob extends BaseTrackableJob
 
     protected function onFinalFailure(\Throwable $e, JobTracking $tracking)
     {
+
         if ($this->auditor->trashed()) {
             $this->auditor->restore();
         }
@@ -132,11 +140,20 @@ class SafeDeleteAuditorJob extends BaseTrackableJob
             ->delete();
     }
 
-    public static function fromTrackingPayload(array $payload, ?int $userId, string $trackingId): static
+    public static function fromTrackingPayload(array $payload, ?int $userId, string $trackingId): ?static
     {
         $auditor = Admin::find($payload['auditor_id']);
-        $competition = $payload['competition_id'] ? Competition::find($payload['competition_id']) : null;
-    
+        $competition = $payload['competition_id'];
+        
+        if (!$auditor) {
+            Log::warning("SafeDeleteAuditorJob retrying failed :: Auditor not found :: fromTrackingPayload", [
+                'auditor_id' => $payload['auditor_id'],
+                'competition_id' => $payload['competition_id'],
+                'error' => "Auditor not found"
+            ]);
+            return null;
+        }
+
         $job = new static($auditor, $competition, $userId, skipTrackingCreation: true);
         $job->trackingId = $trackingId;
         return $job;

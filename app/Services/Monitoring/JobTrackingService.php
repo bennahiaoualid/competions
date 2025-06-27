@@ -5,7 +5,9 @@ namespace App\Services\Monitoring;
 use Illuminate\Support\Collection;
 
 use App\Jobs\Base\BaseTrackableJob;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Monitoring\JobTracking;
+use App\Events\Monitoring\JobStatusUpdated;
 
 class JobTrackingService
 {
@@ -20,6 +22,7 @@ class JobTrackingService
         return JobTracking::where('job_id', $trackingId)->first();
     }
 
+
     public function retryFailedJob(string $trackingId): bool
     {
         $tracking = JobTracking::where('job_id', $trackingId)
@@ -27,6 +30,37 @@ class JobTrackingService
             ->first();
 
         if (!$tracking) return false;
+
+        if ($tracking->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        $checker = app(DuplicateJobChecker::class);
+        $duplicate = $checker->getDuplicateSuccessfulJob(
+            $tracking->job_class,
+            $tracking->job_type,
+            $tracking->payload
+        );
+
+        if ($duplicate) {
+            // ✅ فقط حدّث الحالة والنتيجة ولا تعيد تنفيذ job
+            $tracking->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+                'error_message' => null,
+                'result' => [
+                    'notice' => __('job.messages.success_duplicate_job_found', [
+                        'time' => $duplicate->completed_at_local
+                    ])
+                ],
+            ]);
+
+            broadcast(new JobStatusUpdated($tracking, [
+                __('job.messages.already_handled')
+            ]));
+
+            return true;
+        }
 
         $tracking->update([
             'status' => 'pending',
@@ -55,7 +89,17 @@ class JobTrackingService
     
         /** @var BaseTrackableJob $job */
         $job = $jobClass::fromTrackingPayload($payload, $tracking->user_id, $tracking->job_id);
-        dispatch($job);
+        if ($job) {
+            dispatch($job);
+        }
+    }
+
+    public function deleteJob(string $trackingId): void
+    {
+        $tracking = JobTracking::where('job_id', $trackingId)->first();
+        if ($tracking && $tracking->user_id === Auth::id()) {
+            $tracking->delete();
+        }
     }
     
 }

@@ -4,6 +4,7 @@
 namespace App\Models\Monitoring;
 
 use Carbon\Carbon;
+use App\Presenters\JobResultPresenter;
 use Illuminate\Database\Eloquent\Model;
 
 class JobTracking extends Model
@@ -46,20 +47,13 @@ class JobTracking extends Model
             : null;
     }
 
-
-    public function scopePending($query)
+    /**
+     * Returns formatted job result for UI display.
+     * Used only in PowerGrid row detail.
+     */
+    public function getLocalizedResultAttribute(): array
     {
-        return $query->where('status', 'pending');
-    }
-
-    public function scopeFailed($query)
-    {
-        return $query->where('status', 'failed');
-    }
-
-    public function scopeForUser($query, $userId)
-    {
-        return $query->where('user_id', $userId);
+        return (new JobResultPresenter($this->result ?? []))->toDisplay();
     }
 }
 

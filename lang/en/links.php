@@ -7,6 +7,10 @@ return [
         'admins' => 'Administrators',
         'list' => 'Administrators List',
     ],
+    'monitoring' => [
+        'job_tracking' => 'Job Tracking',
+        'job_list' => 'Jobs List',
+    ],
     'user' =>[
         'list' => 'Users',
     ],
