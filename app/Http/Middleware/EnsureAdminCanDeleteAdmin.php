@@ -17,10 +17,10 @@ class EnsureAdminCanDeleteAdmin
     {
         $currentAdmin = Auth::user();
         $deletedAdmin = Admin::findOrFail($request->id);
-
-        $canDelete = $currentAdmin->hasRole('owner') ||
-                    ($deletedAdmin->admin_id && $deletedAdmin->admin_id === $currentAdmin->id &&
-                    $deletedAdmin->id !== $currentAdmin->id);
+        
+        $canDelete = ($currentAdmin->hasRole('owner') ||
+                    ($deletedAdmin->admin_id && $deletedAdmin->admin_id === $currentAdmin->id))
+                    && $deletedAdmin->id !== $currentAdmin->id;
 
         if (!$canDelete) {
             $notification = $this->generateCustomNotification(__('messages.validation.not_allow.admin_delete'),"error");

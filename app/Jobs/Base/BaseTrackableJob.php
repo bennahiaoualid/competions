@@ -50,7 +50,6 @@ abstract class BaseTrackableJob implements ShouldQueue
 
     protected function createTrackingRecord()
     {
-        Log::info("Creating tracking record for job: " . $this->jobClass .'jj'. $this->skipTrackingCreation);
         JobTracking::create([
             'job_id' => $this->trackingId,
             'job_class' => $this->jobClass,

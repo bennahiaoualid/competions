@@ -80,6 +80,7 @@ class Admin extends Authenticatable
         'password',
         'birthdate',
         'gender',
+        'admin_id',
     ];
 
     /**

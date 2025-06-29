@@ -44,7 +44,7 @@ class AdminService
      * Business logic.
      * @return array roles
      */
-    public function all(): array
+    public function adminList(): array
     {
         $roles = $this->possibleRoles();
         return ['roles' => $roles];
@@ -57,7 +57,7 @@ class AdminService
     {
         try {
             $result = $this->transactionManager->run(function () use ($data) {
-                $admin = $this->adminRepository->create($data);
+                $admin = $this->adminRepository->create(array_merge($data, ['admin_id' => Auth::id()]));
                 $admin->roles()->sync($data['role']);
                 return true;
             });

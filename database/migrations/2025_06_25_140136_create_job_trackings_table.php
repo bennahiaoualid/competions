@@ -30,7 +30,6 @@ return new class extends Migration
             $table->unsignedBigInteger('entity_id')->nullable();
             $table->timestamps();
 
-            $table->unique('job_id');
             $table->index(['status', 'created_at']);
             $table->index(['user_id', 'status', 'created_at']);
             $table->index(['entity_type', 'entity_id']);

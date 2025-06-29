@@ -158,8 +158,23 @@ class SafeDeleteAuditorJob extends BaseTrackableJob
         $job->trackingId = $trackingId;
         return $job;
     }
+
+    /**
+     * Get the auditor for the job.
+     * usualy used in test to get the auditor
+     * @return Admin
+     */
+    public function getAuditor(): Admin
+    {
+        return $this->auditor;
+    }
     
 
+    /**
+     * Get the custom message for the job.
+     * this messages are sent to job update status event to notify the user if the job status is success or failed
+     * @return array
+     */
     protected function getCustomMessage(): array
     {
         // check if we are deleting an auditor from a competition or a full admin

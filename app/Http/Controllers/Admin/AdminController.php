@@ -38,7 +38,7 @@ class AdminController extends Controller
      * Display Admins List View
      */
     function getAdminListView() : View{
-        $data = $this->adminService->all();
+        $data = $this->adminService->adminList();
         return view("pages.admin.admins.list",$data);
     }
 
@@ -51,10 +51,10 @@ class AdminController extends Controller
      *
      * @param StoreAdminRequest $request The incoming request containing admin data.
      */
-    function store(StoreAdminRequest $request) {
+    function store(StoreAdminRequest $request) : RedirectResponse {
         $this->adminService->create($request->validated());
         // Notification handled in service
-        return redirect()->route('admin.list');
+        return redirect()->back();
     }
 
 
