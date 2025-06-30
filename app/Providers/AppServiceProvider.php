@@ -46,7 +46,10 @@ use App\Repository\GuestUsers\GlobalQuestionRepository;
 use App\Interface\Admin\AdminProfileRepositoryInterface;
 use App\Interface\Competition\QuestionRepositoryInterface;
 use App\Interface\GuestUsers\UserGuestRepositoryInterface;
+use App\Interface\Monitoring\JobTrackingStrategyInterface;
 use App\Interface\User\UserCompetitionRepositoryInterface;
+use App\Repository\Monitoring\InMemoryJobTrackingStrategy;
+use App\Repository\Monitoring\DatabaseJobTrackingStrategy;
 use App\Interface\Competition\CompetitionRepositoryInterface;
 use App\Interface\GuestUsers\GlobalQuestionRepositoryInterface;
 
@@ -83,7 +86,8 @@ class AppServiceProvider extends ServiceProvider
             return new CompetitionService(
                 $app->make(CompetitionRepositoryInterface::class),
                 $app->make(TransactionManagerInterface::class),
-                $app->make(FlasherInterface::class)
+                $app->make(FlasherInterface::class),
+                $app->make(JobTrackingService::class)
             );
         });
 
@@ -144,6 +148,20 @@ class AppServiceProvider extends ServiceProvider
 
         // flasher
         $this->app->bind(FlasherInterface::class, Flasher::class);
+
+        // flasher helper
+        $this->app->singleton('flasher', function ($app) {
+            return $app->make(FlasherInterface::class);
+        });
+
+        // job tracking strategy
+        $this->app->bind(JobTrackingStrategyInterface::class, function ($app) {
+            // ✅ FOLLOWS: Environment-based configuration done in service provider, not business logic
+            if ($app->environment('testing')) {
+                return new InMemoryJobTrackingStrategy();
+            }
+            return new DatabaseJobTrackingStrategy();
+        });
     }
 
     /**

@@ -13,6 +13,7 @@ use App\Events\Monitoring\JobStatusUpdated;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use App\Events\Monitoring\JobRetriedSuccessfully;
+use App\Interface\Monitoring\JobTrackingStrategyInterface;
 
 abstract class BaseTrackableJob implements ShouldQueue
 {
@@ -28,13 +29,15 @@ abstract class BaseTrackableJob implements ShouldQueue
     protected $entityType;
     protected $entityId;
     protected bool $skipTrackingCreation = false;
+    protected JobTrackingStrategyInterface $trackingStrategy;
 
     public function __construct(
         $userId = null, 
         $entityType = null, 
         $entityId = null, 
         $jobType,
-        $skipTrackingCreation = false
+        $skipTrackingCreation = false,
+        ?JobTrackingStrategyInterface $trackingStrategy = null
     ) {
         $this->trackingId = Str::uuid();
         $this->jobType = $jobType;
@@ -43,14 +46,13 @@ abstract class BaseTrackableJob implements ShouldQueue
         $this->entityType = $entityType;
         $this->entityId = $entityId;
         $this->skipTrackingCreation = $skipTrackingCreation;
-        if (!$this->skipTrackingCreation) {
-            $this->createTrackingRecord();
-        }
+        // ✅ FOLLOWS: Dependency Inversion - inject strategy, default to production
+        $this->trackingStrategy = $trackingStrategy ?? app(JobTrackingStrategyInterface::class);
     }
 
     protected function createTrackingRecord()
     {
-        JobTracking::create([
+        $this->trackingStrategy->createTrackingRecord([
             'job_id' => $this->trackingId,
             'job_class' => $this->jobClass,
             'job_type' => $this->jobType,
@@ -65,7 +67,11 @@ abstract class BaseTrackableJob implements ShouldQueue
 
     public function handle()
     {
-        $tracking = JobTracking::where('job_id', $this->trackingId)->first();
+        if (!$this->skipTrackingCreation) {
+            $this->createTrackingRecord();
+        }
+        
+        $tracking = $this->trackingStrategy->getTrackingRecord($this->trackingId);
 
         if (!$tracking) {
             throw new \Exception('Job tracking record not found');

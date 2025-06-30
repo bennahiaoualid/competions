@@ -3,17 +3,19 @@
 namespace App\Services\Competition;
 
 use Exception;
+use App\Models\Admin\Admin;
+use App\Contracts\FlasherInterface;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Competition\Competition;
 use App\Contracts\TransactionManagerInterface;
-use App\Contracts\FlasherInterface;
+use App\Jobs\Competition\SafeDeleteAuditorJob;
+use App\Services\Monitoring\JobTrackingService;
 use App\Traits\RegisterLogs; // For logging errors
 use App\Jobs\Competetion\SyncCompetitionParticipants;
 use App\Helpers\UserNotifyEmail; // For sending emails
 use App\Interface\Competition\CompetitionRepositoryInterface;
 use App\Traits\CrudOperationNotificationAlert; // For notifications
 use App\Models\User; // For Auth::user() type hinting if specific methods are used
-use App\Jobs\Competition\DeleteAuditorJob; // For deleting auditor
 
 class CompetitionService
 {
@@ -28,7 +30,8 @@ class CompetitionService
     public function __construct(
         protected CompetitionRepositoryInterface $competitionRepository,
         protected TransactionManagerInterface $transactionManager,
-        protected FlasherInterface $flasher
+        protected FlasherInterface $flasher,
+        protected JobTrackingService $jobTrackingService
     ) {
     }
 
@@ -63,11 +66,11 @@ class CompetitionService
                 SyncCompetitionParticipants::dispatch($competition)->afterCommit();
                 return true;
             });
-            $this->flasher->notifyCrudResult(true, 'saved');
+            $this->flasher->crudSuccess('saved');
             return $result;
         } catch (Exception $exception) {
             $this->registerLogs('Competition creation error: ', $exception);
-            $this->flasher->notifyCrudResult(false, 'saved');
+            $this->flasher->crudFailure('saved');
             return false;
         }
     }
@@ -95,11 +98,11 @@ class CompetitionService
                 return true;
             });
 
-            $this->flasher->notifyCrudResult(true, 'updated');
+            $this->flasher->crudSuccess('updated');
             return $result;
         } catch (Exception $exception) {
             $this->registerLogs('Competition updating error: ', $exception);
-            $this->flasher->notifyCrudResult(false, 'updated');
+            $this->flasher->crudFailure('updated');
             return false;
         }
     }
@@ -115,22 +118,22 @@ class CompetitionService
         try {
             $competition = $this->competitionRepository->findById($competitionId);
             if (!$competition) {
-                $this->flasher->notify('Competition not found.', 'error');
+                $this->flasher->error(__('messages.validation.404.competition'));
                 return false;
             }
 
             if (!($competition->canEdit() || (Auth::user() instanceof User && Auth::user()->hasRole('owner')))) {
-                $this->flasher->notify(__('messages.validation.not_allow.competition_delete'), 'error');
+                $this->flasher->error(__('messages.validation.not_allow.competition_delete'));
                 return false;
             }
 
             $this->competitionRepository->delete($competition);
-            $this->flasher->notifyCrudResult(true, 'deleted');
+            $this->flasher->crudSuccess('deleted');
             return true;
 
         } catch (Exception $exception) {
             $this->registerLogs('Competition deleting error: ', $exception);
-            $this->flasher->notifyCrudResult(false, 'deleted');
+            $this->flasher->crudFailure('deleted');
             return false;
         }
     }
@@ -150,11 +153,11 @@ class CompetitionService
                 return true;
             });
 
-            $this->flasher->notifyCrudResult(true, 'saved');
+            $this->flasher->crudSuccess('saved');
             return $result;
         } catch (Exception $exception) {
             $this->registerLogs('Error adding users to competition: ', $exception);
-            $this->flasher->notifyCrudResult(false, 'saved');
+            $this->flasher->crudFailure('saved');
             return false;
         }
     }
@@ -170,7 +173,7 @@ class CompetitionService
     {
         try {
             if(!$competition->canEdit()) {
-                $this->flasher->notify(__('messages.validation.not_allow.competition_update'), 'error');
+                $this->flasher->error(__('messages.validation.not_allow.competition_update'));
                 return false;
             };
             $result = $this->transactionManager->run(function () use ($competition, $user_id) {
@@ -178,11 +181,11 @@ class CompetitionService
                 return true;
             });
 
-            $this->flasher->notifyCrudResult(true, 'deleted');
+            $this->flasher->crudSuccess('deleted');
             return $result;
         } catch (Exception $exception) {
             $this->registerLogs('Error removing user from competition: ', $exception);
-            $this->flasher->notifyCrudResult(false, 'deleted');
+            $this->flasher->crudFailure('deleted');
             return false;
         }
     }
@@ -198,7 +201,7 @@ class CompetitionService
     {
         try {
             if (!$competition->canEdit()) {
-                $this->flasher->notify(__('messages.validation.not_allow.competition_update'), 'error');
+                $this->flasher->error(__('messages.validation.not_allow.competition_update'));
                 return false;
             }
             
@@ -208,11 +211,11 @@ class CompetitionService
                 return true;
             });
 
-            $this->flasher->notifyCrudResult(true, 'saved');
+            $this->flasher->crudSuccess('saved');
             return $result;
         } catch (Exception $exception) {
             $this->registerLogs('Error adding auditors to competition: ', $exception);
-            $this->flasher->notifyCrudResult(false, 'saved');
+            $this->flasher->crudFailure('saved');
             return false;
         }
     }
@@ -228,20 +231,23 @@ class CompetitionService
     {
         try {            
             if (!$competition->canEdit()) {
-                $this->flasher->notify(__('messages.validation.not_allow.competition_update'), 'error');
+                $this->flasher->error(__('messages.validation.not_allow.competition_update'));
                 return false;
             }
             if($competition->auditors->count() <= 1){
-                $this->flasher->notify(__('messages.validation.not_allow.remove_auditor_only_one'), 'error');
+                $this->flasher->error(__('messages.validation.not_allow.remove_auditor_only_one'));
                 return false;
             }
+            $admin = $this->competitionRepository->getAdmin($auditor_id);
 
-            DeleteAuditorJob::dispatch($auditor_id, $competition)->afterCommit();
-            $this->flasher->notifyCrudResult(true, 'deleted');
+            $job = $this->createDeleteJob($admin, $competition);
+            $this->jobTrackingService->dispatchWithTracking($job);
+
+            $this->flasher->info(__('messages.validation.info.deleted'));
             return true;
         } catch (Exception $exception) {
             $this->registerLogs('Error removing auditor from competition: ', $exception);
-            $this->flasher->notifyCrudResult(false, 'deleted');
+            $this->flasher->crudFailure('deleted');
             return false;
         }
     }
@@ -256,23 +262,23 @@ class CompetitionService
     {
         try {
             if ($competition->start_date->greaterThanOrEqualTo(now())){
-                $this->flasher->notify(__('messages.validation.not_allow.competition_activate_early'), 'error');
+                $this->flasher->error(__('messages.validation.not_allow.competition_activate_early'));
                 return false;
             }
             if ($competition->levels->count() != $competition->levels_number){
-                $this->flasher->notify(__('messages.validation.not_allow.competition_activate_match_levels'), 'error');
+                $this->flasher->error(__('messages.validation.not_allow.competition_activate_match_levels'));
                 return false;
             }
             if ($competition->users->count() <= 2){
-                $this->flasher->notify(__('messages.validation.not_allow.competition_activate_less_competitors'), 'error');
+                $this->flasher->error(__('messages.validation.not_allow.competition_activate_less_competitors'));
                 return false;
             }
             if ($competition->auditors->count() == 0){
-                $this->flasher->notify(__('messages.validation.not_allow.competition_activate_less_auditor'), 'error');
+                $this->flasher->error(__('messages.validation.not_allow.competition_activate_less_auditor'));
                 return false;
             }
             if(!$competition->isAllLevelAfterNow()){
-                $this->flasher->notify(__('messages.validation.not_allow.competition_activate_level_pass'), 'error');
+                $this->flasher->error(__('messages.validation.not_allow.competition_activate_level_pass'));
                 return false;
             }
 
@@ -283,13 +289,23 @@ class CompetitionService
                 return true;
             });
 
-            $this->flasher->notifyCrudResult(true, 'activated');
+            $this->flasher->crudSuccess('activated');
             return $result;
         } catch (Exception $exception) {
             $this->registerLogs('Competition activation error: ', $exception);
-            $this->flasher->notifyCrudResult(false, 'activated');
+            $this->flasher->crudFailure('activated');
             return false;
         }
+    }
+
+    /** helper methods */
+    protected function createDeleteJob(Admin $admin, Competition $competition): SafeDeleteAuditorJob
+    {
+        return new SafeDeleteAuditorJob(
+            auditor: $admin,
+            competition: $competition,
+            userId: Auth::id()
+        );
     }
     
 }

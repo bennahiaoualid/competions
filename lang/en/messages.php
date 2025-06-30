@@ -31,8 +31,14 @@ return [
             'finish' => 'finish operation failed',
             'approved' => 'approve fail',
         ],
+        'info' => [
+            'saved' => 'save operation is in progress',
+            'updated' => 'update operation is in progress',
+            'deleted' => 'delete operation is in progress',
+        ],
         '404' => [
             'user' => 'user not found',
+            'competition' => 'competition not found',
         ],
         'not_allow' => [
             'user_delete' => 'you have no permission to delete a user who doesnt created by you',

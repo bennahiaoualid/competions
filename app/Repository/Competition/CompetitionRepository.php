@@ -2,11 +2,12 @@
 
 namespace App\Repository\Competition;
 
-use App\Interface\Competition\CompetitionRepositoryInterface;
-use App\Models\Competition\Competition;
-use App\Traits\CrudOperationNotificationAlert;
+use App\Models\Admin\Admin;
 use App\Traits\RegisterLogs;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Competition\Competition;
+use App\Traits\CrudOperationNotificationAlert;
+use App\Interface\Competition\CompetitionRepositoryInterface;
 
 
 class CompetitionRepository implements CompetitionRepositoryInterface
@@ -163,5 +164,16 @@ class CompetitionRepository implements CompetitionRepositoryInterface
         $competition->status = "1";
         $result = $competition->save();
         return $result;
+    }
+
+    /**
+     * Get an admin by ID.
+     *
+     * @param int $id The ID of the admin to get.
+     * @return Admin The admin if found, null otherwise.
+     */
+    public function getAdmin($id): Admin
+    {
+        return Admin::findOrFail($id);
     }
 }

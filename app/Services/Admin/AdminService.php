@@ -13,7 +13,6 @@ use App\Contracts\TransactionManagerInterface;
 use App\Jobs\Competition\SafeDeleteAuditorJob;
 use App\Traits\CrudOperationNotificationAlert;
 use App\Interface\Admin\AdminRepositoryInterface;
-
 class AdminService
 {
     use CrudOperationNotificationAlert, RoleManipulation, RegisterLogs;
@@ -22,7 +21,7 @@ class AdminService
         protected AdminRepositoryInterface $adminRepository,
         protected TransactionManagerInterface $transactionManager,
         protected FlasherInterface $flasher,
-        protected JobTrackingService $jobTrackingService
+        protected JobTrackingService $jobTrackingService,
     ) {
     }
 
@@ -57,15 +56,16 @@ class AdminService
     {
         try {
             $result = $this->transactionManager->run(function () use ($data) {
+
                 $admin = $this->adminRepository->create(array_merge($data, ['admin_id' => Auth::id()]));
                 $admin->roles()->sync($data['role']);
                 return true;
             });
-            $this->flasher->notifyCrudResult(true, 'saved');
+            $this->flasher->crudSuccess('saved');
             return $result;
         } catch (\Exception $exception) {
             $this->registerLogs('Admin creation error: ', $exception);
-            $this->flasher->notifyCrudResult(false, 'saved');
+            $this->flasher->crudFailure('saved');
             return false;
         }
     }
@@ -94,11 +94,11 @@ class AdminService
                 $admin->roles()->sync($data['role']);
                 return true;
             });
-            $this->flasher->notifyCrudResult(true, 'updated');
+            $this->flasher->crudSuccess('updated');
             return $result;
         } catch (\Exception $exception) {
             $this->registerLogs('Admin updating error: ', $exception);
-            $this->flasher->notifyCrudResult(false, 'updated');
+            $this->flasher->crudFailure('updated');
             return false;
         }
     }
@@ -110,20 +110,28 @@ class AdminService
     {
         try {
             $result = $this->transactionManager->run(function () use ($admin) {
-                $job = new SafeDeleteAuditorJob(
-                    auditor: $admin,
-                    userId: Auth::id()
-                );
-                $trackingId = $this->jobTrackingService->dispatchWithTracking($job);
+
+                $job = $this->createDeleteJob($admin);
+
+                $this->jobTrackingService->dispatchWithTracking($job);
+
                 $this->adminRepository->delete($admin);
                 return true;
             });
-            $this->flasher->notifyCrudResult(true, 'deleted');
+            $this->flasher->info('deleted');
             return $result;
         } catch (\Exception $exception) {
             $this->registerLogs('Admin deleting error: ', $exception);
-            $this->flasher->notifyCrudResult(false, 'deleted');
+            $this->flasher->crudFailure('deleted');
             return false;
         }
+    }
+
+    protected function createDeleteJob(Admin $admin): SafeDeleteAuditorJob
+    {
+        return new SafeDeleteAuditorJob(
+            auditor: $admin,
+            userId: Auth::id()
+        );
     }
 }

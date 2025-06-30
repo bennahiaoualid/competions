@@ -42,6 +42,7 @@ class SafeDeleteAuditorJob extends BaseTrackableJob
     protected function executeJob(): array
     {
         return DB::transaction(function () {
+            //throw new \Exception('test remove auditor');
 
             $competitions = $this->getCompetitionsToProcess();
 
@@ -55,13 +56,8 @@ class SafeDeleteAuditorJob extends BaseTrackableJob
                 $this->removeAuditorFromCompetitions();
             }
 
-            $result = [
-                'auditor_id' => $this->auditor->id,
-                'auditor' => $this->auditor->name,
-                'competition_id' => $this->competition?->id,
-                'competition' => $this->competition?->name,
-                'completed_at' => now(),
-            ];
+            $result = $this->getResultValues();
+
             if ($this->jobType === 'admin') {
                 $result['deleted_admin_id'] = $this->auditor->id;
             }
@@ -75,7 +71,7 @@ class SafeDeleteAuditorJob extends BaseTrackableJob
         return [
             'auditor_id' => $this->auditor->id,
             'competition_id' => $this->competition?->id,
-            'action' => 'delete_auditor',
+            'action' => $this->competition ? 'delete_auditor' : 'delete_admin',
         ];
     }
 
@@ -89,6 +85,7 @@ class SafeDeleteAuditorJob extends BaseTrackableJob
         $this->updateJobStatus($tracking, [
             'status' => 'failed',
             'error_message' => $e->getMessage(),
+            'result' => $this->getResultValues(),
             'failed_at' => now(),
         ], $this->getCustomMessage()['error']);
 
@@ -143,7 +140,7 @@ class SafeDeleteAuditorJob extends BaseTrackableJob
     public static function fromTrackingPayload(array $payload, ?int $userId, string $trackingId): ?static
     {
         $auditor = Admin::find($payload['auditor_id']);
-        $competition = $payload['competition_id'];
+        $competition = $payload['competition_id'] ? Competition::find($payload['competition_id']) : null;
         
         if (!$auditor) {
             Log::warning("SafeDeleteAuditorJob retrying failed :: Auditor not found :: fromTrackingPayload", [
@@ -200,5 +197,16 @@ class SafeDeleteAuditorJob extends BaseTrackableJob
                 'success' => $success,
                 'error' => $error,
             ];
+    }
+
+    private function getResultValues(): array
+    {
+        return [
+            'auditor_id' => $this->auditor->id,
+            'auditor' => $this->auditor->name,
+            'competition_id' => $this->competition?->id,
+            'competition' => $this->competition?->title,
+            'completed_at' => now(),
+        ];
     }
 }

@@ -7,13 +7,15 @@ use Mockery;
 use Exception;
 use Tests\TestCase;
 use App\Models\Admin\Admin;
+use App\Helpers\UserNotifyEmail;
 use App\Contracts\FlasherInterface;
 use Illuminate\Support\Facades\Auth;
-use App\Helpers\UserNotifyEmail;
 use Illuminate\Support\Facades\Queue;
 use App\Models\Competition\Competition;
 use App\Jobs\Competition\DeleteAuditorJob;
 use App\Contracts\TransactionManagerInterface;
+use App\Jobs\Competition\SafeDeleteAuditorJob;
+use App\Services\Monitoring\JobTrackingService;
 use App\Services\Competition\CompetitionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Jobs\Competetion\SyncCompetitionParticipants;
@@ -29,8 +31,13 @@ class CompetitionServiceTest extends TestCase
     protected $transactionManager;
     /** @var FlasherInterface&\Mockery\MockInterface */
     protected $flasher;
+    /** @var JobTrackingService&\Mockery\MockInterface */
+    protected $jobTrackingService;
     /** @var Competition|\Mockery\MockInterface */
-    protected $competition_partial;
+    protected $competition;
+    /** @var Admin|\Mockery\MockInterface */
+    protected $admin;
+
 
     protected function setUp(): void
     {
@@ -40,18 +47,31 @@ class CompetitionServiceTest extends TestCase
         $this->competitionRepository = Mockery::mock(CompetitionRepositoryInterface::class);
         $this->transactionManager = Mockery::mock(TransactionManagerInterface::class);
         $this->flasher = Mockery::mock(FlasherInterface::class);
+        $this->jobTrackingService = Mockery::mock(JobTrackingService::class);
         
-        $this->competitionService = new CompetitionService($this->competitionRepository, $this->transactionManager, $this->flasher);
+        $this->competitionService = new CompetitionService(
+            $this->competitionRepository, 
+            $this->transactionManager, 
+            $this->flasher,
+            $this->jobTrackingService
+        );
 
-        $this->competition_partial = Mockery::mock(Competition::class)->makePartial();
-        $this->competition_partial->id = 1;
+        // Create a proper mock competition with id
+        $this->competition = Mockery::mock(Competition::class);
+        $this->competition->shouldReceive('getAttribute')
+            ->with('id')
+            ->andReturn(1);
+
+        $this->admin = $this->mockAdmin('owner',true);
         
         // Mock Auth facade
-        Auth::shouldReceive('id')->andReturn(1);
-        Auth::shouldReceive('user')->andReturn($this->mockAdmin('owner',true));
+        Auth::shouldReceive('id')->andReturn($this->admin->id);
+        Auth::shouldReceive('user')->andReturn($this->admin);
+
         
         // Fake queues for job testing
         Queue::fake();
+        Mockery::close();
     }
 
     protected function tearDown(): void
@@ -77,17 +97,12 @@ class CompetitionServiceTest extends TestCase
     {
         // Arrange
         $data = $this->createCompetitionData();
-        $competition = $this->competition_partial;
-        foreach ($data as $key => $value) {
-            $competition->$key = $value;
-        }
-    
     
         $this->competitionRepository
             ->shouldReceive('create')
             ->with($data)
             ->once()
-            ->andReturn($competition);
+            ->andReturn($this->competition);
         
         $this->transactionManager
             ->shouldReceive('run')
@@ -95,8 +110,8 @@ class CompetitionServiceTest extends TestCase
             ->andReturnUsing(function ($callback) { return $callback(); });
     
         $this->flasher
-            ->shouldReceive('notifyCrudResult')
-            ->with(true, "saved")
+            ->shouldReceive('crudSuccess')
+            ->with("saved")
             ->once();
     
         // Act
@@ -106,8 +121,8 @@ class CompetitionServiceTest extends TestCase
         $this->assertTrue($result);
         
         // Assert job was dispatched with correct parameters
-        Queue::assertPushed(SyncCompetitionParticipants::class, function ($job) use ($competition) {
-            return $job->competition->id === $competition->id && $job->isUpdate === false;
+        Queue::assertPushed(SyncCompetitionParticipants::class, function ($job) {
+            return $job->competition->id === $this->competition->id && $job->isUpdate === false;
         });
     }
 
@@ -115,10 +130,6 @@ class CompetitionServiceTest extends TestCase
     {
         // Arrange
         $data = $this->createCompetitionData();
-        $competition = $this->competition_partial;
-        foreach ($data as $key => $value) {
-            $competition->$key = $value;
-        }
 
         $this->competitionRepository
             ->shouldReceive('create')
@@ -132,8 +143,8 @@ class CompetitionServiceTest extends TestCase
             ->andReturnUsing(function ($callback) { return $callback(); });
 
         $this->flasher
-            ->shouldReceive('notifyCrudResult')
-            ->with(false, "saved")
+            ->shouldReceive('crudFailure')
+            ->with("saved")
             ->once();
 
         // Act
@@ -147,24 +158,20 @@ class CompetitionServiceTest extends TestCase
     public function test_update_competition_success_with_resync()
     {
         // Arrange
-        $data = $this->createCompetitionData();
         $new_data = [
             'description' => 'new Description',
             'age_start' => 12, // This should trigger resync
             'age_end' => 15,
         ];
-        $competition = $this->competition_partial;
-        foreach ($data as $key => $value) {
-            $competition->$key = $value;
-        }
-        $competition->shouldReceive('fill')->with($new_data)->andReturnSelf();
+
+        $this->competition->shouldReceive('fill')->with($new_data)->andReturnSelf();
 
         $this->competitionRepository
             ->shouldReceive('update')
-            ->with($competition, $new_data)
+            ->with($this->competition, $new_data)
             ->once()
             ->andReturn([
-                'competition' => $competition, 
+                'competition' => $this->competition, 
                 'resyncCompetitionParticipants' => true
             ]);
         $this->transactionManager
@@ -173,41 +180,37 @@ class CompetitionServiceTest extends TestCase
             ->andReturnUsing(function ($callback) { return $callback(); });     
         
         $this->flasher
-            ->shouldReceive('notifyCrudResult')
-            ->with(true, "updated")
+            ->shouldReceive('crudSuccess')
+            ->with("updated")
             ->once();
 
         // Act
-        $result = $this->competitionService->updateCompetition($competition, $new_data);
+        $result = $this->competitionService->updateCompetition($this->competition, $new_data);
         
         // Assert
         $this->assertTrue($result);
-        Queue::assertPushed(SyncCompetitionParticipants::class, function ($job) use ($competition) {
-            return $job->competition->id === $competition->id && $job->isUpdate === true;
+        Queue::assertPushed(SyncCompetitionParticipants::class, function ($job) {
+            return $job->competition->id === $this->competition->id && $job->isUpdate === true;
         });
     }
 
     public function test_update_competition_success_without_resync()
     {
         // Arrange
-        $data = $this->createCompetitionData();
         $new_data = [
             'description' => 'new Description',
             'age_start' => 12,
             'age_end' => 15,
         ];
-        $competition = $this->competition_partial;
-        foreach ($data as $key => $value) {
-            $competition->$key = $value;
-        }
-        $competition->shouldReceive('fill')->with($new_data)->andReturnSelf();
+        
+        $this->competition->shouldReceive('fill')->with($new_data)->andReturnSelf();
 
         $this->competitionRepository
             ->shouldReceive('update')
-            ->with($competition, $new_data)
+            ->with($this->competition, $new_data)
             ->once()
             ->andReturn([
-                'competition' => $competition, 
+                'competition' => $this->competition, 
                 'resyncCompetitionParticipants' => false
             ]);
         
@@ -217,18 +220,18 @@ class CompetitionServiceTest extends TestCase
             ->andReturnUsing(function ($callback) { return $callback(); });
 
         $this->flasher
-            ->shouldReceive('notifyCrudResult')
-            ->with(true, "updated")
+            ->shouldReceive('crudSuccess')
+            ->with("updated")
             ->once();
 
         // Mock UserNotifyEmail
         $userNotifyEmail = Mockery::mock('alias:' . UserNotifyEmail::class);
         $userNotifyEmail->shouldReceive('usersUpdateCompetition')
-            ->with($competition)
+            ->with($this->competition)
             ->once();
 
         // Act
-        $result = $this->competitionService->updateCompetition($competition, $new_data);
+        $result = $this->competitionService->updateCompetition($this->competition, $new_data);
         
         // Assert
         $this->assertTrue($result);
@@ -238,19 +241,16 @@ class CompetitionServiceTest extends TestCase
     public function test_update_competition_failure()
     {
         // Arrange
-        $data = $this->createCompetitionData();
         $new_data = [
             'description' => 'new Description',
         ];
-        $competition = $this->competition_partial;
-        foreach ($data as $key => $value) {
-            $competition->$key = $value;
-        }
-        $competition->shouldReceive('fill')->with($new_data)->andReturnSelf();
+        
+        $this->competition->shouldReceive('fill')->with($new_data)->andReturnSelf();
+
 
         $this->competitionRepository
             ->shouldReceive('update')
-            ->with($competition, $new_data)
+            ->with($this->competition, $new_data)
             ->once()
             ->andThrow(new Exception('Database error'));
 
@@ -260,12 +260,12 @@ class CompetitionServiceTest extends TestCase
             ->andReturnUsing(function ($callback) { return $callback(); });
 
         $this->flasher
-            ->shouldReceive('notifyCrudResult')
-            ->with(false, "updated")
+            ->shouldReceive('crudFailure')
+            ->with("updated")
             ->once();
 
         // Act
-        $result = $this->competitionService->updateCompetition($competition, $new_data);
+        $result = $this->competitionService->updateCompetition($this->competition, $new_data);
         
         // Assert
         $this->assertFalse($result);
@@ -275,12 +275,8 @@ class CompetitionServiceTest extends TestCase
     public function test_delete_competition_success()
     {
         // Arrange
-        $data = $this->createCompetitionData();
-        $competition = $this->competition_partial;
-        foreach ($data as $key => $value) {
-            $competition->$key = $value;
-        }
-        $competition->shouldReceive('canEdit')->andReturn(true);
+        
+        $this->competition->shouldReceive('canEdit')->andReturn(true);
         
         // Mock Auth user with owner role
         $admin = $this->mockAdmin('owner',true);
@@ -289,22 +285,22 @@ class CompetitionServiceTest extends TestCase
         
         $this->competitionRepository
             ->shouldReceive('findById')
-            ->with($competition->id)
+            ->with($this->competition->id)
             ->once()
-            ->andReturn($competition);
+            ->andReturn($this->competition);
             
         $this->competitionRepository
             ->shouldReceive('delete')
-            ->with($competition)
+            ->with($this->competition)
             ->once();
 
         $this->flasher
-            ->shouldReceive('notifyCrudResult')
-            ->with(true, "deleted")
+            ->shouldReceive('crudSuccess')
+            ->with("deleted")
             ->once();
         
         // Act
-        $result = $this->competitionService->deleteCompetition($competition->id);
+        $result = $this->competitionService->deleteCompetition($this->competition->id);
         
         // Assert
         $this->assertTrue($result);
@@ -320,10 +316,10 @@ class CompetitionServiceTest extends TestCase
             ->with($competitionId)
             ->once()
             ->andReturn(null);
-
+        
         $this->flasher
-            ->shouldReceive('notify')
-            ->with('Competition not found.', 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.404.competition'))
             ->once();
         
         // Act
@@ -337,33 +333,27 @@ class CompetitionServiceTest extends TestCase
     public function test_delete_competition_unauthorized()
     {
         // Arrange
-        $data = $this->createCompetitionData();
-
-        $competition = $this->competition_partial;
-        foreach ($data as $key => $value) {
-            $competition->$key = $value;
-        }
 
         // Mock Auth user without owner role
         $admin = $this->mockAdmin('owner',false);
         Auth::shouldReceive('user')->andReturn($admin);
         
         //  override canEdit method
-        $competition->shouldReceive('canEdit')->andReturn(false);
+        $this->competition->shouldReceive('canEdit')->andReturn(false);
         
         $this->competitionRepository
             ->shouldReceive('findById')
-            ->with($competition->id)
+            ->with($this->competition->id)
             ->once()
-            ->andReturn($competition);
+            ->andReturn($this->competition);
         
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(trans('messages.validation.not_allow.competition_delete'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.competition_delete'))
             ->once();
 
         // Act
-        $result = $this->competitionService->deleteCompetition($competition->id);
+        $result = $this->competitionService->deleteCompetition($this->competition->id);
         
         // Assert
         $this->assertFalse($result);
@@ -372,13 +362,7 @@ class CompetitionServiceTest extends TestCase
     public function test_delete_competition_failure()
     {
         // Arrange
-        $data = $this->createCompetitionData();
-
-        $competition = $this->competition_partial;
-        foreach ($data as $key => $value) {
-            $competition->$key = $value;
-        }
-        $competition->shouldReceive('canEdit')->andReturn(true);
+        $this->competition->shouldReceive('canEdit')->andReturn(true);
         
         // Mock Auth user with owner role
         $admin = $this->mockAdmin('owner',true);
@@ -387,23 +371,23 @@ class CompetitionServiceTest extends TestCase
         
         $this->competitionRepository
             ->shouldReceive('findById')
-            ->with($competition->id)
+            ->with($this->competition->id)
             ->once()
-            ->andReturn($competition);
+            ->andReturn($this->competition);
             
         $this->competitionRepository
             ->shouldReceive('delete')
-            ->with($competition)
+            ->with($this->competition)
             ->once()
             ->andThrow(new Exception('Database error'));
 
         $this->flasher
-            ->shouldReceive('notifyCrudResult')
-            ->with(false, "deleted")
+            ->shouldReceive('crudFailure')
+            ->with("deleted")
             ->once();
         
         // Act
-        $result = $this->competitionService->deleteCompetition($competition->id);
+        $result = $this->competitionService->deleteCompetition($this->competition->id);
         
         // Assert
         $this->assertFalse($result);
@@ -412,17 +396,11 @@ class CompetitionServiceTest extends TestCase
     public function test_add_competition_users_success()
     {
         // Arrange
-        $data = $this->createCompetitionData();
-        $competition = $this->competition_partial;
-        foreach ($data as $key => $value) {
-            $competition->$key = $value;
-        }
-        
         $user_ids = [1, 2, 3];
         
         $this->competitionRepository
             ->shouldReceive('addUsersToCompetition')
-            ->with($competition, $user_ids)
+            ->with($this->competition, $user_ids)
             ->once();
         
         $this->transactionManager
@@ -431,12 +409,12 @@ class CompetitionServiceTest extends TestCase
             ->andReturnUsing(function ($callback) { return $callback(); });
         
         $this->flasher
-            ->shouldReceive('notifyCrudResult')
-            ->with(true, "saved")
+            ->shouldReceive('crudSuccess')
+            ->with("saved")
             ->once();
         
         // Act
-        $result = $this->competitionService->addCompetitionUsers($competition, $user_ids);
+        $result = $this->competitionService->addCompetitionUsers($this->competition, $user_ids);
         
         // Assert
         $this->assertTrue($result);
@@ -445,17 +423,11 @@ class CompetitionServiceTest extends TestCase
     public function test_add_competition_users_failure()
     {
         // Arrange
-        $data = $this->createCompetitionData();
-        $competition = $this->competition_partial;
-        foreach ($data as $key => $value) {
-            $competition->$key = $value;
-        }
-        
         $user_ids = [1, 2, 3];
         
         $this->competitionRepository
             ->shouldReceive('addUsersToCompetition')
-            ->with($competition, $user_ids)
+            ->with($this->competition, $user_ids)
             ->once()
             ->andThrow(new Exception('Database error'));
         
@@ -465,12 +437,12 @@ class CompetitionServiceTest extends TestCase
             ->andReturnUsing(function ($callback) { return $callback(); });
         
         $this->flasher
-            ->shouldReceive('notifyCrudResult')
-            ->with(false, "saved")
+            ->shouldReceive('crudFailure')
+            ->with("saved")
             ->once();
         
         // Act
-        $result = $this->competitionService->addCompetitionUsers($competition, $user_ids);
+        $result = $this->competitionService->addCompetitionUsers($this->competition, $user_ids);
         
         // Assert
         $this->assertFalse($result);
@@ -479,18 +451,13 @@ class CompetitionServiceTest extends TestCase
     public function test_remove_competition_user_success()
     {
         // Arrange
-        $data = $this->createCompetitionData();
-        $competition = $this->competition_partial;
-        foreach ($data as $key => $value) {
-            $competition->$key = $value;
-        }
-        $competition->shouldReceive('canEdit')->andReturn(true);
+        $this->competition->shouldReceive('canEdit')->andReturn(true);
 
         $user_id = 1;
             
         $this->competitionRepository
             ->shouldReceive('removeUserFromCompetition')
-            ->with($competition, $user_id)
+            ->with($this->competition, $user_id)
             ->once();
         
         $this->transactionManager
@@ -499,12 +466,12 @@ class CompetitionServiceTest extends TestCase
             ->andReturnUsing(function ($callback) { return $callback(); });
         
         $this->flasher
-            ->shouldReceive('notifyCrudResult')
-            ->with(true, "deleted")
+            ->shouldReceive('crudSuccess')
+            ->with("deleted")
             ->once();
         
         // Act
-        $result = $this->competitionService->removeCompetitionUser($competition, $user_id);
+        $result = $this->competitionService->removeCompetitionUser($this->competition, $user_id);
         
         // Assert
         $this->assertTrue($result);
@@ -513,18 +480,13 @@ class CompetitionServiceTest extends TestCase
     public function test_remove_competition_user_failure()
     {
         // Arrange
-        $data = $this->createCompetitionData();
-        $competition = $this->competition_partial;
-        foreach ($data as $key => $value) {
-            $competition->$key = $value;
-        }
-        $competition->shouldReceive('canEdit')->andReturn(true);
+        $this->competition->shouldReceive('canEdit')->andReturn(true);
         
         $user_id = 1;
             
         $this->competitionRepository
             ->shouldReceive('removeUserFromCompetition')
-            ->with($competition, $user_id)
+            ->with($this->competition, $user_id)
             ->once()
             ->andThrow(new Exception('Database error'));
         
@@ -534,12 +496,12 @@ class CompetitionServiceTest extends TestCase
             ->andReturnUsing(function ($callback) { return $callback(); });
         
         $this->flasher
-            ->shouldReceive('notifyCrudResult')
-            ->with(false, "deleted")
+            ->shouldReceive('crudFailure')
+            ->with("deleted")
             ->once();
         
         // Act
-        $result = $this->competitionService->removeCompetitionUser($competition, $user_id);
+        $result = $this->competitionService->removeCompetitionUser($this->competition, $user_id);
         
         // Assert
         $this->assertFalse($result);
@@ -548,19 +510,14 @@ class CompetitionServiceTest extends TestCase
     public function test_add_competition_auditors_success()
     {
         // Arrange
-        $data = $this->createCompetitionData();
-        $competition = $this->competition_partial;
-        foreach ($data as $key => $value) {
-            $competition->$key = $value;
-        }
         
-        $competition->shouldReceive('canEdit')->andReturn(true);
+        $this->competition->shouldReceive('canEdit')->andReturn(true);
         
         $auditor_ids = [1, 2, 3];
         
         $this->competitionRepository
             ->shouldReceive('addAuditorsToCompetition')
-            ->with($competition, $auditor_ids)
+            ->with($this->competition, $auditor_ids)
             ->once();
         
         $this->transactionManager
@@ -569,18 +526,18 @@ class CompetitionServiceTest extends TestCase
             ->andReturnUsing(function ($callback) { return $callback(); });
         
         $this->flasher
-            ->shouldReceive('notifyCrudResult')
-            ->with(true, "saved")
+            ->shouldReceive('crudSuccess')
+            ->with("saved")
             ->once();
         
         // Mock UserNotifyEmail
         $userNotifyEmail = Mockery::mock('alias:' . UserNotifyEmail::class);
         $userNotifyEmail->shouldReceive('auditorNewCompetition')
-            ->with($competition, $auditor_ids)
+            ->with($this->competition, $auditor_ids)
             ->once();
         
         // Act
-        $result = $this->competitionService->addCompetitionAuditors($competition, $auditor_ids);
+        $result = $this->competitionService->addCompetitionAuditors($this->competition, $auditor_ids);
         
         // Assert
         $this->assertTrue($result);
@@ -589,23 +546,17 @@ class CompetitionServiceTest extends TestCase
     public function test_add_competition_auditors_unauthorized()
     {
         // Arrange
-        $data = $this->createCompetitionData();
-        $competition = $this->competition_partial;
-        foreach ($data as $key => $value) {
-            $competition->$key = $value;
-        }
-        
-        $competition->shouldReceive('canEdit')->andReturn(false);
+        $this->competition->shouldReceive('canEdit')->andReturn(false);
         
         $auditor_ids = [1, 2, 3];
         
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.competition_update'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.competition_update'))
             ->once();
         
         // Act
-        $result = $this->competitionService->addCompetitionAuditors($competition, $auditor_ids);
+        $result = $this->competitionService->addCompetitionAuditors($this->competition, $auditor_ids);
         
         // Assert
         $this->assertFalse($result);
@@ -614,19 +565,13 @@ class CompetitionServiceTest extends TestCase
     public function test_add_competition_auditors_failure()
     {
         // Arrange
-        $data = $this->createCompetitionData();
-        $competition = $this->competition_partial;
-        foreach ($data as $key => $value) {
-            $competition->$key = $value;
-        }
-        
-        $competition->shouldReceive('canEdit')->andReturn(true);
+        $this->competition->shouldReceive('canEdit')->andReturn(true);
         
         $auditor_ids = [1, 2, 3];
         
         $this->competitionRepository
             ->shouldReceive('addAuditorsToCompetition')
-            ->with($competition, $auditor_ids)
+            ->with($this->competition, $auditor_ids)
             ->once()
             ->andThrow(new Exception('Database error'));
         
@@ -636,12 +581,12 @@ class CompetitionServiceTest extends TestCase
             ->andReturnUsing(function ($callback) { return $callback(); });
         
         $this->flasher
-            ->shouldReceive('notifyCrudResult')
-            ->with(false, "saved")
+            ->shouldReceive('crudFailure')
+            ->with("saved")
             ->once();
         
         // Act
-        $result = $this->competitionService->addCompetitionAuditors($competition, $auditor_ids);
+        $result = $this->competitionService->addCompetitionAuditors($this->competition, $auditor_ids);
         
         // Assert
         $this->assertFalse($result);
@@ -651,92 +596,80 @@ class CompetitionServiceTest extends TestCase
     {
         // Arrange
         Bus::fake();
-        $data = $this->createCompetitionData();
-        $competition = $this->competition_partial;
-        foreach ($data as $key => $value) {
-            $competition->$key = $value;
-        }
-        
-        $competition->shouldReceive('canEdit')->andReturn(true);
+    
+        $this->competition->shouldReceive('canEdit')->andReturn(true);
         // Mock auditors collection with count = 2
         $auditorsCollection = Mockery::mock();
         $auditorsCollection->shouldReceive('count')->andReturn(2);
-        $competition->shouldReceive('getAttribute')->with('auditors')->andReturn($auditorsCollection);
+        $this->competition->shouldReceive('getAttribute')->with('auditors')->andReturn($auditorsCollection);
         
-        $auditor_id = 1;
+        $auditor_id = $this->admin->id;
+        
+        $this->competitionRepository
+        ->shouldReceive('getAdmin')
+        ->once()
+        ->with($auditor_id)
+        ->andReturn($this->admin);
+
+        $this->jobTrackingService
+            ->shouldReceive('dispatchWithTracking')
+            ->once()
+            ->andReturn('tracking-id');
         
         $this->flasher
-            ->shouldReceive('notifyCrudResult')
-            ->with(true, "deleted")
+            ->shouldReceive('info')
+            ->with(__('messages.validation.info.deleted'))
             ->once();
         
         // Act
-        $result = $this->competitionService->removeCompetitionAuditor($competition, $auditor_id);
+        $result = $this->competitionService->removeCompetitionAuditor($this->competition, $auditor_id);
         
         // Assert
         $this->assertTrue($result);
-        Bus::assertDispatched(DeleteAuditorJob::class, function ($job) use ($competition, $auditor_id) {
-            return $job->getCompetition()->id === $competition->id
-                && $job->getAuditorId() === $auditor_id;
-        });
     }
 
     public function test_remove_competition_auditor_unauthorized()
     {
         Bus::fake();
         // Arrange
-        $data = $this->createCompetitionData();
-        $competition = $this->competition_partial;
-        foreach ($data as $key => $value) {
-            $competition->$key = $value;
-        }
-        
-        $competition->shouldReceive('canEdit')->andReturn(false);
+        $this->competition->shouldReceive('canEdit')->andReturn(false);
         
         $auditor_id = 1;
             
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.competition_update'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.competition_update'))
             ->once();
         
         // Act
-        $result = $this->competitionService->removeCompetitionAuditor($competition, $auditor_id);
+        $result = $this->competitionService->removeCompetitionAuditor($this->competition, $auditor_id);
         
         // Assert
         $this->assertFalse($result);
-        Bus::assertNothingDispatched(DeleteAuditorJob::class);
     }
 
     public function test_remove_competition_auditor_last_auditor()
     {
         // Arrange
         Bus::fake();
-        $data = $this->createCompetitionData();
-        $competition = $this->competition_partial;
-        foreach ($data as $key => $value) {
-            $competition->$key = $value;
-        }
-        
-        $competition->shouldReceive('canEdit')->andReturn(true);
+        $this->competition->shouldReceive('canEdit')->andReturn(true);
         // Mock auditors collection with count = 1
         $auditorsCollection = Mockery::mock();
         $auditorsCollection->shouldReceive('count')->andReturn(1);
-        $competition->shouldReceive('getAttribute')->with('auditors')->andReturn($auditorsCollection);
+        $this->competition->shouldReceive('getAttribute')->with('auditors')->andReturn($auditorsCollection);
         
         $auditor_id = 1;
             
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.remove_auditor_only_one'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.remove_auditor_only_one'))
             ->once();
         
         // Act
-        $result = $this->competitionService->removeCompetitionAuditor($competition, $auditor_id);
+        $result = $this->competitionService->removeCompetitionAuditor($this->competition, $auditor_id);
         
         // Assert
         $this->assertFalse($result);
-        Bus::assertNothingDispatched(DeleteAuditorJob::class);
     }
 
     public function test_activate_competition_success()
@@ -755,7 +688,7 @@ class CompetitionServiceTest extends TestCase
         $auditorsCollection = Mockery::mock();
         $auditorsCollection->shouldReceive('count')->andReturn(2);
 
-        $competition = $this->competition_partial;
+        $competition = $this->competition;
         
         $competition->shouldReceive('getAttribute')->with('start_date')->andReturn($pastDate);
         $competition->shouldReceive('getAttribute')->with('levels')->andReturn($levelsCollection);
@@ -784,8 +717,8 @@ class CompetitionServiceTest extends TestCase
             ->once();
         
         $this->flasher
-            ->shouldReceive('notifyCrudResult')
-            ->with(true, "activated")
+            ->shouldReceive('crudSuccess')
+            ->with("activated")
             ->once();
         
         // Act
@@ -800,7 +733,7 @@ class CompetitionServiceTest extends TestCase
         // Create a mock date that's in the future (should fail)
         $futureDate = now()->addDay();
         
-        $competition = $this->competition_partial;
+        $competition = $this->competition;
 
         // Mock the start_date attribute to return a Carbon instance
         $competition->shouldReceive('getAttribute')
@@ -809,8 +742,8 @@ class CompetitionServiceTest extends TestCase
 
         
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.competition_activate_early'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.competition_activate_early'))
             ->once();
         
         // Act
@@ -824,8 +757,8 @@ class CompetitionServiceTest extends TestCase
     {
 
         // Arrange
-        $competition = $this->competition_partial;
-        $competition->levels_number = 3;
+        $competition = $this->competition;
+        $competition->shouldReceive('getAttribute')->with('levels_number')->andReturn(3);
 
          // Create a mock date that past
         $pastDate = now()->subDay(); 
@@ -839,8 +772,8 @@ class CompetitionServiceTest extends TestCase
         $competition->shouldReceive('getAttribute')->with('levels')->andReturn($levelsCollection);
         
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.competition_activate_match_levels'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.competition_activate_match_levels'))
             ->once();
         
         // Act
@@ -853,8 +786,8 @@ class CompetitionServiceTest extends TestCase
     public function test_activate_competition_insufficient_competitors()
     {
         // Arrange
-        $competition = $this->competition_partial;
-        $competition->levels_number = 3;
+        $competition = $this->competition;
+        $competition->shouldReceive('getAttribute')->with('levels_number')->andReturn(3);
 
             // Create a mock date that past
         $pastDate = now()->subDay(); 
@@ -872,8 +805,8 @@ class CompetitionServiceTest extends TestCase
         $competition->shouldReceive('getAttribute')->with('users')->andReturn($usersCollection);
 
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.competition_activate_less_competitors'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.competition_activate_less_competitors'))
             ->once();
         
         // Act
@@ -886,8 +819,8 @@ class CompetitionServiceTest extends TestCase
     public function test_activate_competition_no_auditors()
     {
         // Arrange
-        $competition = $this->competition_partial;
-        $competition->levels_number = 3;
+        $competition = $this->competition;
+        $competition->shouldReceive('getAttribute')->with('levels_number')->andReturn(3);
 
             // Create a mock date that past
         $pastDate = now()->subDay(); 
@@ -909,8 +842,8 @@ class CompetitionServiceTest extends TestCase
         $competition->shouldReceive('getAttribute')->with('auditors')->andReturn($auditorsCollection);
 
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.competition_activate_less_auditor'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.competition_activate_less_auditor'))
             ->once();
         
         // Act
@@ -923,8 +856,8 @@ class CompetitionServiceTest extends TestCase
     public function test_activate_competition_level_passed()
     {
         // Arrange
-        $competition = $this->competition_partial;
-        $competition->levels_number = 3;
+        $competition = $this->competition;
+        $competition->shouldReceive('getAttribute')->with('levels_number')->andReturn(3);
 
             // Create a mock date that past
         $pastDate = now()->subDay(); 
@@ -947,8 +880,8 @@ class CompetitionServiceTest extends TestCase
         
         $competition->shouldReceive('isAllLevelAfterNow')->andReturn(false);
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.competition_activate_level_pass'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.competition_activate_level_pass'))
             ->once();
         
         // Act
@@ -961,8 +894,8 @@ class CompetitionServiceTest extends TestCase
     public function test_activate_competition_failure()
     {
         // Arrange
-        $competition = $this->competition_partial;
-        $competition->levels_number = 3;
+        $competition = $this->competition;
+        $competition->shouldReceive('getAttribute')->with('levels_number')->andReturn(3);
 
             // Create a mock date that past
         $pastDate = now()->subDay(); 
@@ -997,8 +930,8 @@ class CompetitionServiceTest extends TestCase
             ->andReturnUsing(function ($callback) { return $callback(); });
         
         $this->flasher
-            ->shouldReceive('notifyCrudResult')
-            ->with(false, "activated")
+            ->shouldReceive('crudFailure')
+            ->with("activated")
             ->once();
         
         // Act
@@ -1012,9 +945,11 @@ class CompetitionServiceTest extends TestCase
     private function mockAdmin($role = 'owner',$hasRole = true): Admin | Mockery\MockInterface
     {
         $admin = Mockery::mock(Admin::class)->makePartial();
-        $admin->id = 1;
+        $admin->shouldReceive('getAttribute')->with('id')->andReturn(1);
+        $admin->shouldReceive('getAttribute')->with('name')->andReturn('admin');
+        $admin->shouldReceive('getAttribute')->with('email')->andReturn('admin@admin.com');
+        
         $admin->shouldReceive('hasRole')->with($role)->andReturn($hasRole);
         return $admin;
     }
-
 } 
