@@ -21,6 +21,9 @@ return [
         'admin_restored' => 'admin :admin has been restored',
         'success_duplicate_job_found' => 'Duplicate successful job found at :time',
         'already_handled' => 'Job already handled',
+        'user_deleted' => 'user :user has been deleted successfully',
+        'user_delete_failed' => 'user :user has been deleted but failed to remove as an user',
+        'user_restored' => 'user :user has been restored',
     ],
     'status' => [
         'pending' => 'Pending',
@@ -30,7 +33,9 @@ return [
     ],
     'job_type' => [ 
         'delete_auditor' => 'Delete Auditor',
-        'delete_admin' => 'Delete Admin',
+        'soft_delete_admin' => 'Delete Admin Temporarily',
+        'hard_delete_admin' => 'Delete Admin Permanently',
+        'delete_user' => 'Delete User',
     ],
     'result_keys' => [
         'auditor_id' => 'Auditor ID',
@@ -40,5 +45,13 @@ return [
         'auditor' => 'Auditor',
         'competition' => 'Competition',
         'notice' => 'Notice',
+        'job_id' => 'Job ID',
+        'user_id' => 'User ID',
+        'user' => 'User',
+        'admin_id' => 'Admin ID',
+        'admin_name' => 'Admin Name',
+    ],
+    'result_values' => [
+        'mode' => 'Mode',
     ],
 ];

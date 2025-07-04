@@ -40,7 +40,7 @@ class FilterCompetitionRequest extends FormRequest
             'start_date_to' => 'sometimes|date_format:Y-m-d',
             'age_start' => 'sometimes|integer|min:6',
             'age_end' => 'sometimes|integer|min:6',
-            'status' => 'sometimes|in:0,1,2',
+            'status' => 'sometimes|in:pending,active,finished',
         ];
     }
 

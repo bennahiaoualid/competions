@@ -15,12 +15,9 @@
 
                     const method = e.status === 'completed' ? toastr.success : toastr.error;
                     e.messages.forEach(message => method(message));
-
-                    if (/\/admin\/admins$/.test(window.location.pathname)) {
-                        setTimeout(() => {
+                    setTimeout(() => {
                             window.location.reload();
                         }, 6000);
-                    }
                 });
         } else {
             console.error("Echo not available");

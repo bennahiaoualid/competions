@@ -43,7 +43,7 @@ class JobTrackingService
         );
 
         if ($duplicate) {
-            // ✅ فقط حدّث الحالة والنتيجة ولا تعيد تنفيذ job
+
             $tracking->update([
                 'status' => 'completed',
                 'completed_at' => now(),
@@ -51,7 +51,8 @@ class JobTrackingService
                 'result' => [
                     'notice' => __('job.messages.success_duplicate_job_found', [
                         'time' => $duplicate->completed_at_local
-                    ])
+                    ]),
+                    'job_id' => $duplicate->job_id
                 ],
             ]);
 
@@ -101,5 +102,9 @@ class JobTrackingService
             $tracking->delete();
         }
     }
-    
+
+    public function deleteJobs(array $ids): void
+    {
+        JobTracking::whereIn('id', $ids)->delete();
+    }
 }

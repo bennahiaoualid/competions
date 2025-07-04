@@ -45,14 +45,17 @@ Route::group(
                 
                 Route::get('/monitoring/job/{jobId}', [MonitoringController::class, "jobRetry"])->name("monitoring.job.retry");
                 Route::get('/monitoring/job/{jobId}/delete', [MonitoringController::class, "jobDelete"])->name("monitoring.job.delete");
+                Route::post('/monitoring/jobs/delete', [MonitoringController::class, "jobDeleteBulk"])->name("monitoring.job.delete.bulk");
+
+
             });
 
             // users manipulation
             Route::get('/users', [\App\Http\Controllers\User\UserController::class, "show"])->name("users");
             Route::post('/users/store', [\App\Http\Controllers\User\UserController::class, "store"])->name("users.store");
-            Route::middleware('can:update user')->get('/users/edit/{id}', [\App\Http\Controllers\User\UserController::class, "edit"])->name("users.edit");
-            Route::patch('/users/update', [\App\Http\Controllers\User\UserController::class, "update"])->name("users.update");
-            Route::post('/users/delete', [\App\Http\Controllers\User\UserController::class, "delete"])->middleware("can_delete_user")->name("users.delete");
+            Route::middleware('can:update user')->get('/users/edit/{user}', [\App\Http\Controllers\User\UserController::class, "edit"])->name("users.edit");
+            Route::patch('/users/update/{user}', [\App\Http\Controllers\User\UserController::class, "update"])->name("users.update");
+            Route::middleware("can_delete_user")->post('/users/delete', [\App\Http\Controllers\User\UserController::class, "delete"])->name("users.delete");
 
             //competitions
             Route::get('/competitions', [\App\Http\Controllers\Competition\CompetitionController::class, "index"])->name("competitions");

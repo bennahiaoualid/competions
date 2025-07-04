@@ -7,7 +7,6 @@
             $color = $outline ? 'bg-green-100' : 'bg-green-300';
             $color_border = 'border-green-300';
             break;
-        case 'inactive':
         case 'failed':
             $color = $outline ? 'bg-red-100' : 'bg-red-300';
             $color_border = 'border-red-300';

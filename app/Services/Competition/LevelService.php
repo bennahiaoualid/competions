@@ -92,12 +92,12 @@ class LevelService
         try {
             $competition = $level->competition;
 
-            if($competition->status != 0){
+            if($competition->status != Competition::STATUS_PENDING){
                 $this->flasher->notify(__('messages.validation.not_allow.active_competition_update'), 'error');
                 return false;
             }
 
-            if ($level->status != 0) {
+            if ($level->status != Level::STATUS_PENDING) {
                 $this->flasher->notify(__('messages.validation.not_allow.active_level_update'), 'error');
                 return false;
             }
@@ -149,7 +149,7 @@ class LevelService
                 return false;
             }
 
-            if ($competition->status != 0) {
+            if ($competition->status != Competition::STATUS_PENDING) {
                 $this->flasher->notify(__('messages.validation.not_allow.active_competition_update'), 'error');
                 return false;
             }
@@ -171,7 +171,7 @@ class LevelService
         try {
             $competition = $level->competition;
 
-            if($level->status == 1){
+            if($level->status == Level::STATUS_ACTIVE){
                 return false;
             }
 
@@ -180,7 +180,7 @@ class LevelService
                 return false;
             }
 
-            if ($competition->status != 1) {
+            if ($competition->status != Competition::STATUS_ACTIVE) {
                 $this->flasher->notify(__('messages.validation.not_allow.level_activate_before_competition'), 'error');
                 return false;
             }
@@ -234,7 +234,7 @@ class LevelService
             return false;
         }
     
-        if (!($level->status == 1 && !$level->isStillActive())) {
+        if (!($level->status == Level::STATUS_ACTIVE && !$level->isStillActive())) {
             $this->flasher->notify(__('messages.validation.not_allow.level_finish_still_active'), 'error');
             return false;
         }

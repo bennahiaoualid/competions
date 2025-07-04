@@ -93,6 +93,7 @@ return [
         ]
     ],
     'global' => [
+        'id' => 'ID',
         'no' => 'N°',
         'minute'=>'minute',
         'minutes'=>'minutes',

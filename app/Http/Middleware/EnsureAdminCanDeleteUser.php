@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class RightsToDeleteUser
+class EnsureAdminCanDeleteUser
 {
     use CrudOperationNotificationAlert;
     /**
@@ -23,13 +23,12 @@ class RightsToDeleteUser
         $deletedUser = User::findorfail($request->id);
         // check if the current admin is not super
         if(!$currentAdmin->hasRole(['super_admin','owner'], 'admin')){
+            
             // check if this admin is not the one who created this user before deleting
             if($deletedUser->admin_id != $currentAdmin->id or !$currentAdmin->can('delete user')){
-                $notifications = $this->generateCustomNotifications(__('messages.validation.not_allow.user_delete'),"error");
+                $notification = $this->generateCustomNotification(__('messages.validation.not_allow.user_delete'),"error");
                 // Flash each message to the session
-                foreach ($notifications as $notification) {
-                    session()->flash('messages', session('messages', collect())->push($notification));
-                }
+                session()->flash('messages', session('messages', collect())->push($notification));
                 return redirect()->back();
             }
         }

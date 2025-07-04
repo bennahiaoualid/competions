@@ -21,6 +21,9 @@ return [
         'admin_restored' => 'تم استرجاع المسؤول :admin',
         'success_duplicate_job_found' => 'تم العثور على عملية مكررة ناجحة في الوقت :time',
         'already_handled' => 'تم التنفيذ هاته العملية',
+        'user_deleted' => 'تم حذف المستخدم :user بنجاح',
+        'user_delete_failed' => 'فشل حذف المستخدم :user',
+        'user_restored' => 'تم استرجاع المستخدم :user',
     ],
     'status' => [
         'pending' => 'قيد الانتظار',
@@ -30,7 +33,9 @@ return [
     ],
     'job_type' => [ 
         'delete_auditor' => 'حذف المصحح',
-        'delete_admin' => 'حذف المسؤول',
+        'soft_delete_admin' => 'حذف المسؤول مؤقتا',
+        'hard_delete_admin' => 'حذف المسؤول نهائيا',
+        'delete_user' => 'حذف المستخدم',
     ],
     'result_keys' => [
         'auditor_id' => 'معرف المصحح',
@@ -40,5 +45,10 @@ return [
         'completed_at' => 'وقت انهاء العملية',
         'deleted_admin_id' => 'معرف المسؤول المحذوف',
         'notice' => 'ملاحظة',
+        'job_id' => 'معرف العملية',
+        'user_id' => 'معرف المستخدم',
+        'user' => 'المستخدم',
+        'admin_id' => 'معرف المسؤول',
+        'admin_name' => 'اسم المسؤول',
     ],
 ];

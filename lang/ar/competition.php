@@ -25,7 +25,7 @@ return [
         'status' =>[
             'state' =>  'الحالة',
             'active' =>  'جارية',
-            'inactive' =>  'غير نشط',
+            'pending' =>  'غير نشط',
             'finished' =>  'منتهية',
         ],
         'coming' =>  'المسابقات القادمة',

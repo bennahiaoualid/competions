@@ -27,7 +27,7 @@
 
     <div class="">
         @foreach($competitions as $competition)
-            <x-collapsible-card :title="$competition->title . ' | ' . $competition->getStatus()" type="info">
+            <x-collapsible-card :title="$competition->title . ' | ' . $competition->status" type="info">
                 @include('pages.admin.admins.auditor.levels_audit_list')
             </x-collapsible-card>
         @endforeach
@@ -88,9 +88,9 @@
                 <x-input-label for="status" :value=" ucwords(__('competition.info.status.state'))" />
                 <x-form.select-box id="status" name="status"  :options="[
                     ['value' => '', 'text' => __('form.filter.all'), 'selected' => true],
-                    ['value' => '0', 'text' => __('competition.info.status.inactive'), 'selected' => false],
-                    ['value' => '1', 'text' => __('competition.info.status.active'), 'selected' => false],
-                    ['value' => '2', 'text' => __('competition.info.status.finished'), 'selected' => false],
+                    ['value' => 'pending', 'text' => __('competition.info.status.pending'), 'selected' => false],
+                    ['value' => 'active', 'text' => __('competition.info.status.active'), 'selected' => false],
+                    ['value' => 'finished', 'text' => __('competition.info.status.finished'), 'selected' => false],
                 ]">
                 </x-form.select-box>
                 <x-input-error :messages="$errors->filterCompetitions->get('status')" class="mt-2" />

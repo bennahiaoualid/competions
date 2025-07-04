@@ -2,24 +2,25 @@
 
 namespace App\Models;
 
-use App\Models\Admin\Admin;
-use App\Models\Competition\Competition;
-use App\Models\Competition\Level;
-use App\Models\Competition\Response;
-use App\Models\GuestUsers\GlobalResponse;
 use Carbon\Carbon;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use App\Models\Admin\Admin;
 use Illuminate\Support\Str;
+use App\Models\Competition\Level;
 use Spatie\Activitylog\LogOptions;
+use App\Models\Competition\Response;
+use App\Models\Competition\Competition;
+use Illuminate\Notifications\Notifiable;
+use App\Models\GuestUsers\GlobalResponse;
+use Illuminate\Database\Eloquent\Builder;
+use App\Models\Monitoring\DeletionRequest;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * 
@@ -164,20 +165,37 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsTo(Admin::class);
     }
 
+    /**
+     * The levels that this user has access to.
+     */
     public function levelAdminUser(): BelongsToMany
     {
         return $this->belongsToMany(Level::class, 'level_admin_user', 'user_id', 'level_id')
             ->withPivot('admin_id');
     }
 
+    /**
+     * The responses that this user has made.
+     */
     public function responses(): HasMany
     {
         return $this->hasMany(Response::class);
     }
 
+    /**
+     * The global responses that this user has made.
+     */
     public function globalResponses(): HasMany
     {
         return $this->hasMany(GlobalResponse::class, 'user_id');
+    }
+
+    /**
+     * The deletion requests that this user has requested to be deleted.
+     */
+    public function deletionRequests()
+    {
+        return $this->morphMany(DeletionRequest::class, 'deletable');
     }
 
 

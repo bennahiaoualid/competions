@@ -42,7 +42,7 @@ class UpdateCompetition
             ) ;
         }
         // only the competition that not activated yet can be updated
-        elseif ($competition->status != 0 ){
+        elseif ($competition->status != Competition::STATUS_PENDING ){
             return redirect()->back()->with(
                 [
                     "messages" => $this->generateCustomNotifications(__('messages.validation.not_allow.active_competition_update'),"error")

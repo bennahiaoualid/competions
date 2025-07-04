@@ -105,11 +105,11 @@ final class UserTable extends PowerGridComponent
         ];
     }
 
-    public function actions(User $row): array
+    public function actions(User $user): array
     {
         return [
             Button::add('my-custom-button')
-                ->slot(view('components.tables.user-table-action-buttons', ['row' => $row])->render())
+                ->slot(view('components.tables.user-table-action-buttons', ['user' => $user])->render())
         ];
     }
 

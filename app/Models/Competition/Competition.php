@@ -59,6 +59,18 @@ use Illuminate\Support\Facades\Auth;
 class Competition extends Model
 {
     use HasFactory;
+
+    const STATUS_PENDING = 'pending';
+    const STATUS_ACTIVE = 'active';
+    const STATUS_COMPLETED = 'finished';
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope('not_suspended', function (Builder $builder) {
+            $builder->where('is_suspended', false);
+        });
+    }
+
     /**
      * The attributes that are mass assignable.
      *
@@ -74,7 +86,8 @@ class Competition extends Model
         'levels_number',
         'status',
         'participants_sync_status',
-        'last_synced_at'
+        'last_synced_at',
+        'is_suspended'
     ];
 
     /**
@@ -85,6 +98,7 @@ class Competition extends Model
     protected function casts(): array
     {
         return [
+            'is_suspended' => 'boolean',
             'start_date' => 'datetime',
             'age_start' => 'integer',
             'age_end' => 'integer',
@@ -98,7 +112,7 @@ class Competition extends Model
      */
     public function admin(): BelongsTo
     {
-        return $this->belongsTo(Admin::class);
+        return $this->belongsTo(Admin::class)->withTrashed();
     }
 
     /**
@@ -126,21 +140,6 @@ class Competition extends Model
     }
 
     /**
-     * get status
-     */
-    public function getStatus() : string{
-        switch ($this->status){
-            case 1 : $st =  'active';
-                break;
-            case 0 : $st = 'inactive';
-                break;
-            case 2 : $st = 'finished';
-        }
-        return $st;
-    }
-
-
-    /**
      * return true if the competition created by the auth admin
      * @return boolean
      */
@@ -158,7 +157,7 @@ class Competition extends Model
     function isAllLevelAfterNow(?int $exclude_id = null): bool
     {
         foreach ($this->levels as $level){
-            if (($exclude_id == null || $level->id != $exclude_id) && $level->status = 0){
+            if (($exclude_id == null || $level->id != $exclude_id) && $level->status == 0){
                 if ($level->start_date->lessThanOrEqualTo(now())){
                     return false;
                 }

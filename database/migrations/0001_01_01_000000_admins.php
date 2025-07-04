@@ -13,16 +13,16 @@ return new class extends Migration
     {
         Schema::create('admins', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name')->index();
             $table->string('email')->unique();
             $table->date('birthdate');
-            $table->enum('gender', ['male', 'female'])->default('male');
-            $table->foreignId('admin_id')->nullable()->constrained()->onDelete('set null');
+            $table->enum('gender', ['male', 'female'])->default('male')->index();
+            $table->foreignId('admin_id')->nullable()->nullOnDelete();
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
-            $table->index('name');
-            $table->index('gender');
+            $table->softDeletes();
+            $table->index('deleted_at');
         });
     }
 

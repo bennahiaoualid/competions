@@ -19,78 +19,58 @@ class UserController extends Controller
 {
     use CrudOperationNotificationAlert;
     use RoleManipulation;
+    /**
+     * The controller coordinates HTTP request/response and delegates all business logic to the service.
+     */
     public function __construct(
         protected UserService $userService
     ) {
     }
 
     function index() : View{
-        return $this->userService->index();
+        $data = $this->userService->index();
+        return view('pages.user.dashboard', compact('data'));
     }
 
     function show() : View{
-        return $this->userService->show();
+        return view('pages.admin.users.list');
     }
 
     /**
-     * Handles the storage of an admin request and returns a response with notifications.
-     *
-     * @param StoreUserRequest $request The incoming request containing admin data.
+     * Handles the storage of an user request and returns a response.
+     * @param StoreUserRequest $request
+     * @return RedirectResponse
      */
-    function store(StoreUserRequest $request) {
-        $result = $this->userService->create($request->validated());
-
-        $notifications = $this->generateNotifications($result != false,"saved");
-
-        // Flash each message to the session
-        foreach ($notifications as $notification) {
-            session()->flash('messages', session('messages', collect())->push($notification));
-        }
-
-        return redirect()->route('admin.users');
-    }
-
-    function edit($id){
-      return $this->userService->edit($id);
+    function store(StoreUserRequest $request) : RedirectResponse {
+        $this->userService->create($request->validated());
+        return redirect()->back();
     }
 
     /**
-     * Handles the storage of an admin request and returns a response with notifications.
-     *
-     * @param UpdateUserRequest $request The incoming request containing admin data.
+     * Display the edit user form page.
      */
-    function update(UpdateUserRequest $request) : RedirectResponse {
-        $user = User::find($request->id);
-        if ($user){
-            $result = $this->userService->update($user,$request->validated());
+    function edit(User $user): View{
+        return view('pages.admin.users.edit-user', compact('user'));
+    }
 
-            $notifications = $this->generateNotifications($result,"updated");
-
-            // Flash each message to the session
-            foreach ($notifications as $notification) {
-                session()->flash('messages', session('messages', collect())->push($notification));
-            }
-        }
-        else{
-            $notifications = $this->generateCustomNotifications(__('messages.404.user'),"error");
-        }
+    /**
+     * Handles the update of a user and returns back a response.
+     * @param UpdateUserRequest $request
+     * @param User $user
+     * @return RedirectResponse
+     */
+    function update(UpdateUserRequest $request, User $user) : RedirectResponse {
+        $this->userService->update($user,$request->validated());
         return Redirect::back();
     }
 
     /**
-     * Handles the deleting of a user request and returns a response with notifications.
-     * @param  Request $request
-     * @return RedirectResponse
+     * Handles the deleting of a user and returns a response.
+     * All business logic and notifications are handled in the service.
      */
     function delete(Request $request) : RedirectResponse {
         $user = $request->user;
-            $result = $this->userService->delete($user);
-            $notifications = $this->generateNotifications($result,"deleted");
-            foreach ($notifications as $notification) {
-                session()->flash('messages', session('messages', collect())->push($notification));
-            }
-            return Redirect::back();
+        $this->userService->delete($user);
+        return Redirect::back();
     }
-
-
 }

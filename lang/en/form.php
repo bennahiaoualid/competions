@@ -31,6 +31,9 @@ return [
         'add' => "add new global question",
         'delete' => "delete global question"
     ],
+    'job' => [
+        'remove' => "remove jobs",
+    ],
     'filter' => [
         'filter' => 'filter',
         'all' => 'All',
@@ -44,6 +47,7 @@ return [
         "confirm_delete" => "Are you sure to continue deleting this record",
         "confirm_competitor_add" => "Are you sure to add this competitors",
         'confirm_auditor_add' => 'Are you sure to add this auditors?',
+        'confirm_job_remove' => 'Are you sure to remove this jobs?',
         'login' => "Log in",
         'register' => "Register",
         'show' => "show",

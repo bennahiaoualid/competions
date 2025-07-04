@@ -16,8 +16,8 @@
                 <div class="space-y-6">
                     <div class="flex justify-between">
                         <h2 class=" sm:text-xl text-sky-600 font-bold capitalize">{{$level->name}}</h2>
-                        <x-status-widget :status="$level->getStatus()" :outline="false"
-                                        :text="__('competition.info.status.' . $level->getStatus())">
+                        <x-status-widget :status="$level->status" :outline="false"
+                                        :text="__('competition.info.status.' . $level->status)">
                         </x-status-widget>
                     </div>
 
@@ -103,7 +103,7 @@
                                 </x-button>
                             </div>
                         @else
-                            @if($level->status == 0)
+                            @if($level->status == 'pending')
                                 <x-alert
                                     type="info"
                                     outline="true"
@@ -136,7 +136,7 @@
                 </x-collapsible-card>
 
                 {{-- show competitor responses list --}}
-                @if($level->userCanParticipate() && $level->status != 0 && !$level->isStillActive() )
+                @if($level->userCanParticipate() && $level->status != 'pending' && !$level->isStillActive() )
                     <x-collapsible-card :title="__('competition.response.info')" type="info">
                         <div class="flex justify-between items-center my-4 p-2 border border-primary rounded" >
                             <p class="text-lg font-bold capitalize text-primary">{{__('competition.response.response')}}</p>

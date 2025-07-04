@@ -75,9 +75,11 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // user
-        $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
         $this->app->bind(UserService::class, function ($app) {
-            return new UserService($app->make(UserRepositoryInterface::class));
+            return new UserService(
+                $app->make(FlasherInterface::class),
+                $app->make(JobTrackingService::class)
+            );
         });
 
         // competition

@@ -65,8 +65,8 @@ final class CompetitionTable extends PowerGridComponent
             ->add('levels_number')
             ->add('status', function ($competition) {
                 return Blade::render(
-                    '<x-status-widget status="'. $competition->getStatus().
-                    '" text="'.__('competition.info.status.'.$competition->getStatus()).'" />'
+                    '<x-status-widget status="'. $competition->status.
+                    '" text="'.__('competition.info.status.'.$competition->status).'" />'
                 );
             });
 

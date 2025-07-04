@@ -2,17 +2,18 @@
 
 namespace App\Models\Admin;
 
-use App\Models\Competition\Competition;
-use App\Models\GuestUsers\GlobalQuestion;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
-
+use App\Models\Competition\Competition;
+use Illuminate\Notifications\Notifiable;
+use App\Models\GuestUsers\GlobalQuestion;
+use App\Models\Monitoring\DeletionRequest;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * 
@@ -110,8 +111,17 @@ class Admin extends Authenticatable
             $query->whereIn('name', $roles);
         });
     }
+
     /**
-     * The admins that has permissions to be auditor in this competition.
+     * The competitions that created by this admin.
+     */
+    public function competitions(): HasMany
+    {
+        return $this->hasMany(Competition::class);
+    }
+
+    /**
+     * The competitions that this admin has permissions to be auditor in.
      */
     public function competitionsAudit(): BelongsToMany
     {
@@ -124,6 +134,14 @@ class Admin extends Authenticatable
     public function globalQuestions(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(GlobalQuestion::class);
+    }
+
+    /**
+     * The deletion requests that this admin has requested to be deleted.
+     */
+    public function deletionRequests()
+    {
+        return $this->morphMany(DeletionRequest::class, 'deletable');
     }
 
     /**

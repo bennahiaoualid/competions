@@ -16,8 +16,8 @@
                 <div class="space-y-6">
                     <div class="flex justify-between">
                         <h1 class=" sm:text-xl text-sky-600 font-bold capitalize">{{$competition->title}}</h1>
-                        <x-status-widget :status="$competition->getStatus()" :outline="false"
-                                        :text="__('competition.info.status.' . $competition->getStatus())">
+                        <x-status-widget :status="$competition->status" :outline="false"
+                                        :text="__('competition.info.status.' . $competition->status)">
                         </x-status-widget>
                     </div>
 

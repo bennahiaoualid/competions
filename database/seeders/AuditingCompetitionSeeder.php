@@ -65,7 +65,7 @@ class AuditingCompetitionSeeder extends Seeder
                 'age_start' => 18,
                 'age_end' => 30,
                 'levels_number' => 1,
-                'status' => '1',
+                'status' => 'active',
             ]
         );
 
@@ -128,8 +128,6 @@ class AuditingCompetitionSeeder extends Seeder
                 'level_id' => $level->id,
                 'user_id' => $user->id,
                 'admin_id' => $auditor->id,
-                'created_at' => now(),
-                'updated_at' => now(),
             ]);
         }
     }

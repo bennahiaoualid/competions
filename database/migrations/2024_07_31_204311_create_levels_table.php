@@ -15,12 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->foreignId('competition_id')->constrained('competitions')->onDelete('cascade');;
-            $table->foreignId('admin_id')->constrained('admins');
+            $table->foreignId('competition_id')->constrained('competitions')->onDelete('cascade');
+            $table->foreignId('admin_id')->nullable()->constrained('admins')->nullOnDelete();
             $table->integer('questions_number');
-            $table->dateTime('start_date');
+            $table->dateTime('start_date')->index();
             $table->integer('duration'); // Duration in minutes
-            $table->enum('status', [0,1,2])->default(0)->comment('inactive,active,finished');
+            $table->enum('status', ['pending','active','finished'])->default('pending')->index()->comment('pending,active,finished');
             $table->timestamps();
         });
     }

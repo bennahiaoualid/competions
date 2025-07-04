@@ -161,7 +161,7 @@ class CompetitionRepository implements CompetitionRepositoryInterface
     */
     public function activate(Competition $competition): bool
     {
-        $competition->status = "1";
+        $competition->status = Competition::STATUS_ACTIVE;
         $result = $competition->save();
         return $result;
     }

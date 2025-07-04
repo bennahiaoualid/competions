@@ -49,6 +49,9 @@ use Illuminate\Support\Facades\Auth;
 class Level extends Model
 {
     use HasFactory;
+    const STATUS_PENDING = 'pending';
+    const STATUS_ACTIVE = 'active';
+    const STATUS_FINISHED = 'finished';
 
     /**
      * The attributes that are mass assignable.
@@ -76,7 +79,6 @@ class Level extends Model
         return [
             'start_date' => 'datetime',
             'duration' => 'integer',
-            'status' => 'integer',
             'questions_number' => 'integer',
         ];
     }
@@ -107,25 +109,11 @@ class Level extends Model
     }
 
     /**
-     * get status
-     */
-    public function getStatus() : string{
-        switch ($this->status){
-            case 1 : $st =  'active';
-                break;
-            case 0 : $st = 'inactive';
-                break;
-            case 2 : $st = 'finished';
-        }
-        return $st;
-    }
-
-    /**
      * return true if the level is active and still not pass the duration
      */
     public function isStillActive() : bool{
         $endTime = $this->start_date->copy()->addMinutes($this->duration);
-        return  ($this->status == 1 && $endTime->greaterThan(now()));
+        return  ($this->status == self::STATUS_ACTIVE && $endTime->greaterThan(now()));
     }
 
     /**

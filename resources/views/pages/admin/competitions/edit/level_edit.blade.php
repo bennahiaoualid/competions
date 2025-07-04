@@ -22,7 +22,7 @@
                 @if($level->canEdit())
 
                     {{-- show activation button --}}
-                    @if($level->status == 0)
+                    @if($level->status == 'pending')
                         <form action="{{route('admin.competitions.level.activate', ['level' => $level])}}" method="post">
                             @csrf
                             @method('post')
@@ -35,9 +35,9 @@
                         </form>
                     @else
                         {{-- show finishing button --}}
-                        @if($level->isStillActive() || $level->status == 2)
-                            <x-status-widget :status="$level->getStatus()" :outline="false"
-                                            :text="__('competition.info.status.' . $level->getStatus())">
+                        @if($level->isStillActive() || $level->status == 'finished')
+                            <x-status-widget :status="$level->status" :outline="false"
+                                            :text="__('competition.info.status.' . $level->status)">
                             </x-status-widget>
                         @else
                             <form action="{{route('admin.competitions.level.finish', ['level' => $level])}}" method="post">

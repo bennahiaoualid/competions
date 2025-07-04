@@ -44,7 +44,10 @@ class CompetitionFactory extends Factory
             'age_start' => $this->faker->numberBetween(10, 15),
             'age_end' => $this->faker->numberBetween(16, 25),
             'levels_number' => $this->faker->numberBetween(1, 5),
-            'status' => 0, // 0: inactive, 1: active
+            'participants_sync_status' => 'completed',
+            'last_synced_at' => now(),
+            'status' => 'pending', // 'pending', 'active', 'finished'
+            'is_suspended' => false,
         ];
     }
 

@@ -25,7 +25,7 @@ return [
         'status' =>[
             'state' =>  'state',
             'active' =>  'active',
-            'inactive' =>  'coming',
+            'pending' =>  'pending',
             'finished' =>  'finished',
         ],
         'coming' =>  'coming competitions',

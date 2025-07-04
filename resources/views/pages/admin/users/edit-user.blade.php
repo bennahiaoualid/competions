@@ -18,10 +18,9 @@
             </h2>
         </header>
 
-        <form class="mt-6 space-y-6" action="{{route('admin.users.update')}}" method="post">
+        <form class="mt-6 space-y-6" action="{{route('admin.users.update',['user' => $user])}}" method="post">
             @csrf
             @method("patch")
-            <input type="hidden" name="id" value="{{$user->id}}" />
             <div>
                 <x-input-label for="name" :value="ucwords(__('user.profile.name'))" />
                 <x-text-input id="name" name="name" type="text" class="mt-1 block w-full outline-none" :icon="false" :value="$user->name" required autofocus autocomplete="name" />

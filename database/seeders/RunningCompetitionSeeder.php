@@ -46,7 +46,7 @@ class RunningCompetitionSeeder extends Seeder
                 'age_start' => 18,
                 'age_end' => 30,
                 'levels_number' => 1,
-                'status' => '1', // Competition is active
+                'status' => 'active', // Competition is active
             ]
         );
 

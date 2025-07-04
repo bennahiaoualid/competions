@@ -30,8 +30,8 @@
                 {{Carbon\Carbon::parse($level->start_date)->timezone(session('timezone'))}}
             </td>
             <td class="border-t-0 px-6 align-center border-l-0 border-r-0 text-xs whitespace-nowrap p-4" >
-                <x-status-widget :status="$level->getStatus()"
-                                :text="__('competition.info.status.'.$level->getStatus())" />
+                <x-status-widget :status="$level->status"
+                                :text="__('competition.info.status.'.$level->status)" />
             </td>
             <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-center">
                 {{$level->questions_number}}

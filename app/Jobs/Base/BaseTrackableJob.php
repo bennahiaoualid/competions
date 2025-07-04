@@ -5,7 +5,6 @@ namespace App\Jobs\Base;
 use Throwable;
 use Illuminate\Support\Str;
 use Illuminate\Bus\Queueable;
-use Illuminate\Support\Facades\Log;
 use App\Models\Monitoring\JobTracking;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
@@ -48,6 +47,10 @@ abstract class BaseTrackableJob implements ShouldQueue
         $this->skipTrackingCreation = $skipTrackingCreation;
         // ✅ FOLLOWS: Dependency Inversion - inject strategy, default to production
         $this->trackingStrategy = $trackingStrategy ?? app(JobTrackingStrategyInterface::class);
+    
+        if (!$this->skipTrackingCreation) {
+            $this->createTrackingRecord();
+        }
     }
 
     protected function createTrackingRecord()
@@ -67,9 +70,6 @@ abstract class BaseTrackableJob implements ShouldQueue
 
     public function handle()
     {
-        if (!$this->skipTrackingCreation) {
-            $this->createTrackingRecord();
-        }
         
         $tracking = $this->trackingStrategy->getTrackingRecord($this->trackingId);
 
@@ -92,7 +92,7 @@ abstract class BaseTrackableJob implements ShouldQueue
                 'result' => $result,
             ], $this->getCustomMessage()['success']);
 
-            $this->onSuccess($result);
+            $this->onSuccess();
         } catch (Throwable $e) {
             $this->handleJobFailure($tracking, $e);
             throw $e;
@@ -125,7 +125,7 @@ abstract class BaseTrackableJob implements ShouldQueue
     abstract protected function executeJob();
     abstract protected function getPayloadData(): array;
 
-    protected function onSuccess($result): void
+    protected function onSuccess(): void
     {
         event(new JobRetriedSuccessfully(
             jobId: $this->trackingId,

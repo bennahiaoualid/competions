@@ -52,7 +52,7 @@ class UserCompetitionService
      */
     public function competitionDetail(Competition $competition): array
     {
-        if($competition->status == 2){
+        if($competition->status == Competition::STATUS_COMPLETED){
             $results = $this->getCashedDetailOrder(
                 key: "competition_detail_{$competition->id}",
                 model: $competition,
@@ -78,7 +78,7 @@ class UserCompetitionService
      */
     public function levelDetail(Level $level): array
     {
-        if($level->status == 2){
+        if($level->status == Level::STATUS_FINISHED){
             $results = $this->getCashedDetailOrder(
                 key: "level_detail_{$level->id}",
                 model: $level,
@@ -106,7 +106,7 @@ class UserCompetitionService
     {
         try {
             // Check if the level is available
-            if($level->status != 1){
+            if($level->status != Level::STATUS_ACTIVE){
                 throw new \Exception("trying to respond to non active level questions");
                 return ['status' => 'error'];
             }

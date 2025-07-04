@@ -8,11 +8,13 @@ use App\Traits\RegisterLogs;
 use App\Traits\RoleManipulation;
 use App\Contracts\FlasherInterface;
 use Illuminate\Support\Facades\Auth;
-use App\Services\Monitoring\JobTrackingService;
+use App\Jobs\Admin\DeleteAdminCoordinatorJob;
 use App\Contracts\TransactionManagerInterface;
 use App\Jobs\Competition\SafeDeleteAuditorJob;
 use App\Traits\CrudOperationNotificationAlert;
+use App\Services\Monitoring\JobTrackingService;
 use App\Interface\Admin\AdminRepositoryInterface;
+
 class AdminService
 {
     use CrudOperationNotificationAlert, RoleManipulation, RegisterLogs;
@@ -127,10 +129,11 @@ class AdminService
         }
     }
 
-    protected function createDeleteJob(Admin $admin): SafeDeleteAuditorJob
+    protected function createDeleteJob(Admin $admin): DeleteAdminCoordinatorJob
     {
-        return new SafeDeleteAuditorJob(
-            auditor: $admin,
+        return new DeleteAdminCoordinatorJob(
+            admin: $admin,
+            mode: 'soft',
             userId: Auth::id()
         );
     }

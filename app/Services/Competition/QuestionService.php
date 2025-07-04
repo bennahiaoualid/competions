@@ -54,7 +54,7 @@ class QuestionService
                 );
                 return false;
             }
-            if($level->status != 0){
+            if($level->status != Level::STATUS_PENDING){
                 $this->flasher->notify(
                     __('messages.validation.not_allow.active_level_update'),
                     "error"
@@ -112,7 +112,7 @@ class QuestionService
                 );
                 return false;
             }
-            if($level->status != 0){
+            if($level->status != Level::STATUS_PENDING){
                 $this->flasher->notify(
                     __('messages.validation.not_allow.active_level_update'),
                     "error"

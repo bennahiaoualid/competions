@@ -22,7 +22,7 @@
                 <h2 class="text-xl font-bold capitalize">{{__('competition.info.information')}}</h2>
                 @if($competition->canEdit())
                     {{-- show activation button --}}
-                    @if($competition->status == 0)
+                    @if($competition->status == 'pending')
                         <form action="{{route('admin.competitions.activate', ['competition' => $competition])}}" method="post">
                         @csrf
                             @method('post')
@@ -35,8 +35,8 @@
                         </form>
                     {{-- show finishing button --}}
                     @else
-                        <x-status-widget :status="$competition->getStatus()" :outline="false"
-                                        :text="__('competition.info.status.' . $competition->getStatus())">
+                        <x-status-widget :status="$competition->status" :outline="false"
+                                        :text="__('competition.info.status.' . $competition->status)">
                         </x-status-widget>
                     @endif
 
