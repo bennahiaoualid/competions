@@ -48,7 +48,7 @@
     </div>
     <div class="flex-1">
         @if($title)
-            <h4 class="mb-2 font-bold text-sm md:text-base lg:text-lg">{{ $title }}</h4>
+            <h4 class="mb-2 font-bold capitalize text-sm md:text-base lg:text-lg">{{ $title }}</h4>
         @endif
         {{ $slot }}
     </div>

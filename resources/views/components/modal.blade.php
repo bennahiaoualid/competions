@@ -23,6 +23,7 @@
         modalName: @js($name),
         modalId: @js($id), // Modal ID
         inputValue: '',
+        payload:  {},
         focusables() {
             let selector = 'a, button, input:not([type=\'hidden\']), textarea, select, details, [tabindex]:not([tabindex=\'-1\'])';
             return [...$el.querySelectorAll(selector)]
@@ -44,7 +45,13 @@
         }
     })"
     {{--x-on:open-modal.window="modalName === $event.detail.detail ? show = true : null"--}}
-    x-on:open-modal.window="modalName === $event.detail.detail ? (show = true, inputValue = $event.detail.value) : null"
+    x-on:open-modal.window="
+        if (modalName === $event.detail.detail) {
+            show = true;
+            inputValue = $event.detail.value;
+            payload = $event.detail.input_detail;
+        }
+    "
     x-on:close-modal.window="$event.detail == '{{ $name }}' ? show = false : null"
     x-on:close.stop="show = false"
     x-on:keydown.escape.window="show = false"

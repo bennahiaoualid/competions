@@ -4,6 +4,7 @@ use Livewire\Livewire;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Competition\AuditController;
 use App\Http\Controllers\Monitoring\MonitoringController;
+use App\Http\Controllers\Monitoring\DeletionRecordsController;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
 /*
@@ -39,6 +40,14 @@ Route::group(
                 Route::get('/activity', [\App\Http\Controllers\Admin\AdminController::class, "showActivity"])->name("activity");
             });
 
+            // Permission Assignment Routes (Owner only)
+            Route::middleware('role:owner')->group(function (){
+                Route::get('/permissions', [\App\Http\Controllers\Admin\PermissionAssignmentController::class, "index"])->name("permissions.index");
+                Route::get('/permissions/role/{role}', [\App\Http\Controllers\Admin\PermissionAssignmentController::class, "showRole"])->name("permissions.role");
+                Route::post('/permissions/role/{role}/assign', [\App\Http\Controllers\Admin\PermissionAssignmentController::class, "assignPermissions"])->name("permissions.assign");
+                Route::post('/permissions/role/{role}/revoke', [\App\Http\Controllers\Admin\PermissionAssignmentController::class, "revokePermissions"])->name("permissions.revoke");
+            });
+
             // Monitoring routes belongs to owner and super_admin
             Route::group(['middleware' => ['role:owner|super_admin']], function (){
                 Route::get('/monitoring', [MonitoringController::class, "JobTrackingList"])->name("monitoring.job.tracking");
@@ -47,7 +56,10 @@ Route::group(
                 Route::get('/monitoring/job/{jobId}/delete', [MonitoringController::class, "jobDelete"])->name("monitoring.job.delete");
                 Route::post('/monitoring/jobs/delete', [MonitoringController::class, "jobDeleteBulk"])->name("monitoring.job.delete.bulk");
 
-
+                // Deletion Records routes
+                Route::get('/monitoring/deletion-records', [DeletionRecordsController::class, 'index'])->name('monitoring.deletion-records');
+                Route::post('/monitoring/deletion-records/{deletionRequest}/hard-delete', [DeletionRecordsController::class, 'hardDelete'])->name('monitoring.deletion-records.hard-delete');
+                Route::post('/monitoring/deletion-records/{deletionRequest}/restore', [DeletionRecordsController::class, 'restore'])->name('monitoring.deletion-records.restore');
             });
 
             // users manipulation
@@ -101,7 +113,7 @@ Route::group(
             Route::post('/global-question/delete', [\App\Http\Controllers\GuestUsers\GlobalQuestionController::class, "delete"])->name("global_question.delete");
             // global question ==> approve
             Route::middleware('role:owner|super_admin')->get('/global-question/{id}/approve', [\App\Http\Controllers\GuestUsers\GlobalQuestionController::class, "approve"])->name("global_question.approve");
-           
+
             Route::get('/profile', [\App\Http\Controllers\Admin\AdminProfileController::class, 'edit'])->name('profile.edit');
            // Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
            // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

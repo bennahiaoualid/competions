@@ -11,5 +11,5 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <!-- tailwind complied -->
-@vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/sidebar.js'])
+@vite(['resources/css/app.css', 'resources/css/admin-sidebar.css', 'resources/js/app.js', 'resources/js/sidebar.js'])
 @livewireStyles

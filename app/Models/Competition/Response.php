@@ -36,6 +36,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Response whereScore($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Response whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Response whereUserId($value)
+ * @property string|null $sanpshot_admin
+ * @property float|null $final_score
+ * @property-read User $user
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Response whereFinalScore($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Response whereFlags($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Response whereKeystrokes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Response wherePenalty($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Response whereSanpshotAdmin($value)
  * @mixin \Eloquent
  */
 class Response extends Model

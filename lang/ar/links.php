@@ -4,12 +4,14 @@ return [
 
     'admin' => [
         'dashboard' => 'لوحة التحكم',
-        'admins' => 'المدراء',
-        'list' => 'قائمة المدراء',
+        'admins' => 'المشرفين',
+        'list' => 'قائمة المشرفين',
+        'permissions' => 'الصلاحيات',
     ],
     'monitoring' => [
         'job_tracking' => 'تتبع المهام',
         'job_list' => 'قائمة المهام',
+        'deletion_records' => 'سجلات الحذف',
     ],
     'user' =>[
         'list' => 'المستخدمين',

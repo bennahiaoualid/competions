@@ -54,6 +54,10 @@ use Illuminate\Support\Facades\Auth;
  * @method static Builder<static>|Competition whereStatus($value)
  * @method static Builder<static>|Competition whereTitle($value)
  * @method static Builder<static>|Competition whereUpdatedAt($value)
+ * @property bool $is_suspended
+ * @method static Builder<static>|Competition whereIsSuspended($value)
+ * @method static Builder<static>|Competition whereLastSyncedAt($value)
+ * @method static Builder<static>|Competition whereParticipantsSyncStatus($value)
  * @mixin \Eloquent
  */
 class Competition extends Model

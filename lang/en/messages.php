@@ -16,6 +16,7 @@ return [
             'saved' => 'data have been saved',
             'updated' => 'data have been updated',
             'deleted' => 'data have been deleted',
+            'restored' => 'data have been restored',
             'activated' => 'activation done',
             'finish' => 'finish operation done',
             'response_audited' => 'response number :number score updated',
@@ -26,6 +27,7 @@ return [
             'saved' => 'something went wrong while saving',
             'updated' => 'something went wrong while updating',
             'deleted' => 'something went wrong while deleting',
+            'restored' => 'something went wrong while restoring',
             'activated' => 'activation failed',
             'something_went_wrong' => 'something went wrong',
             'finish' => 'finish operation failed',
@@ -89,7 +91,9 @@ return [
             'response_final_score_calc' => 'final score = score - (response duration / duration * (score / 2))',
             'response_penalty_calc' => 'the score will by decreased by percentage of the penalty',
             'delete_competition' => 'This process will remove competition and its information including levels competitors auditors and results, you cant undo ',
-            'correct_choice' => 'the first choice will be chose as the correct one'
+            'correct_choice' => 'the first choice will be chose as the correct one',
+            'hard_delete_warning' => 'This action will permanently delete the entity and all its associated data. This operation cannot be undone.',
+            'restore_confirmation' => 'This action will restore the entity and make it active again. Are you sure you want to proceed?'
         ]
     ],
     'global' => [
@@ -131,5 +135,13 @@ return [
         'new_auditor' => 'you have been added as an auditor in new Competition :competition',
         'finish_level' =>  'a competition that you are an auditor on it :competition has been finish the level :level you can start checking responses',
 
+    ],
+    'permissions' => [
+        'assigned_successfully' => 'Permissions have been assigned successfully',
+        'revoked_successfully' => 'Permissions have been revoked successfully',
+        'assignment_failed' => 'Failed to assign permissions. Please try again.',
+        'revocation_failed' => 'Failed to revoke permissions. Please try again.',
+        'unauthorized' => 'You are not authorized to perform this action.',
+        'no_permissions_selected' => 'No permissions were selected.',
     ],
 ];

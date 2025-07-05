@@ -34,6 +34,10 @@ return [
     'job' => [
         'remove' => "remove jobs",
     ],
+    'deletion' => [
+        'hard_delete' => "Hard Delete Confirmation",
+        'restore' => "Restore Confirmation",
+    ],
     'filter' => [
         'filter' => 'filter',
         'all' => 'All',
@@ -44,6 +48,9 @@ return [
         "update" => "update",
         "change" => "change",
         "delete" => "delete",
+        "hard_delete" => "Hard Delete",
+        "restore" => "Restore",
+        "actions" => "Actions",
         "confirm_delete" => "Are you sure to continue deleting this record",
         "confirm_competitor_add" => "Are you sure to add this competitors",
         'confirm_auditor_add' => 'Are you sure to add this auditors?',

@@ -9,8 +9,12 @@
 
 <li class="mb-2" x-data="{ open: @js($active) }">
     <x-nav-link href="#" @click="open = !open"  :active="$active" :sub="false" data-dropdown-target="dropdown-{{ $dropdownId }}">
-       @isset($icon) {{ $icon }} @endisset {{ $title }}
-        <i class="fas fa-chevron-down arrow-icon transition duration-300 ms-auto" :class="open ? 'rotate-0' : 'ltr:rotate-90 rtl:-rotate-90'"></i>
+        
+        @isset($icon) {{ $icon }} @endisset
+        @isset($titleUi){{ $titleUi }}@endisset
+        <i class="fas fa-chevron-down arrow-icon collapse-link-icon transition duration-300 ms-auto" :class="open ? 'rotate-0' : 'ltr:rotate-90 rtl:-rotate-90'"></i>
+        
+    
     </x-nav-link>
     @if(!empty($links))
         <ul x-show="open" @click.outside="open = false" @close.stop="open = false" data-dropdown="dropdown-{{ $dropdownId }}" class="sub-menu mt-1 space-y-1">

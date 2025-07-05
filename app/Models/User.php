@@ -75,6 +75,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @method static Builder<static>|User whereUpdatedAt($value)
  * @method static Builder<static>|User withTrashed()
  * @method static Builder<static>|User withoutTrashed()
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Competition> $competitions
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, DeletionRequest> $deletionRequests
+ * @property-read int|null $deletion_requests_count
  * @mixin \Eloquent
  */
 class User extends Authenticatable implements MustVerifyEmail

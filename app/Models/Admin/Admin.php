@@ -64,6 +64,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin withoutRole($roles, $guard = null)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin withoutRoles(array $roles)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin withoutTrashed()
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Competition> $competitions
+ * @property-read int|null $competitions_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, DeletionRequest> $deletionRequests
+ * @property-read int|null $deletion_requests_count
  * @mixin \Eloquent
  */
 class Admin extends Authenticatable
