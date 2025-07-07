@@ -17,4 +17,5 @@ enum DeletionRequestTypeEnum: string
             self::Admin => __('deletion.type.admin'),
         };
     }
+    
 }

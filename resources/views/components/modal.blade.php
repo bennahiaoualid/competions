@@ -4,6 +4,7 @@
     'maxWidth' => '2xl',
     'id' => '',
     'title_size' => 'text-2xl',
+    'inputValue' => ''
 ])
 
 @php
@@ -22,7 +23,7 @@
         show: @js($show),
         modalName: @js($name),
         modalId: @js($id), // Modal ID
-        inputValue: '',
+        inputValue: @js($inputValue),
         payload:  {},
         focusables() {
             let selector = 'a, button, input:not([type=\'hidden\']), textarea, select, details, [tabindex]:not([tabindex=\'-1\'])';

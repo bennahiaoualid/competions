@@ -46,14 +46,17 @@ return [
     'view admin' => 'عرض المشرفين',
     'update admin' => 'تحديث المشرف',
     'delete admin' => 'حذف المشرف',
-    'hard delete admin' => 'حذف المشرف نهائياً',
+    'hard_delete admin' => 'حذف المشرف نهائياً',
+    'restore admin' => 'إستعادة المشرف',
+
+    'view user' => 'عرض المستخدمين',
     'add user' => 'إضافة مستخدم',
     'update user' => 'تحديث المستخدم',
     'delete user' => 'حذف المستخدم',
-    'hard delete user' => 'حذف المستخدم نهائياً',
-    'view user' => 'عرض المستخدمين',
+    'hard_delete user' => 'حذف المستخدم نهائياً',
+    'restore user' => 'إستعادة المستخدم',
+
     'add competition' => 'إضافة مسابقة',
-    'restore deleted entities' => 'استعادة الكيانات المحذوفة',
     
     // Page Titles
     'manage_permissions_for' => 'إدارة الصلاحيات لـ',

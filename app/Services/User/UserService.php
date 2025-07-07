@@ -5,15 +5,11 @@ namespace App\Services\User;
 use Exception;
 use App\Models\User;
 use App\Traits\RegisterLogs;
-use App\Helpers\UserSafeDelete;
 use App\Helpers\CompetitionsOrder;
 use Illuminate\Support\Facades\DB;
 use App\Contracts\FlasherInterface;
-use Illuminate\Contracts\View\View;
-use App\Jobs\User\SafeDeleteUserJob;
+use App\Jobs\User\SoftDeleteUserJob;
 use Illuminate\Support\Facades\Auth;
-use App\Contracts\TransactionManagerInterface;
-use App\Interface\User\UserRepositoryInterface;
 use App\Services\Monitoring\JobTrackingService;
 
 class UserService
@@ -87,10 +83,10 @@ class UserService
     /**
      * Delete a user with safe delete, transaction, and notification.
      */
-    public function delete(User $user)
+    public function delete(User $user, string $reason)
     {
         try {
-            $job = $this->createDeleteJob($user);
+            $job = $this->createDeleteJob($user, $reason);
             $this->jobTrackingService->dispatchWithTracking($job);
             $this->flasher->crudSuccess('deleted');
             return true;
@@ -147,8 +143,9 @@ class UserService
         );
     }
 
-    private function createDeleteJob(User $user): SafeDeleteUserJob
+    private function createDeleteJob(User $user, string $reason): SoftDeleteUserJob
     {
-        return new SafeDeleteUserJob($user, Auth::user(), 'User Deletion');
+        return new SoftDeleteUserJob($user, Auth::user(), $reason);
     }
+
 }

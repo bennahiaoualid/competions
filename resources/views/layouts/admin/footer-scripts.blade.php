@@ -5,8 +5,10 @@
         const userId = document.querySelector('meta[name="user-id"]').getAttribute('content');
 
         if (window.Echo) {
+            console.log(window)
             window.Echo.private(`job.admin.${userId}`)
                 .listen('.JobUpdated', (e) => {
+
                     toastr.options.timeOut = 10000;
                     toastr.options.progressBar = true;
 

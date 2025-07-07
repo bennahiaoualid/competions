@@ -8,6 +8,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\DeletionRequestTypeEnum;
 use App\Enums\DeletionRequestStatusEnum;
+use App\Helpers\DateTimeHelper;
 use App\PowerGridThemes\TailwindStriped;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\Monitoring\DeletionRequest;
@@ -26,10 +27,16 @@ final class DeletionRecordsTable extends PowerGridComponent
     public function setUp(): array
     {
         return [
-            PowerGrid::header()->showSearchInput(),
+            PowerGrid::header()
+                ->showSearchInput()
+                ->showToggleColumns(),
             PowerGrid::footer()
                 ->showPerPage()
                 ->showRecordCount(),
+            PowerGrid::detail()
+                ->view('components.tables.deletion_request_detail')
+                ->showCollapseIcon()
+                ->collapseOthers()
         ];
     }
 
@@ -55,13 +62,7 @@ final class DeletionRecordsTable extends PowerGridComponent
     {
         return PowerGrid::fields()
             ->add('deletable_entity', function ($deletionRequest) {
-                $deletable = $deletionRequest->deletable;
-                if (!$deletable) {
-                    return '<span class="text-gray-500">Entity not found</span>';
-                }
-                
-                $name = $deletionRequest->snapshot_name ?? $deletable->name ?? 'Unknown';
-                
+                $name = $deletionRequest->snapshot_name;
                 return e($name);
             })
 
@@ -75,17 +76,13 @@ final class DeletionRecordsTable extends PowerGridComponent
                 return $admin ? e($admin->name) : 'Unknown';
             })
 
-            ->add('reason', function ($deletionRequest) {
-                return e($deletionRequest->reason);
-            })
-
             ->add('status', fn ($deletionRequest) => view('components.ui_widgets.status-widget', [
                 'status' => $deletionRequest->status,
                 'text' => DeletionRequestStatusEnum::from($deletionRequest->status)->label()
             ]))
 
-            ->add('requested_at', function ($deletionRequest) {
-                return e(Carbon::parse($deletionRequest->requested_at)->format('Y-m-d H:i:s'));
+            ->add('requested_at_local', function ($deletionRequest) {
+                return e(DateTimeHelper::toLocalString($deletionRequest->requested_at));
             })
 
             ->add('approved_by', function ($deletionRequest) {
@@ -93,35 +90,26 @@ final class DeletionRecordsTable extends PowerGridComponent
                 return $admin ? e($admin->name) : '-';
             })
 
-            ->add('approved_at', function ($deletionRequest) {
-                return $deletionRequest->approved_at ;
-                   /* ? e(Carbon::parse($deletionRequest->approved_at)->format('Y-m-d H:i:s'))
-                    : '-';*/
+            ->add('approved_at_local', function ($deletionRequest) {
+                return $deletionRequest->approved_at 
+                    ? e(DateTimeHelper::toLocalString($deletionRequest->approved_at))
+                    : '-';
             });
     }
 
     public function columns(): array
     {
         return [
-            Column::make(__('deletion.records.entity'), 'deletable_entity')
-                ->sortable()
+            Column::make(__('deletion.records.entity'), 'deletable_entity', 'snapshot_name')
                 ->searchable(),
-            Column::make(__('deletion.records.type'), 'deletable_type')
-                ->sortable()
+            Column::make(__('deletion.records.type'), 'deletable_type'),
+            Column::make(__('deletion.records.requested_by'), 'requested_by', 'snapshot_deleter_name')
                 ->searchable(),
-            Column::make(__('deletion.records.requested_by'), 'requested_by')
-                ->sortable()
-                ->searchable(),
-            Column::make(__('deletion.records.reason'), 'reason')
-                ->searchable(),
-            Column::make(__('deletion.records.status'), 'status')
-                ->sortable(),
-            Column::make(__('deletion.records.requested_at'), 'requested_at')
-                ->sortable(),
-            Column::make(__('deletion.records.approved_by'), 'approved_by')
-                ->sortable(),
-            /*Column::make(__('deletion.records.approved_at'), 'approved_at')
-                ->sortable(),*/
+            Column::make(__('deletion.records.status'), 'status'),
+            Column::make(__('deletion.records.requested_at'), 'requested_at_local', 'requested_at')
+            ->sortable(),
+            Column::make(__('deletion.records.approved_by'), 'approved_by'),
+            Column::make(__('deletion.records.approved_at'), 'approved_at_local'),
             Column::action(__('form.actions.actions'))
         ];
     }
@@ -129,72 +117,68 @@ final class DeletionRecordsTable extends PowerGridComponent
     public function filters(): array
     {
         return [
-            // Add filters if needed
+            Filter::select('status', 'status')
+                ->dataSource(array_map(function ($status) {
+                    return [
+                        'id' => $status->value,
+                        'name' => $status->label(),
+                    ];
+                }, DeletionRequestStatusEnum::cases()))
+                ->optionValue('id')
+                ->optionLabel('name'),
+
+            Filter::select('deletable_type', 'deletable_type')
+                ->dataSource(array_map(function ($jobType) {
+                    return [
+                        'id' => $jobType->value,
+                        'name' => $jobType->label(),
+                    ];
+                }, DeletionRequestTypeEnum::cases()))
+                ->optionValue('id')
+                ->optionLabel('name'),
         ];
     }
 
     public function actions(DeletionRequest $row): array
     {
-        $actions = [];
-        
-        // Get entity details for modal display
 
         $needsAction = $row->deletable ? $row->deletable->trashed() : false;
         $entityName = $row->snapshot_name ;
-        $actions[] = Button::add('hard_delete_modal')
-            ->slot(' <i class="fa-solid fa-unlock text-base"></i>')
-            ->class('px-2 py-1 text-xs inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150
-        bg-transparent text-danger border-danger hover:bg-danger hover:text-white focus:bg-danger focus:text-white active:bg-danger active:text-white focus:ring-danger')
-            ->dispatch('open-modal', ['detail' => 'hard_delete_modal', 'value' => $row->id]);
-        
-        // Check if user can perform actions on this specific deletable type
-        /*if ($row->deletable_type === User::class && Auth::user()->can('hard delete user')) {
-            $actions[] = Button::add('hard-delete')
-                ->slot('<i class="fa-solid fa-trash"></i>')
-                ->class('inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 px-2 py-1 text-lg bg-transparent text-red-600 border-red-600 hover:bg-red-600 hover:text-white focus:bg-red-600 focus:text-white active:bg-red-600 active:text-white focus:ring-red-600')
-                ->dispatch('openHardDeleteModal', [
-                    'id' => $row->id,
-                    'entityName' => $entityName,
-                    'entityType' => $entityType
-                ]);
-        }
-        
-        /*if ($row->deletable_type === Admin::class && Auth::user()->can('hard delete admin')) {
-            $actions[] = Button::add('hard-delete')
-                ->slot('<i class="fa-solid fa-trash"></i>')
-                ->class('inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 px-2 py-1 text-lg bg-transparent text-red-600 border-red-600 hover:bg-red-600 hover:text-white focus:bg-red-600 focus:text-white active:bg-red-600 active:text-white focus:ring-red-600')
-                ->dispatch('openHardDeleteModal', [
-                    'id' => $row->id,
-                    'entityName' => $entityName,
-                    'entityType' => $entityType
-                ]);
-        }*/
-        
-        // Restore action (available for both types if user has general restore permission)
-        /*if (Auth::user()->can('restore deleted entities')) {
-            $actions[] = Button::add('restore')
-                ->slot('<i class="fa-solid fa-undo"></i>')
-                ->class('inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 px-2 py-1 text-lg bg-transparent text-green-600 border-green-600 hover:bg-green-600 hover:text-white focus:bg-green-600 focus:text-white active:bg-green-600 active:text-white focus:ring-green-600')
-                ->dispatch('openRestoreModal', [
-                    'id' => $row->id,
-                    'entityName' => $entityName,
-                    'entityType' => $entityType
-                ]);
-        }*/
-        
+
         return [
+            Button::add('detail')
+                ->slot(__('deletion.records.reason'))
+                ->class('px-2 py-1 text-xs inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150
+                bg-transparent text-primary border-primary hover:bg-primary hover:text-white focus:bg-primary focus:text-white active:bg-primary active:text-white focus:ring-primary')
+                ->toggleDetail($row->id),
+
             Button::add('hard_delete_modal')
-                ->slot(' <i class="fa-solid fa-unlock text-base"></i>')
+                ->slot('<i class="fa-solid fa-unlock text-base"></i>')
                 ->class('px-2 py-1 text-xs inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150
             bg-transparent text-danger border-danger hover:bg-danger hover:text-white focus:bg-danger focus:text-white active:bg-danger active:text-white focus:ring-danger')
                 ->can($needsAction)
-                ->dispatch('open-modal', 
+                ->dispatch(
+                    'open-modal', 
                         [
                             'detail' => 'hard_delete_modal', 
                             'value' => $row->id,
                             'input_detail' => ['entityName' => $entityName]
                         ]
+                        ),
+
+            Button::add('restore_modal')
+                ->slot('<i class="fa-solid fa-rotate"></i>')
+                ->class('px-2 py-1 text-xs inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150
+            bg-transparent text-warning border-warning hover:bg-warning hover:text-white focus:bg-warning focus:text-white active:bg-warning active:text-white focus:ring-warning')
+                ->can($needsAction)
+                ->dispatch('open-modal', 
+                        [
+                            'detail' => 'restore_modal', 
+                            'value' => $row->id,
+                            'input_detail' => ['entityName' => $entityName]
+                        ]
                     )
+            
         ];
     }
 

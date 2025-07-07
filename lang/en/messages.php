@@ -22,6 +22,7 @@ return [
             'response_audited' => 'response number :number score updated',
             'approved' => 'approved',
             'response_audited' => 'response number :number has been audited',
+            'hard_deleted' => 'entity has been permanently deleted',
         ],
         'fail' =>[
             'saved' => 'something went wrong while saving',
@@ -32,6 +33,7 @@ return [
             'something_went_wrong' => 'something went wrong',
             'finish' => 'finish operation failed',
             'approved' => 'approve fail',
+            'hard_deleted' => 'something went wrong while permanently deleting',
         ],
         'info' => [
             'saved' => 'save operation is in progress',
@@ -70,6 +72,8 @@ return [
             'remove_auditor_only_one' => 'you cant delete the only auditor in a competition',
             'global_question_choices' => 'choices number should be at between 2 or 5 choices',
         ],
+        'invalid_deletion_type' => 'Invalid deletion type. This operation is not allowed for this entity type.',
+        'insufficient_permissions' => 'You do not have sufficient permissions to perform this action.',
         'contact' => 'contact administrator',
     ],
     'alert'=>[
@@ -123,6 +127,7 @@ return [
         'ltr' => 'left to right',
         'rtl' => 'right to left',
         'action' => 'action',
+        'reason' => 'reason'
     ],
     'mail' => [
         'welcome' => 'Welcome dear :user',

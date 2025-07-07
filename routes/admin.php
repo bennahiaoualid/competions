@@ -31,7 +31,7 @@ Route::group(
             Route::get('/', [\App\Http\Controllers\Admin\AdminController::class, "index"])->name("index");
             Route::get('/admins', [\App\Http\Controllers\Admin\AdminController::class, "getAdminListView"])->name("list");
 
-            // only admin with role owner and super_admin can access to this routs
+            // Admin manipulation crud only admin with role owner and super_admin can access to this routs
             Route::group(['middleware' => ['role:owner|super_admin']], function (){
                 Route::post('/store', [\App\Http\Controllers\Admin\AdminController::class, "store"])->name("store");
                 Route::middleware('prevent_unauthorized_admin_edit')->get('/admins/edit/{id}', [\App\Http\Controllers\Admin\AdminController::class, "edit"])->name("edit");
@@ -58,8 +58,8 @@ Route::group(
 
                 // Deletion Records routes
                 Route::get('/monitoring/deletion-records', [DeletionRecordsController::class, 'index'])->name('monitoring.deletion-records');
-                Route::post('/monitoring/deletion-records/{deletionRequest}/hard-delete', [DeletionRecordsController::class, 'hardDelete'])->name('monitoring.deletion-records.hard-delete');
-                Route::post('/monitoring/deletion-records/{deletionRequest}/restore', [DeletionRecordsController::class, 'restore'])->name('monitoring.deletion-records.restore');
+                Route::post('/monitoring/deletion-records/hard-delete', [DeletionRecordsController::class, 'hardDelete'])->name('monitoring.deletion-records.hard-delete');
+                Route::post('/monitoring/deletion-records/restore', [DeletionRecordsController::class, 'restore'])->name('monitoring.deletion-records.restore');
             });
 
             // users manipulation
@@ -68,6 +68,7 @@ Route::group(
             Route::middleware('can:update user')->get('/users/edit/{user}', [\App\Http\Controllers\User\UserController::class, "edit"])->name("users.edit");
             Route::patch('/users/update/{user}', [\App\Http\Controllers\User\UserController::class, "update"])->name("users.update");
             Route::middleware("can_delete_user")->post('/users/delete', [\App\Http\Controllers\User\UserController::class, "delete"])->name("users.delete");
+            Route::post('/users/hard-delete', [\App\Http\Controllers\User\UserController::class, "hardDelete"])->name("users.hard_delete");
 
             //competitions
             Route::get('/competitions', [\App\Http\Controllers\Competition\CompetitionController::class, "index"])->name("competitions");

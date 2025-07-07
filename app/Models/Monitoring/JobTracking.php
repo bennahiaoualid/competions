@@ -4,6 +4,7 @@
 namespace App\Models\Monitoring;
 
 use Carbon\Carbon;
+use App\Helpers\DateTimeHelper;
 use App\Presenters\JobResultPresenter;
 use Illuminate\Database\Eloquent\Model;
 
@@ -75,24 +76,17 @@ class JobTracking extends Model
 
     public function getCompletedAtLocalAttribute(): ?string
     {
-        return $this->convertToDisplayTimezone($this->completed_at);
+        return DateTimeHelper::toLocalString($this->completed_at);
     }
 
     public function getFailedAtLocalAttribute(): ?string
     {
-        return $this->convertToDisplayTimezone($this->failed_at);
+        return DateTimeHelper::toLocalString($this->failed_at);
     }
 
     public function getStartedAtLocalAttribute(): ?string
     {
-        return $this->convertToDisplayTimezone($this->started_at);
-    }
-
-    protected function convertToDisplayTimezone(?string $timestamp): ?string
-    {
-        return $timestamp
-            ? Carbon::parse($timestamp)->setTimezone(config('app.timezone_display'))->format('Y-m-d H:i')
-            : null;
+        return DateTimeHelper::toLocalString($this->started_at);
     }
 
     /**

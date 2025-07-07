@@ -9,97 +9,104 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Monitoring\DeletionRequest;
 use App\Contracts\TransactionManagerInterface;
+use App\Services\Monitoring\JobTrackingService;
+use App\Jobs\User\HardDeleteUserJob;
+use App\Jobs\Admin\HardDeleteAdminJob;
+use App\Jobs\Admin\RestoreAdminJob;
 
 class DeletionRecordsService
 {
     use RegisterLogs;
+    
     public function __construct(
-        private TransactionManagerInterface $transaction_manager
+        private TransactionManagerInterface $transaction_manager,
+        private JobTrackingService $jobTrackingService
     ) {}
 
+    /**
+     * Generic hard delete method that dispatches appropriate job based on entity type
+     */
     public function hardDelete(DeletionRequest $deletionRequest): bool
     {
         try {
-            return $this->transaction_manager->run(function()use($deletionRequest){
-                // Get the deletable entity
-                $deletable = $deletionRequest->deletable;
-                
-                if (!$deletable) {
-                    throw new \Exception('Deletable entity not found');
-                }
+            // Get the deletable entity
+            $deletable = $deletionRequest->deletable;
 
-                // Perform hard delete based on type
-                if ($deletable instanceof User) {
-                    $deletable->forceDelete();
-                } elseif ($deletable instanceof Admin) {
-                    $deletable->forceDelete();
-                }
+            if (!$deletable) {
+                throw new \Exception('Deletable entity not found');
+            }
 
-                // Update deletion request status
-                $deletionRequest->update([
-                    'status' => 'approved',
-                    'approved_by_admin_id' => Auth::id(),
-                    'approved_at' => now(),
-                ]);
+            // Create and dispatch the appropriate job
+            $job = $this->createHardDeleteJob($deletable, $deletionRequest);
+            $this->jobTrackingService->dispatchWithTracking($job);
 
-                // Log the action
-                Log::info('Entity hard deleted', [
-                    'deletion_request_id' => $deletionRequest->id,
-                    'deletable_type' => $deletionRequest->deletable_type,
-                    'deletable_id' => $deletionRequest->deletable_id,
-                    'deleted_by' => Auth::id(),
-                ]);
-                return true;
-            });
+            return true;
 
         } catch (\Exception $e) {
-            Log::error('Hard delete failed', [
-                'deletion_request_id' => $deletionRequest->id,
-                'error' => $e->getMessage(),
-            ]);
+            $this->registerLogs('DeletionREcordsService :: hardDelete',$e);
             return false;
         }
     }
 
+    /**
+     * Generic restore method
+     */
     public function restore(DeletionRequest $deletionRequest): bool
     {
         try {
-            return $this->transaction_manager->run(function () use ($deletionRequest) {
-                // Get the deletable entity (with trashed)
-                $deletable = $this->getDeletableWithTrashed($deletionRequest);
-                
-                if (!$deletable) {
-                    throw new \Exception('Deletable entity not found');
-                }
+            $deletable = $this->getDeletableWithTrashed($deletionRequest);
 
-                // Restore the entity
-                $deletable->restore();
+            if (!$deletable) {
+                throw new \Exception('Deletable entity not found');
+            }
 
-                // Update deletion request status
-                $deletionRequest->update([
-                    'status' => 'rejected',
-                    'approved_by_admin_id' => Auth::id(),
-                    'approved_at' => now(),
-                ]);
-
-                // Log the action
-                Log::info('Entity restored', [
-                    'deletion_request_id' => $deletionRequest->id,
-                    'deletable_type' => $deletionRequest->deletable_type,
-                    'deletable_id' => $deletionRequest->deletable_id,
-                    'restored_by' => Auth::id(),
-                ]);
-
-                return true;
-            });
- 
+            if ($deletable instanceof \App\Models\User) {
+                return $this->restoreUser($deletable, $deletionRequest);
+            } elseif ($deletable instanceof \App\Models\Admin\Admin) {
+                return $this->restoreAdmin($deletable, $deletionRequest);
+            } else {
+                throw new \Exception('Unsupported deletable type');
+            }
         } catch (\Exception $e) {
-            Log::error('Restore failed', [
-                'deletion_request_id' => $deletionRequest->id,
-                'error' => $e->getMessage(),
-            ]);
+            $this->registerLogs('DeletionRecordsService :: restore ', $e);
             return false;
         }
+    }
+
+    private function restoreUser($user, $deletionRequest): bool
+    {
+        return $this->transaction_manager->run(function () use ($user, $deletionRequest) {
+            $user->restore();
+            $admin = Auth::user();
+            $deletionRequest->update([
+                'status' => 'rejected',
+                'approved_by_admin_id' => $admin->id,
+                'snapshot_approver_name' => $admin->name . ' - ' .$admin->email,
+                'approved_at' => now(),
+            ]);
+            return true;
+        });
+    }
+
+    private function restoreAdmin($admin, $deletionRequest): bool
+    {
+        $job = new \App\Jobs\Admin\RestoreAdminJob($admin, $deletionRequest);
+        $this->jobTrackingService->dispatchWithTracking($job);
+        return true;
+    }
+
+    /**
+     * Factory method to create appropriate hard delete job based on entity type
+     */
+    private function createHardDeleteJob($deletable, DeletionRequest $deletionRequest)
+    {
+        /** @var \App\Models\Admin\Admin $admin */
+        $admin = Auth::user();
+        return match (get_class($deletable)) {
+            User::class => new HardDeleteUserJob($deletable, $admin, $deletionRequest),
+            Admin::class => new HardDeleteAdminJob($deletable, $admin, $deletionRequest),
+            default => throw new \InvalidArgumentException("Unsupported entity type: " . get_class($deletable))
+        };
     }
 
     private function getDeletableWithTrashed(DeletionRequest $deletionRequest)

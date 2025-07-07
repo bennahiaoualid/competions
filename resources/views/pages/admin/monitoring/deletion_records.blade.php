@@ -20,12 +20,11 @@
     </div>
 
     {{-- Hard Delete Modal - Only show if user has appropriate permissions --}}
-    @can('hard delete user')
         <x-modal name="hard_delete_modal" title="Hard Delete Confirmation" :show="false">
             <x-slot:modalhead>
                 {{__("form.deletion.hard_delete")}}
             </x-slot>
-            <form id="hard-delete-form" method="post" action="" class="space-y-2">
+            <form id="hard-delete-form" method="post" action="{{ route('admin.monitoring.deletion-records.hard-delete') }}" class="space-y-2">
                 @csrf
                 @method('post')
                 <div>
@@ -42,23 +41,20 @@
                 </div>
             </x-slot>
         </x-modal>
-    @endcan
 
     {{-- Restore Modal - Only show if user has restore permission --}}
-    @can('restore deleted entities')
-     {{--  <x-modal name="restore_modal" title="Restore Confirmation" :show="false">
+        <x-modal name="restore_modal" title="Restore Confirmation" :show="false">
             <x-slot:modalhead>
                 {{__("form.deletion.restore")}}
             </x-slot>
-            <form id="restore-form" method="post" action="" class="space-y-2">
+            <form id="restore-form" method="post" action="{{ route('admin.monitoring.deletion-records.restore') }}" class="space-y-2">
                 @csrf
                 @method('post')
                 <div>
                     <input type="hidden" name="deletion_request_id" x-model="inputValue"/>
                     <x-alert type="info" outline="true" size="sm" :title="__('messages.alert.type.info')">
                         <p>{{__('messages.alert.content.restore_confirmation')}}</p>
-                        <p class="mt-2"><strong>Entity:</strong> <span x-text="entityName"></span></p>
-                        <p><strong>Type:</strong> <span x-text="entityType"></span></p>
+                        <p class="mt-2"><strong>{{ __('deletion.records.entity') }}:</strong> <span x-text="payload.entityName"></span></p>
                     </x-alert>
                 </div>
             </form>
@@ -67,8 +63,7 @@
                     <x-button form="restore-form" color_type="success">{{ __('form.actions.restore') }}</x-button>
                 </div>
             </x-slot>
-        </x-modal>--}}
-    @endcan
+        </x-modal>
 @endsection
 
 @section('custom_js')

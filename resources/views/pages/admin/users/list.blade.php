@@ -79,7 +79,7 @@
     </x-modal>
     @endcan
 
-    <x-modal name="delete" title="My Modal" :show="false">
+    <x-modal name="delete" title="My Modal" :show="$errors->hasBag('deleteUser')" :inputValue="old('id')">
         <x-slot:modalhead>
             {{__("form.user.delete")}}
         </x-slot>
@@ -88,8 +88,17 @@
             @method('post')
 
             <div>
-               <input type="hidden" name="id" x-model="inputValue"/>
-                <p class=""> {{__("form.actions.confirm_delete")}}</p>
+                <input type="hidden" name="id" x-model="inputValue"/>
+                <p class="my-1">
+                    {{__("form.actions.confirm_delete")}}
+                    <span class="text-danger" x-text="payload.userName"></span>
+                </p>
+            </div>
+
+            <div>
+                <x-input-label for="delete_user_reason" :value=" ucwords(__('messages.global.reason'))" />
+                <x-text-input id="delete_user_reason" name="reason" type="text" class="mt-1 block w-full" min="5" max="100"  />
+                <x-input-error :messages="$errors->deleteUser->get('reason')" class="mt-2" />
             </div>
 
         </form>

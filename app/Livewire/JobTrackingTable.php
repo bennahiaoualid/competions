@@ -59,23 +59,9 @@ final class JobTrackingTable extends PowerGridComponent
 
     public function datasource(): Builder
     {
-        $query = JobTracking::select('id', 'job_id', 'job_type', 'status', 'error_message', 'result', 'attempts', 'started_at', 'completed_at', 'failed_at')
+        return JobTracking::select('id', 'job_id', 'job_type', 'status', 'error_message', 'result', 'attempts', 'started_at', 'completed_at', 'failed_at')
                         ->where('user_id', Auth::id())
                         ->orderBy('started_at', 'desc');
-
-        if ($this->filters['started_at_local'] ?? false) {
-            $tz = config('app.timezone_display', 'UTC');
-    
-            $start = Carbon::parse($this->filters['started_at_local'], $tz)->startOfDay();
-            $end   = Carbon::parse($this->filters['started_at_local'], $tz)->endOfDay();
-    
-            $query->whereBetween('started_at', [
-                $start->copy()->setTimezone('UTC'),
-                $end->copy()->setTimezone('UTC'),
-            ]);
-        }
-    
-        return $query;
     }
 
     public function relationSearch(): array
@@ -168,14 +154,14 @@ final class JobTrackingTable extends PowerGridComponent
                 ->toggleDetail($row->id),
 
             Button::add('retry_job')
-                ->slot(' <i class="fa-solid fa-rotate"></i>')
+                ->slot('<i class="fa-solid fa-rotate"></i>')
                 ->class('px-2 py-1 text-xs inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150
                 bg-transparent text-warning border-warning hover:bg-warning hover:text-white focus:bg-warning focus:text-white active:bg-warning active:text-white focus:ring-warning')
                 ->route('admin.monitoring.job.retry', ['jobId' => $row->job_id])
                 ->can($row->status === 'failed'),
 
             Button::add('delete_job')
-                ->slot(' <i class="fa-solid fa-unlock text-base"></i>')
+                ->slot('<i class="fa-solid fa-unlock text-base"></i>')
                 ->class('px-2 py-1 text-xs inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150
                 bg-transparent text-danger border-danger hover:bg-danger hover:text-white focus:bg-danger focus:text-white active:bg-danger active:text-white focus:ring-danger')
                 ->route('admin.monitoring.job.delete', ['jobId' => $row->job_id]),

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Models\User;
+use App\Models\Monitoring\DeletionRequest;
 use App\Services\User\UserService;
 use App\Traits\CrudOperationNotificationAlert;
 use App\Traits\RoleManipulation;
@@ -13,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Auth;
 
 
 class UserController extends Controller
@@ -20,16 +22,21 @@ class UserController extends Controller
     use CrudOperationNotificationAlert;
     use RoleManipulation;
     /**
-     * The controller coordinates HTTP request/response and delegates all business logic to the service.
+     * The controller coordinates HTTP request/response cycle.
+     * It delegates business logic to the service layer.
      */
     public function __construct(
-        protected UserService $userService
+        private UserService $userService
     ) {
     }
 
-    function index() : View{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(): View
+    {
         $data = $this->userService->index();
-        return view('pages.user.dashboard', compact('data'));
+        return view('pages.user.dashboard', $data);
     }
 
     function show() : View{
@@ -69,8 +76,15 @@ class UserController extends Controller
      * All business logic and notifications are handled in the service.
      */
     function delete(Request $request) : RedirectResponse {
-        $user = $request->user;
-        $this->userService->delete($user);
+
+        $request->validateWithBag('deleteUser',
+                [
+                'reason' => 'required|string|min:3|max:100'
+            ], [], [
+                'reason' => __('messages.global.reason')
+            ]);
+
+        $this->userService->delete($request->user,$request->reason);
         return Redirect::back();
     }
 }

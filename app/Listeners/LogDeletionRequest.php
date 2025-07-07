@@ -12,6 +12,19 @@ class LogDeletionRequest
         $deletable = $event->deletable;
         $admin = $event->requestedBy;
 
+        // Prevent duplicate pending requests
+        $exists = DeletionRequest::where([
+            'deletable_id' => $deletable->id,
+            'deletable_type' => get_class($deletable),
+            'status' => 'pending',
+        ])->exists();
+
+        if ($exists) {
+            // Optionally log or notify
+            \Log::info("Duplicate pending DeletionRequest for {$deletable->id}");
+            return;
+        }
+
         DeletionRequest::create([
             'deletable_id' => $deletable->id,
             'deletable_type' => get_class($deletable),

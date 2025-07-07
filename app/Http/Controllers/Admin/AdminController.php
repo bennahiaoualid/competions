@@ -82,8 +82,17 @@ class AdminController extends Controller
      * @return RedirectResponse
      */
     function delete(Request $request) : RedirectResponse {
-        $this->adminService->delete($request->admin);
-        // Notification handled in service
+        
+        $request->validateWithBag('deleteAdmin',
+            [
+            'reason' => 'required|string|min:3|max:100'
+        ], [], [
+            'reason' => __('messages.global.reason')
+        ]);
+        
+
+        $this->adminService->delete($request->admin,$request->reason);
+
         return Redirect::back();
     }
 

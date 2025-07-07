@@ -46,14 +46,17 @@ return [
     'view admin' => 'View Admin',
     'update admin' => 'Update Admin',
     'delete admin' => 'Delete Admin',
-    'hard delete admin' => 'Hard Delete Admin',
+    'hard_delete admin' => 'Hard Delete Admin',
+    'restore admin' => 'Restore Admin',
+
+    'view user' => 'View User',
     'add user' => 'Add User',
     'update user' => 'Update User',
     'delete user' => 'Delete User',
-    'hard delete user' => 'Hard Delete User',
-    'view user' => 'View User',
+    'hard_delete user' => 'Hard Delete User',
+    'restore user' => 'Restore User',
+
     'add competition' => 'Add Competition',
-    'restore deleted entities' => 'Restore Deleted Entities',
     
     // Page Titles
     'manage_permissions_for' => 'Manage Permissions for',

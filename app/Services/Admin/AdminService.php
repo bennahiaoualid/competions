@@ -14,6 +14,7 @@ use App\Jobs\Competition\SafeDeleteAuditorJob;
 use App\Traits\CrudOperationNotificationAlert;
 use App\Services\Monitoring\JobTrackingService;
 use App\Interface\Admin\AdminRepositoryInterface;
+use Egulias\EmailValidator\Result\Reason\Reason;
 
 class AdminService
 {
@@ -108,16 +109,15 @@ class AdminService
     /**
      * Delete an admin with transaction and notification.
      */
-    public function delete(Admin $admin): bool
+    public function delete(Admin $admin, string $reason): bool
     {
         try {
-            $result = $this->transactionManager->run(function () use ($admin) {
+            $result = $this->transactionManager->run(function () use ($admin, $reason) {
 
-                $job = $this->createDeleteJob($admin);
+                $job = $this->createDeleteJob($admin, $reason);
 
                 $this->jobTrackingService->dispatchWithTracking($job);
 
-                $this->adminRepository->delete($admin);
                 return true;
             });
             $this->flasher->info('deleted');
@@ -129,12 +129,14 @@ class AdminService
         }
     }
 
-    protected function createDeleteJob(Admin $admin): DeleteAdminCoordinatorJob
+    protected function createDeleteJob(Admin $admin, string $reason): DeleteAdminCoordinatorJob
     {
         return new DeleteAdminCoordinatorJob(
             admin: $admin,
             mode: 'soft',
-            userId: Auth::id()
+            userId: Auth::id(),
+            skipTrackingCreation:false,
+            reason: $reason
         );
     }
 }

@@ -39,6 +39,8 @@ return new class extends Migration
             $table->timestamp('requested_at')->useCurrent()->index();
             $table->timestamp('approved_at')->nullable()->index();
 
+            // Unique index to prevent duplicate pending requests
+            $table->unique(['deletable_id', 'deletable_type', 'status'], 'unique_pending_deletion_request');
         });
     }
 

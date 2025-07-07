@@ -24,6 +24,8 @@ return [
         'user_deleted' => 'user :user has been deleted successfully',
         'user_delete_failed' => 'user :user has been deleted but failed to remove as an user',
         'user_restored' => 'user :user has been restored',
+        'user_hard_deleted' => 'user :user has been permanently deleted',
+        'user_hard_delete_failed' => 'user :user hard deletion failed',
     ],
     'status' => [
         'pending' => 'Pending',
@@ -35,7 +37,8 @@ return [
         'delete_auditor' => 'Delete Auditor',
         'soft_delete_admin' => 'Delete Admin Temporarily',
         'hard_delete_admin' => 'Delete Admin Permanently',
-        'delete_user' => 'Delete User',
+        'soft_delete_user' => 'Soft Delete User',
+        'hard_delete_user' => 'Hard Delete User',
     ],
     'result_keys' => [
         'auditor_id' => 'Auditor ID',
@@ -50,8 +53,8 @@ return [
         'user' => 'User',
         'admin_id' => 'Admin ID',
         'admin_name' => 'Admin Name',
-    ],
-    'result_values' => [
-        'mode' => 'Mode',
+        'deletion_type' => 'Deletion Type',
+        'approved_by' => 'Approved By',
+        'deletion_request_id' => 'Deletion Request ID',
     ],
 ];

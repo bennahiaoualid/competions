@@ -23,8 +23,12 @@ class DeletionRecordsController extends Controller
         return view('pages.admin.monitoring.deletion_records');
     }
 
-    public function hardDelete(DeletionRequest $deletionRequest)
+    /**
+     * Generic hard delete method that handles all entity types
+     */
+    public function hardDelete(Request $request)
     {
+        $deletionRequest = DeletionRequest::findorfail($request->deletion_request_id);
         // Check permission based on deletable type
         $permission = $this->getRequiredPermission($deletionRequest->deletable_type);
         
@@ -35,7 +39,7 @@ class DeletionRecordsController extends Controller
         $result = $this->deletionRecordsService->hardDelete($deletionRequest);
         
         if ($result) {
-            $this->flasher->crudSuccess('deleted');
+            $this->flasher->info(__('messages.validation.info.deleted'));
         } else {
             $this->flasher->crudFailure('deleted');
         }
@@ -43,9 +47,16 @@ class DeletionRecordsController extends Controller
         return redirect()->back();
     }
 
-    public function restore(DeletionRequest $deletionRequest)
+    /**
+     * Generic restore method that handles all entity types
+     */
+    public function restore(Request $request)
     {
-        if (!Auth::user()->can('restore deleted entities')) {
+        $deletionRequest = DeletionRequest::findorfail($request->deletion_request_id);
+
+        $permission = $this->getRequiredRestorePermission($deletionRequest->deletable_type);
+
+        if (!Auth::user()->can($permission)) {
             abort(403, 'Insufficient permissions');
         }
 
@@ -60,11 +71,23 @@ class DeletionRecordsController extends Controller
         return redirect()->back();
     }
 
+    /**
+     * Get required permission based on entity type
+     */
     private function getRequiredPermission(string $deletableType): string
     {
         return match ($deletableType) {
-            User::class => 'hard delete user',
-            Admin::class => 'hard delete admin',
+            User::class => 'hard_delete user',
+            Admin::class => 'hard_delete admin',
+            default => throw new \InvalidArgumentException("Unknown deletable type: {$deletableType}")
+        };
+    }
+
+    private function getRequiredRestorePermission(string $deletableType): string
+    {
+        return match ($deletableType) {
+            User::class => 'restore user',
+            Admin::class => 'restore admin',
             default => throw new \InvalidArgumentException("Unknown deletable type: {$deletableType}")
         };
     }

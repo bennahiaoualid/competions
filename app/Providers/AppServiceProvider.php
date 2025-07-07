@@ -3,17 +3,11 @@
 namespace App\Providers;
 
 use Carbon\Carbon;
-use App\Models\User;
 use App\Models\Admin\Admin;
 use App\Services\User\UserService;
 use App\Contracts\FlasherInterface;
-use App\Providers\AllUsersProvider;
 use App\Services\Admin\AdminService;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Event;
 use App\Services\Notification\Flasher;
-use App\Repository\User\UserRepository;
 use Illuminate\Support\ServiceProvider;
 use App\Repository\Admin\AdminRepository;
 use Illuminate\Validation\Rules\Password;
@@ -25,20 +19,17 @@ use App\Services\Database\TransactionManager;
 use App\Services\GuestUsers\UserGuestService;
 use App\Services\User\UserCompetitionService;
 use App\Contracts\TransactionManagerInterface;
-use App\Interface\User\UserRepositoryInterface;
 use App\Repository\Competition\AuditRepository;
 use App\Repository\Competition\LevelRepository;
 use App\Services\Monitoring\JobTrackingService;
 use App\Repository\Admin\AdminProfileRepository;
 use App\Services\Competition\CompetitionService;
 use Illuminate\Auth\Notifications\ResetPassword;
-use App\Events\Monitoring\JobRetriedSuccessfully;
 use App\Interface\Admin\AdminRepositoryInterface;
 use App\Repository\Competition\QuestionRepository;
 use App\Repository\GuestUsers\UserGuestRepository;
 use App\Repository\User\UserCompetitionRepository;
 use App\Services\GuestUsers\GlobalQuestionService;
-use App\Listeners\HandleAdminDeletionAfterJobSuccess;
 use App\Repository\Competition\CompetitionRepository;
 use App\Interface\Competition\AuditRepositoryInterface;
 use App\Interface\Competition\LevelRepositoryInterface;
@@ -172,9 +163,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Implicitly grant "Super-Admin" role all permission checks using can()
-        Gate::before(function ($user, $ability) {
-            return $user->hasRole('owner') ? true : null;
-        });
 
         Password::defaults(function () {
             return Password::min(8)
@@ -202,10 +190,6 @@ class AppServiceProvider extends ServiceProvider
             return $this->setTimezone(session()->get('timezone') ?? config('app.timezone_display'));
         });
 
-        // event listeners
-        Event::listen(
-            JobRetriedSuccessfully::class, 
-            HandleAdminDeletionAfterJobSuccess::class
-        );
+       
     }
 }

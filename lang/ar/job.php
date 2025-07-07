@@ -24,6 +24,8 @@ return [
         'user_deleted' => 'تم حذف المستخدم :user بنجاح',
         'user_delete_failed' => 'فشل حذف المستخدم :user',
         'user_restored' => 'تم استرجاع المستخدم :user',
+        'user_hard_deleted' => 'تم حذف المستخدم :user بشكل نهائي',
+        'user_hard_delete_failed' => 'فشل الحذف النهائي للمستخدم :user',
     ],
     'status' => [
         'pending' => 'قيد الانتظار',
@@ -35,7 +37,8 @@ return [
         'delete_auditor' => 'حذف المصحح',
         'soft_delete_admin' => 'حذف المسؤول مؤقتا',
         'hard_delete_admin' => 'حذف المسؤول نهائيا',
-        'delete_user' => 'حذف المستخدم',
+        'soft_delete_user' => 'حذف المستخدم مؤقتا',
+        'hard_delete_user' => 'حذف المستخدم نهائيا',
     ],
     'result_keys' => [
         'auditor_id' => 'معرف المصحح',
@@ -50,5 +53,8 @@ return [
         'user' => 'المستخدم',
         'admin_id' => 'معرف المسؤول',
         'admin_name' => 'اسم المسؤول',
+        'deletion_type' => 'نوع الازالة',
+        'approved_by' => 'تمت الموافقة بواسطة',
+        'deletion_request_id' => 'معرف طلب الازالة',
     ],
 ];

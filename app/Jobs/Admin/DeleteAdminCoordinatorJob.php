@@ -10,16 +10,24 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Monitoring\JobTracking;
 use App\Jobs\Admin\SafeDeleteAuditorJob;
 use App\Events\Monitoring\DeletionRequested;
+use App\Services\Monitoring\JobTrackingService;
 
 class DeleteAdminCoordinatorJob extends BaseTrackableJob
 {
     protected Admin $admin;
     protected string $mode; // 'soft' or 'hard'
+    protected ?string $reason;
 
-    public function __construct(Admin $admin, string $mode, ?int $userId = null, bool $skipTrackingCreation = false)
+    public function __construct
+    (
+        Admin $admin, string $mode, 
+        ?int $userId = null, bool $skipTrackingCreation = false,
+        ?string $reason
+            )
     {
         $this->admin = $admin;
         $this->mode = $mode;
+        $this->reason = $reason;
 
         parent::__construct(
             userId: $userId,
@@ -36,18 +44,10 @@ class DeleteAdminCoordinatorJob extends BaseTrackableJob
             dispatch_sync(new SafeDeleteAuditorJob($this->admin));
 
             match ($this->mode) {
-                'soft' => dispatch_sync(new SoftDeleteAdminJob($this->admin)),
+                'soft' => dispatch_sync(new SoftDeleteAdminJob($this->admin, $this->userId, $this->reason)),
                 'hard' => dispatch_sync(new HardDeleteAdminJob($this->admin)),
                 default => throw new \InvalidArgumentException("Invalid delete mode: {$this->mode}")
             };
-
-            $deleteRequestedBy = Admin::find($this->userId);
-            event(new DeletionRequested(
-                $this->admin, 
-                $deleteRequestedBy, 
-                "kkkkk", 
-                $this->admin->name.' - '.$this->admin->email
-            ));
 
             return $this->getResultValues();
         });
@@ -57,7 +57,8 @@ class DeleteAdminCoordinatorJob extends BaseTrackableJob
     {
         return [
             'admin_id' => $this->admin->id,
-            'action' => $this->mode . '_delete_admin'
+            'action' => $this->mode . '_delete_admin',
+            'reason' =>$this->reason
         ];
     }
 
@@ -79,13 +80,19 @@ class DeleteAdminCoordinatorJob extends BaseTrackableJob
     public static function fromTrackingPayload(array $payload, ?int $userId, string $trackingId): ?static
     {
         $admin = Admin::find($payload['admin_id']);
-        if (!$admin) return null;
+        $reason = $payload['reason'];
+        if (!$admin) {
+            $service = app(JobTrackingService::class);
+            $service->deleteJob($trackingId);
+            return null;
+        }
 
         $job = new static(
-            $admin, 
-            $payload['action'] === 'hard_delete_admin' ? 'hard' : 'soft', 
-            $userId,
-            skipTrackingCreation: true
+            admin: $admin, 
+            mode: $payload['action'] === 'hard_delete_admin' ? 'hard' : 'soft', 
+            userId: $userId,
+            skipTrackingCreation: true,
+            reason: $reason
         );
         $job->trackingId = $trackingId;
         return $job;
@@ -93,9 +100,6 @@ class DeleteAdminCoordinatorJob extends BaseTrackableJob
 
     protected function onFinalFailure(Throwable $e, JobTracking $tracking)
     {
-        if ($this->admin->trashed()) {
-            $this->admin->restore();
-        }
         $this->updateJobStatus($tracking, [
             'status' => 'failed',
             'error_message' => $e->getMessage(),
