@@ -151,7 +151,8 @@ class Admin extends Authenticatable
     /**
      * override methode for storing log activity
      */
-    protected array  $logAttributes = [   'name',
+    protected array  $logAttributes = [   
+        'name',
         'email',
         'birthdate',
         'gender',
@@ -161,6 +162,7 @@ class Admin extends Authenticatable
         return LogOptions::defaults()
             ->logOnly($this->logAttributes)
             ->useLogName('admin')
-            ->logOnlyDirty();
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs(); 
     }
 }

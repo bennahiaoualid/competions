@@ -10,6 +10,7 @@ return [
         'approved_by' => 'وافق بواسطة',
         'approved_at' => 'تاريخ الموافقة',
         'type' => 'النوع',
+        'alternative_admin' => 'المشرف البديل',
     ],
     'status' =>[
         'pending' => 'قيد الانتظار', 

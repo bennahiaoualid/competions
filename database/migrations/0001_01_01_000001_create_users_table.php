@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name')->index();
             $table->string('email')->unique();
             $table->boolean('guest')->default(false)->index();
-            $table->foreignId('admin_id')->nullable()->nullOnDelete();
+            $table->foreignId('admin_id')->nullable()->constrained('admins')->nullOnDelete();
             $table->date('birthdate')->nullable();
             $table->enum('gender', ['male', 'female'])->default('male')->index();
             $table->timestamp('email_verified_at')->nullable()->index();

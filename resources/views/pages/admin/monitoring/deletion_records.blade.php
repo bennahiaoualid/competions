@@ -42,6 +42,56 @@
             </x-slot>
         </x-modal>
 
+    {{-- this modal only for hard delete admin --}}
+    @can('hard_delete admin')
+        <x-modal name="hard_delete_admin_modal" title="Hard Delete Confirmation" :show="false">
+            <x-slot:modalhead>
+                {{__("form.deletion.hard_delete")}}
+            </x-slot>
+            <form id="hard-delete-admin-form" method="post" action="{{ route('admin.monitoring.deletion-records.hard-delete') }}" class="space-y-2">
+                @csrf
+                @method('post')
+                <div>
+                    <input type="hidden" name="deletion_request_id" x-model="inputValue"/>
+                    
+                    <x-alert type="info" outline="true" size="sm" :closable="true" :title="__('messages.alert.type.info')">
+                        <p class="mt-2">
+                            {{ __('messages.alert.content.hard_delete_admin_alternative') }}
+                        </p>
+                    </x-alert>
+
+                    <div>
+                        <x-input-label for="" :value=" ucwords(__('deletion.records.alternative_admin'))" />
+                        @php
+                            $options = [] ;
+                        @endphp
+                        @foreach($admins as $admin)
+                            @php $options[] = ['value' => $admin->id, 'text' => $admin->name, 'selected' => false] @endphp
+                        @endforeach
+                        <x-form.searchable-select
+                            name="admin_id"
+                            :options="$options"
+                            :placeholder="__('messages.global.choose')"
+                            :value="old('admin_id')"
+                            :disabled="false"
+                        />
+                        <x-input-error :messages="$errors->hardDeleteAdmin->get('admin_id')" class="mt-2" />
+                    </div>
+                    
+                    <x-alert type="danger" outline="true" size="sm" :title="__('messages.alert.type.danger')">
+                        <p>{{__('messages.alert.content.hard_delete_warning')}}</p>
+                        <p class="mt-2"><strong>{{ __('deletion.records.entity') }}:</strong> <span x-text="payload.entityName"></span></p>
+                    </x-alert>
+                </div>
+            </form>
+            <x-slot:modalfooter>
+                <div class="flex justify-end">
+                    <x-button form="hard-delete-admin-form" color_type="danger">{{ __('form.actions.hard_delete') }}</x-button>
+                </div>
+            </x-slot>
+        </x-modal>
+    @endcan
+
     {{-- Restore Modal - Only show if user has restore permission --}}
         <x-modal name="restore_modal" title="Restore Confirmation" :show="false">
             <x-slot:modalhead>
@@ -65,42 +115,3 @@
             </x-slot>
         </x-modal>
 @endsection
-
-@section('custom_js')
-<script>
-    // Listen for modal open events from PowerGrid
-    document.addEventListener('openHardDeleteModal', function(event) {
-        const deletionRequestId = event.detail.id;
-        const entityName = event.detail.entityName || 'Unknown';
-        const entityType = event.detail.entityType || 'Unknown';
-        
-        // Set form action
-        document.getElementById('hard-delete-form').action = `/admin/monitoring/deletion-records/${deletionRequestId}/hard-delete`;
-        
-        // Set values for display
-        document.querySelector('[name="deletion_request_id"]').value = deletionRequestId;
-        document.querySelector('#hard_delete_modal [x-text="entityName"]').textContent = entityName;
-        document.querySelector('#hard_delete_modal [x-text="entityType"]').textContent = entityType;
-        
-        // Open modal
-        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'hard_delete_modal' }));
-    });
-
-    document.addEventListener('openRestoreModal', function(event) {
-        const deletionRequestId = event.detail.id;
-        const entityName = event.detail.entityName || 'Unknown';
-        const entityType = event.detail.entityType || 'Unknown';
-        
-        // Set form action
-        document.getElementById('restore-form').action = `/admin/monitoring/deletion-records/${deletionRequestId}/restore`;
-        
-        // Set values for display
-        document.querySelector('[name="deletion_request_id"]').value = deletionRequestId;
-        document.querySelector('#restore_modal [x-text="entityName"]').textContent = entityName;
-        document.querySelector('#restore_modal [x-text="entityType"]').textContent = entityType;
-        
-        // Open modal
-        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'restore_modal' }));
-    });
-</script>
-@endsection 

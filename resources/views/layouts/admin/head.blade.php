@@ -1,5 +1,6 @@
 <!-- Title -->
 <title>@yield("title")</title>
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <link rel="icon" type="image/x-icon" href="{{asset('assets/images/favicon.ico')}}">
 
 <!-- Font Awesome -->

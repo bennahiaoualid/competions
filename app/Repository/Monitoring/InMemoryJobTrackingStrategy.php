@@ -11,11 +11,15 @@ class InMemoryJobTrackingStrategy implements JobTrackingStrategyInterface
     
     public function createTrackingRecord(array $data): void
     {
-        $this->records[$data['job_id']] = (object) $data;
+        $this->records[(string) $data['job_id']] = (object) $data;
     }
     
     public function getTrackingRecord(string $jobId): ?JobTracking
     {
-        return $this->records[$jobId] ?? null;
+        $data = $this->records[$jobId] ?? null;
+        if (!$data) {
+            return null;
+        }
+        return new \App\Models\Monitoring\JobTracking((array) $data);
     }
 }

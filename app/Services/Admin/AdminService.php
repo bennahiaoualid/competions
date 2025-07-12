@@ -124,7 +124,7 @@ class AdminService
             return $result;
         } catch (\Exception $exception) {
             $this->registerLogs('Admin deleting error: ', $exception);
-            $this->flasher->crudFailure('deleted');
+            $this->flasher->info(__('messages.validation.info.deleted'));
             return false;
         }
     }
@@ -134,7 +134,7 @@ class AdminService
         return new DeleteAdminCoordinatorJob(
             admin: $admin,
             mode: 'soft',
-            userId: Auth::id(),
+            initiatorId: Auth::id(),
             skipTrackingCreation:false,
             reason: $reason
         );

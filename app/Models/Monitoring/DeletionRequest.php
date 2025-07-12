@@ -4,6 +4,7 @@ namespace App\Models\Monitoring;
 
 use App\Models\Admin\Admin;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -43,6 +44,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class DeletionRequest extends Model
 {
+    use HasFactory;
     protected $table = 'deletion_requests';
 
     protected $fillable = [

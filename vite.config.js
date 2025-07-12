@@ -9,6 +9,8 @@ export default defineConfig({
                 'resources/css/admin-sidebar.css',
                 'resources/js/app.js',
                 'resources/js/sidebar.js',
+                'resources/js/notifications/NotificationManager.js',
+                'resources/js/notifications/init.js',
             ],
             refresh: true,
         }),

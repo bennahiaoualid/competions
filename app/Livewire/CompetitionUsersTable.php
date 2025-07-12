@@ -48,7 +48,7 @@ final class CompetitionUsersTable extends PowerGridComponent
                     '<a target="_blank"
                     class="underline text-blue-600 hover:text-blue-800"
                     href="%s">%s</a>',
-                    route("admin.users.edit",["id" => e($user->id)]),
+                    route("admin.users.edit",["user" => $user]),
                     e($user->name)
                 );
             })

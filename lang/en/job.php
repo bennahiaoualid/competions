@@ -19,6 +19,7 @@ return [
         'admin_deleted' => 'admin :admin has been deleted and removed as an auditor successfully',
         'admin_delete_failed' => 'admin :admin has been deleted but failed to remove as an auditor',
         'admin_restored' => 'admin :admin has been restored',
+        'admin_restore_failed' => 'admin :admin has been restored but failed',
         'success_duplicate_job_found' => 'Duplicate successful job found at :time',
         'already_handled' => 'Job already handled',
         'user_deleted' => 'user :user has been deleted successfully',
@@ -39,6 +40,7 @@ return [
         'hard_delete_admin' => 'Delete Admin Permanently',
         'soft_delete_user' => 'Soft Delete User',
         'hard_delete_user' => 'Hard Delete User',
+        'restore_admin' => 'Restore Admin',
     ],
     'result_keys' => [
         'auditor_id' => 'Auditor ID',
@@ -56,5 +58,12 @@ return [
         'deletion_type' => 'Deletion Type',
         'approved_by' => 'Approved By',
         'deletion_request_id' => 'Deletion Request ID',
+        'restored_at' => 'Restored At',
+    ],
+    'errors' => [
+        'only_auditor' => 'This admin cannot be removed because they are the only auditor in some competitions.',
+        'owns_active_competition_with_running_level' => 'This admin cannot be removed because they own competitions with active levels. Please wait until they finish.',
+        'admin_must_soft_deleted' => 'Cannot delete, Admin must be soft deleted before hard delete.',
+    
     ],
 ];

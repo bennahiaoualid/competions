@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->date('birthdate');
             $table->enum('gender', ['male', 'female'])->default('male')->index();
-            $table->foreignId('admin_id')->nullable()->nullOnDelete();
+            $table->foreignId('admin_id')->nullable()->constrained('admins')->nullOnDelete();
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();

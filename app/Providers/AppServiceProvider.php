@@ -43,6 +43,9 @@ use App\Repository\Monitoring\InMemoryJobTrackingStrategy;
 use App\Repository\Monitoring\DatabaseJobTrackingStrategy;
 use App\Interface\Competition\CompetitionRepositoryInterface;
 use App\Interface\GuestUsers\GlobalQuestionRepositoryInterface;
+use Illuminate\Support\Facades\Event;
+use App\Events\Notifications\Admin\AuditorDeletionFailed;
+use App\Listeners\Notifications\Admin\NotifyCompetitionOwnerOfAuditorIssue;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -190,6 +193,5 @@ class AppServiceProvider extends ServiceProvider
             return $this->setTimezone(session()->get('timezone') ?? config('app.timezone_display'));
         });
 
-       
     }
 }

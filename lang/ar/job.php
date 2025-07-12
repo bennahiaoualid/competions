@@ -19,6 +19,7 @@ return [
         'admin_deleted' => 'تم حذف المسؤول :admin وازالته كمصحح بنجاح',
         'admin_delete_failed' => 'تم حذف المسؤول :admin ولكن فشل ازالته كمصحح',
         'admin_restored' => 'تم استرجاع المسؤول :admin',
+        'admin_restore_failed' => 'فشل استرجاع المسؤول :admin',
         'success_duplicate_job_found' => 'تم العثور على عملية مكررة ناجحة في الوقت :time',
         'already_handled' => 'تم التنفيذ هاته العملية',
         'user_deleted' => 'تم حذف المستخدم :user بنجاح',
@@ -39,6 +40,7 @@ return [
         'hard_delete_admin' => 'حذف المسؤول نهائيا',
         'soft_delete_user' => 'حذف المستخدم مؤقتا',
         'hard_delete_user' => 'حذف المستخدم نهائيا',
+        'restore_admin' => 'استرجاع المسؤول',
     ],
     'result_keys' => [
         'auditor_id' => 'معرف المصحح',
@@ -56,5 +58,12 @@ return [
         'deletion_type' => 'نوع الازالة',
         'approved_by' => 'تمت الموافقة بواسطة',
         'deletion_request_id' => 'معرف طلب الازالة',
+        'restored_at' => 'تم الاسترجاع في',
+    ],
+    'errors' => [
+        'only_auditor' => 'لا يمكن ازالة هذا المشرف لانه المصحح الوحيد في بعض المسابقات : :competitions',
+        'owns_active_competition_with_running_level' => 'لا يمكن ازالة هذا المشرف لان لديه مسابقة بمرحلة نشطة انتضر حتى انتهائها : :competitions',
+        'admin_must_soft_deleted' => 'لا يمكن الازالة, يجب ازالة هذا المشرف بشكل مؤقت قبل ازالته كليا',
+
     ],
 ];

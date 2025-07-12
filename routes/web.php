@@ -85,12 +85,10 @@ Route::group(
     Route::get('/questions',[\App\Http\Controllers\GuestUsers\UserGuestController::class, 'index'])->name('global_questions.index');
     Route::get('/global-order', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'globalUsersOrder'])->name('global_questions.global_order');
 
+    // Include notification routes inside localization middleware
+    require __DIR__.'/notification.php';
 
     require __DIR__.'/auth.php';
-
 });
-
-
-
 
 require base_path('/routes/admin.php');

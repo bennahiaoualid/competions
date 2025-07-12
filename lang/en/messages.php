@@ -39,6 +39,7 @@ return [
             'saved' => 'save operation is in progress',
             'updated' => 'update operation is in progress',
             'deleted' => 'delete operation is in progress',
+            'restored' => 'restore operation is in progress',
         ],
         '404' => [
             'user' => 'user not found',
@@ -97,7 +98,8 @@ return [
             'delete_competition' => 'This process will remove competition and its information including levels competitors auditors and results, you cant undo ',
             'correct_choice' => 'the first choice will be chose as the correct one',
             'hard_delete_warning' => 'This action will permanently delete the entity and all its associated data. This operation cannot be undone.',
-            'restore_confirmation' => 'This action will restore the entity and make it active again. Are you sure you want to proceed?'
+            'restore_confirmation' => 'This action will restore the entity and make it active again. Are you sure you want to proceed?',
+            'hard_delete_admin_alternative' => 'this admin will replace the deleted admin in all records such as users, admins, competitions, levels, questions, responses, results, etc.',
         ]
     ],
     'global' => [
@@ -127,7 +129,8 @@ return [
         'ltr' => 'left to right',
         'rtl' => 'right to left',
         'action' => 'action',
-        'reason' => 'reason'
+        'reason' => 'reason',
+        'choose' => 'choose'
     ],
     'mail' => [
         'welcome' => 'Welcome dear :user',

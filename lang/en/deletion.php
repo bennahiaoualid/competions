@@ -10,6 +10,7 @@ return [
         'approved_by' => 'Approved By',
         'approved_at' => 'Approved At',
         'type' => 'type',
+        'alternative_admin' => 'Alternative Admin',
     ],
     'status' =>[
         'pending' => 'pending', 

@@ -121,6 +121,7 @@ Route::group(
         });
 
         require __DIR__.'/auth_admin.php';
+        // require __DIR__.'/notification.php';
     });
 
 });

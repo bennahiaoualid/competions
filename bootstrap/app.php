@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'can_update_competition' => \App\Http\Middleware\UpdateCompetition::class,
             'guest.guard' => \App\Http\Middleware\GuestWithGuard::class,
             'auth_competitor' =>\App\Http\Middleware\AuthCompetitor::class,
+            'either.auth' => \App\Http\Middleware\EitherAuth::class,
 
         ]);
     })

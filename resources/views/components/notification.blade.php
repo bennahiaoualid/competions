@@ -97,3 +97,12 @@
     </script>
 @endif
 
+{{-- Notification System Component --}}
+<script>
+    // Set user ID for notification system
+    window.userId = {{ Auth::id() }};
+</script>
+
+{{-- Include notification scripts --}}
+@vite(['resources/js/notifications/NotificationManager.js', 'resources/js/notifications/init.js'])
+
