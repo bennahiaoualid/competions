@@ -38,6 +38,12 @@ return [
         'hard_delete' => "Hard Delete Confirmation",
         'restore' => "Restore Confirmation",
     ],
+    'process_delayed' => [
+        'delete' => "delete process delayed record",
+    ],
+    'notification' => [
+        'delete' => "delete notification",
+    ],
     'filter' => [
         'filter' => 'filter',
         'all' => 'All',
@@ -48,6 +54,7 @@ return [
         "update" => "update",
         "change" => "change",
         "delete" => "delete",
+        "delete_all" => "delete all",
         "hard_delete" => "Hard Delete",
         "restore" => "Restore",
         "actions" => "Actions",

@@ -2,18 +2,21 @@
 
 namespace App\Models\Admin;
 
+use App\Observers\AdminObserver;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Permission\Traits\HasRoles;
+use App\Models\Admin\AdminAvailability;
 use App\Models\Competition\Competition;
 use Illuminate\Notifications\Notifiable;
 use App\Models\GuestUsers\GlobalQuestion;
 use App\Models\Monitoring\DeletionRequest;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * 
@@ -68,8 +71,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read int|null $competitions_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, DeletionRequest> $deletionRequests
  * @property-read int|null $deletion_requests_count
+ * @property-read AdminAvailability|null $availability
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin availableAsAuditor()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin availableAsLevelManager()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin availableAsOwnershipTransfer()
  * @mixin \Eloquent
  */
+
+#[ObservedBy([AdminObserver::class])]
 class Admin extends Authenticatable
 {
     use HasFactory, Notifiable, LogsActivity, HasRoles, SoftDeletes;
@@ -117,6 +126,36 @@ class Admin extends Authenticatable
     }
 
     /**
+     * Scope a query to only include admins available as auditor.
+     */
+    public function scopeAvailableAsAuditor($query)
+    {
+        return $query->whereHas('availability', function ($q) {
+            $q->where('auditor', true);
+        });
+    }
+
+    /**
+     * Scope a query to only include admins available as level manager.
+     */
+    public function scopeAvailableAsLevelManager($query)
+    {
+        return $query->whereHas('availability', function ($q) {
+            $q->where('level_manager', true);
+        });
+    }
+
+    /**
+     * Scope a query to only include admins available for ownership transfer.
+     */
+    public function scopeAvailableAsOwnershipTransfer($query)
+    {
+        return $query->whereHas('availability', function ($q) {
+            $q->where('ownership_transfer', true);
+        });
+    }
+
+    /**
      * The competitions that created by this admin.
      */
     public function competitions(): HasMany
@@ -147,6 +186,12 @@ class Admin extends Authenticatable
     {
         return $this->morphMany(DeletionRequest::class, 'deletable');
     }
+
+    public function availability(){
+        return $this->hasOne(AdminAvailability::class);
+    } 
+
+    
 
     /**
      * override methode for storing log activity

@@ -62,6 +62,10 @@ Route::group(
                 Route::post('/monitoring/deletion-records/restore', [DeletionRecordsController::class, 'restore'])->name('monitoring.deletion-records.restore');
             });
 
+            // Delayed Processes routes
+            Route::get('/monitoring/delayed-processes', [\App\Http\Controllers\Admin\DelayedProcessController::class, 'index'])->name('monitoring.delayed-processes');
+            Route::delete('/monitoring/delayed-processes/delete', [\App\Http\Controllers\Admin\DelayedProcessController::class, 'delete'])->name('monitoring.delayed-processes.delete');
+
             // users manipulation
             Route::get('/users', [\App\Http\Controllers\User\UserController::class, "show"])->name("users");
             Route::post('/users/store', [\App\Http\Controllers\User\UserController::class, "store"])->name("users.store");
@@ -118,6 +122,11 @@ Route::group(
             Route::get('/profile', [\App\Http\Controllers\Admin\AdminProfileController::class, 'edit'])->name('profile.edit');
            // Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
            // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+            // Admin Availability routes
+
+            Route::patch('/availability/{adminAvailability}/auditor', [\App\Http\Controllers\Admin\AdminAvailabilityController::class, 'updateAuditor'])->name('availability.updateAuditor');
+            Route::patch('/availability/{adminAvailability}/level-manager', [\App\Http\Controllers\Admin\AdminAvailabilityController::class, 'updateLevelManager'])->name('availability.updateLevelManager');
+            Route::patch('/availability/{adminAvailability}/ownership-transfer', [\App\Http\Controllers\Admin\AdminAvailabilityController::class, 'updateTransferOwnership'])->name('availability.updateOwnershipTransfer');
         });
 
         require __DIR__.'/auth_admin.php';

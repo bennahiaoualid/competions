@@ -58,6 +58,27 @@
                 </x-nav-link>
             </li>
 
+            {{-- Delayed processes list --}}
+            <li class="mb-2">
+                <x-nav-link href="{{route('admin.monitoring.delayed-processes')}}" :active="request()->routeIs('admin.monitoring.delayed-processes')" :sub="false">
+                    <x-slot:icon>
+                        <i class="fas fa-clock me-3"></i>
+                    </x-slot:icon>
+                    <span class="sidebar-text">{{__("links.monitoring.delayed_processes")}}</span>
+                    <span class="block ms-2 py-0.5 px-2 rounded-md bg-warning text-white sidebar-badge" x-text="$store.delayedProcesses.readyCount || 0"></span>
+                </x-nav-link>
+            </li>
+
+            {{-- Notification table list --}}
+            <li class="mb-2">
+                <x-nav-link href="{{ route('notifications.index') }}" :active="request()->routeIs('notifications.index*')" :sub="false">
+                    <x-slot:icon>
+                        <i class="fas fa-bell me-3"></i>
+                    </x-slot:icon>
+                    <span class="sidebar-text">{{ __("notifications.notifications") }}</span>
+                </x-nav-link>
+            </li>
+
             <li class="mb-2">
                 <x-nav-link href="{{route('admin.users')}}" :active="request()->routeIs('admin.users')" :sub="false">
                     <x-slot:icon>

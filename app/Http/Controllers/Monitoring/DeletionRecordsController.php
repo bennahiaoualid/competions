@@ -42,10 +42,11 @@ class DeletionRecordsController extends Controller
      */
     public function index()
     {
-        if(Auth::user()->can('hard_delete admin')){
-            $admins = Admin::all();
+        $admins = collect();
+        if (Auth::user()->can('hard_delete admin')) {
+            $admins = Admin::availableAsOwnershipTransfer()->get();
         }
-        return view('pages.admin.monitoring.deletion_records',compact('admins'));
+        return view('pages.admin.monitoring.deletion_records', compact('admins'));
     }
 
     /**

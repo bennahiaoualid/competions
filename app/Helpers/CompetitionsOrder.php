@@ -111,23 +111,27 @@ class CompetitionsOrder
             return [];
         }
         $competitionIds = $competitions->pluck('id')->toArray();
-
-        $results = DB::select("
-            SELECT 
-                u.id,
-                u.name,
-                l.competition_id,
-                SUM(r.score) as total_score
-            FROM users u
-            INNER JOIN responses r ON u.id = r.user_id
-            INNER JOIN questions q ON r.question_id = q.id  
-            INNER JOIN levels l ON q.level_id = l.id
-            WHERE l.competition_id IN (" . implode(',', array_fill(0, count($competitionIds), '?')) . ")
-            AND u.deleted_at IS NULL 
-            AND u.guest = 0
-            GROUP BY u.id, u.name, l.competition_id
-            ORDER BY l.competition_id, SUM(r.score) DESC
-        ", $competitionIds);
+        if(!empty($competitionIds)){
+            $results = DB::select("
+                        SELECT 
+                            u.id,
+                            u.name,
+                            l.competition_id,
+                            SUM(r.score) as total_score
+                        FROM users u
+                        INNER JOIN responses r ON u.id = r.user_id
+                        INNER JOIN questions q ON r.question_id = q.id  
+                        INNER JOIN levels l ON q.level_id = l.id
+                        WHERE l.competition_id IN (" . implode(',', array_fill(0, count($competitionIds), '?')) . ")
+                        AND u.deleted_at IS NULL 
+                        AND u.guest = 0
+                        GROUP BY u.id, u.name, l.competition_id
+                        ORDER BY l.competition_id, SUM(r.score) DESC
+                    ", $competitionIds);
+        }else{
+            $results = collect();
+        }
+       
         
         // Get audit status (simplified for batch)
         $auditFinished = true; // You can optimize this separately if needed

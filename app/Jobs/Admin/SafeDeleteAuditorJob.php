@@ -174,9 +174,7 @@ class SafeDeleteAuditorJob implements ShouldQueue
      * Create delayed process for this auditor
      */
     private function createDelayedProcess($competitions): void
-    {
-        Log::info('Created delayed process createDelayedProcess');
-        
+    {        
         event(new DelayedProcessCreationEvent(
             processType: ProcessTypeEnum::DELETE_AUDITOR,
             targetType: 'Admin',

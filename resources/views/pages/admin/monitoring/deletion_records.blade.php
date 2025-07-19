@@ -64,10 +64,11 @@
                         <x-input-label for="" :value=" ucwords(__('deletion.records.alternative_admin'))" />
                         @php
                             $options = [] ;
+                            foreach ($admins as $admin) {
+                                $options[] = ['value' => $admin->id, 'text' => $admin->name, 'selected' => false];
+                            }
                         @endphp
-                        @foreach($admins as $admin)
-                            @php $options[] = ['value' => $admin->id, 'text' => $admin->name, 'selected' => false] @endphp
-                        @endforeach
+                        
                         <x-form.searchable-select
                             name="admin_id"
                             :options="$options"

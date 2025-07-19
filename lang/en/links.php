@@ -12,6 +12,7 @@ return [
         'job_tracking' => 'Job Tracking',
         'job_list' => 'Jobs List',
         'deletion_records' => 'Deletion Records',
+        'delayed_processes' => 'Delayed Processes',
     ],
     'user' =>[
         'list' => 'Users',

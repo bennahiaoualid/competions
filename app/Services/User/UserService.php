@@ -40,6 +40,7 @@ class UserService
             'coming_comp' => $competitions->where('status', 0)->count(),
             'finished_comp' => $competitions->where('status', 2)->count(),
         ];
+
         return $data;
     }
 
@@ -99,9 +100,16 @@ class UserService
 
     private function getUserCompetitionsWithRankUsingService($competitions, $user_id)
     {
+        if(empty($competitions)){
+            return [
+                'competition' => null,
+                'user_rank' => null,
+                'total_competitors' => null,
+            ];
+        }
+        
         // Single call to get all data
         $allCompetitorData = CompetitionsOrder::getBatchCompetitorsOrder($competitions);
-
         // Get total counts separately  
         $totalCounts = $this->getTotalParticipantsCount($competitions->pluck('id')->toArray());
         

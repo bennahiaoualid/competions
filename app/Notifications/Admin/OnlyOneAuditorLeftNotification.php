@@ -41,7 +41,7 @@ class OnlyOneAuditorLeftNotification extends Notification implements ShouldQueue
             ],
             // New notification priority and link fields
             'notification_priority_type' => 'warning', // Since it's about auditor requirement
-            'link' => UrlGenerator::url('admin.competitions.edit', $this->competition->id), // Use helper for correct domain
+            'link' => route('admin.competitions.edit', base64_encode($this->competition->id)), // Use helper for correct domain
             // Additional metadata (not for translation)
             'competition_id' => $this->competition->id,
             'auditor_id' => $this->auditor->id,
@@ -72,7 +72,6 @@ class OnlyOneAuditorLeftNotification extends Notification implements ShouldQueue
             'message' => $translatedMessage,
             'notification_priority_type' => 'warning',
             'link' => route('admin.competitions.edit', base64_encode($this->competition->id)), // Use helper for correct domain
-            'link_text' => __('notifications.link_text.detail'),
             'read_at' => null,
             'created_at' => now()->toISOString(),
         ]);

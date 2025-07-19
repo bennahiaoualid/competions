@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Admin\Admin;
+use App\Models\Admin\AdminAvailability;
 use App\Models\Competition\Competition;
 use App\Models\Competition\Level;
 use App\Models\User;
@@ -20,13 +21,29 @@ class SoftDeleteAdminEdgeCaseSeeder extends Seeder
             'email' => 'admin_only_auditor_active@test.com',
             'name' => 'Admin Only Auditor Active',
         ]);
-        $userOnlyAuditorActive = User::factory()->create([
-            'email' => 'user_only_auditor_active@test.com',
-            'name' => 'User Only Auditor Active',
+        AdminAvailability::updateOrCreate(
+            ['admin_id' => $adminOnlyAuditorActive->id],
+            [
+                'auditor' => true,
+                'level_manager' => true,
+                'ownership_transfer' => true,
+            ]
+        );
+        $ownerAdminOnlyAuditorActive = Admin::factory()->create([
+            'email' => 'owner_admin_only_auditor_active@test.com',
+            'name' => 'Owner Admin Only Auditor Active',
         ]);
+        AdminAvailability::updateOrCreate(
+            ['admin_id' => $ownerAdminOnlyAuditorActive->id],
+            [
+                'auditor' => true,
+                'level_manager' => true,
+                'ownership_transfer' => true,
+            ]
+        );
         $compOnlyAuditorActive = Competition::factory()->create([
-            'title' => 'competition_delete_admin_only_auditor_active',
-            'admin_id' => $adminOnlyAuditorActive->id,
+            'title' => 'competition_admin_only_auditor_active',
+            'admin_id' => $ownerAdminOnlyAuditorActive->id,
             'status' => Competition::STATUS_ACTIVE,
             'start_date' => Carbon::now()->subDay(),
         ]);
@@ -37,6 +54,14 @@ class SoftDeleteAdminEdgeCaseSeeder extends Seeder
             'email' => 'admin_only_auditor_pending@test.com',
             'name' => 'Admin Only Auditor Pending',
         ]);
+        AdminAvailability::updateOrCreate(
+            ['admin_id' => $adminOnlyAuditorPending->id],
+            [
+                'auditor' => true,
+                'level_manager' => true,
+                'ownership_transfer' => true,
+            ]
+        );
         $userOnlyAuditorPending = User::factory()->create([
             'email' => 'user_only_auditor_pending@test.com',
             'name' => 'User Only Auditor Pending',
@@ -54,6 +79,14 @@ class SoftDeleteAdminEdgeCaseSeeder extends Seeder
             'email' => 'admin_multi_auditor@test.com',
             'name' => 'Admin Multi Auditor',
         ]);
+        AdminAvailability::updateOrCreate(
+            ['admin_id' => $adminMultiAuditor->id],
+            [
+                'auditor' => true,
+                'level_manager' => true,
+                'ownership_transfer' => true,
+            ]
+        );
         $userMultiAuditor = User::factory()->create([
             'email' => 'user_multi_auditor@test.com',
             'name' => 'User Multi Auditor',
@@ -72,6 +105,14 @@ class SoftDeleteAdminEdgeCaseSeeder extends Seeder
             'email' => 'admin_soft_delete_target@test.com',
             'name' => 'Admin Soft Delete Target',
         ]);
+        AdminAvailability::updateOrCreate(
+            ['admin_id' => $targetAdmin->id],
+            [
+                'auditor' => true,
+                'level_manager' => true,
+                'ownership_transfer' => true,
+            ]
+        );
 
         // 4. Owns active competition with running level (should succeed)
         $compOwnsActiveRunning = Competition::factory()->create([
@@ -93,6 +134,14 @@ class SoftDeleteAdminEdgeCaseSeeder extends Seeder
             'email' => 'admin_other_owner@test.com',
             'name' => 'Admin Other Owner',
         ]);
+        AdminAvailability::updateOrCreate(
+            ['admin_id' => $adminOtherOwner->id],
+            [
+                'auditor' => true,
+                'level_manager' => true,
+                'ownership_transfer' => true,
+            ]
+        );
         $compLevelInOthers = Competition::factory()->create([
             'title' => 'competition_delete_admin_level_in_others_comp',
             'admin_id' => $adminOtherOwner->id,
@@ -135,6 +184,14 @@ class SoftDeleteAdminEdgeCaseSeeder extends Seeder
             'email' => 'admin_owns_active_running_level_block@test.com',
             'name' => 'Admin Owns Active Running Level Block',
         ]);
+        AdminAvailability::updateOrCreate(
+            ['admin_id' => $adminOwnsActiveRunningBlock->id],
+            [
+                'auditor' => true,
+                'level_manager' => true,
+                'ownership_transfer' => true,
+            ]
+        );
         $compOwnsActiveRunningBlock = Competition::factory()->create([
             'title' => 'competition_delete_admin_owns_active_running_level_block',
             'admin_id' => $adminOwnsActiveRunningBlock->id,
@@ -152,9 +209,23 @@ class SoftDeleteAdminEdgeCaseSeeder extends Seeder
 
     private function cleanup()
     {
+        // Clean up AdminAvailability for all relevant admins
+        $adminEmails = [
+            'admin_only_auditor_active@test.com',
+            'admin_only_auditor_pending@test.com',
+            'owner_admin_only_auditor_active@test.com',
+            'admin_multi_auditor@test.com',
+            'admin_soft_delete_target@test.com',
+            'admin_other_owner@test.com',
+            'admin_owns_active_running_level_block@test.com',
+        ];
+        $adminIds = Admin::whereIn('email', $adminEmails)->pluck('id');
+        \App\Models\Admin\AdminAvailability::whereIn('admin_id', $adminIds)->delete();
+
         Admin::whereIn('email', [
             'admin_only_auditor_active@test.com',
             'admin_only_auditor_pending@test.com',
+            'owner_admin_only_auditor_active@test.com',
             'admin_multi_auditor@test.com',
             'admin_soft_delete_target@test.com',
             'admin_other_owner@test.com',
@@ -170,6 +241,7 @@ class SoftDeleteAdminEdgeCaseSeeder extends Seeder
         Competition::whereIn('title', [
             'competition_delete_admin_only_auditor_active',
             'competition_delete_admin_only_auditor_pending',
+            'owner_admin_only_auditor_active',
             'competition_delete_admin_multi_auditor',
             'competition_delete_admin_owns_active_running_level',
             'competition_delete_admin_level_in_others_comp',

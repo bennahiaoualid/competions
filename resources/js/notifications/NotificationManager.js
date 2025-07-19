@@ -48,6 +48,7 @@ class NotificationManager {
     getUserId() {
         // Try to get from meta tag first
         const metaTag = document.querySelector('meta[name="user-id"]');
+
         if (metaTag) {
             return metaTag.getAttribute('content');
         }
@@ -240,42 +241,41 @@ class NotificationManager {
             const message = notification.message || '';
             const isRead = notification.read_at ? 'read' : 'unread';
             const priorityType = notification.notification_priority_type || 'info';
-            const link = notification.link;
-            const linkText = notification.link_text;
-            
             // Get styles and icon for notification type
             const typeStyles = this.getNotificationTypeStyles(priorityType);
-            
-            // Generate link button if link exists
-            const linkButton = link ? `
-                <div class="mt-2">
-                    <a href="${link}" class="inline-flex items-center px-3 py-1 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors duration-200">
-                        ${linkText || 'Show Detail'}
-                    </a>
-                </div>
-            ` : '';
-            
+
+            // Detail icon button (end of row)
+            const detailButton = `
+                <button class="icon-notification-detail ml-2 text-gray-400 hover:text-blue-600 focus:outline-none" title="Detail" data-id="${notification.id}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                </button>
+            `;
             return `
                 <div class="notification-item ${isRead} p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors duration-200 ${typeStyles.bg} ${typeStyles.border}" data-id="${notification.id}">
-                    <div class="flex items-start gap-3">
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 ${typeStyles.bgColor} rounded-full flex items-center justify-center">
-                                <svg class="w-4 h-4 ${typeStyles.iconColor}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${typeStyles.icon}" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center justify-between">
-                                <p class="text-sm font-medium text-gray-900 truncate">${title}</p>
-                                <div class="flex items-center gap-2">
-                                    ${!notification.read_at ? '<span class="w-2 h-2 bg-blue-500 rounded-full"></span>' : ''}
-                                    <span class="text-xs text-gray-500">${this.formatTime(notification.created_at)}</span>
+                    <div class="flex items-start gap-3 justify-between">
+                        <div class="flex items-start gap-3 flex-1 min-w-0">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 ${typeStyles.bgColor} rounded-full flex items-center justify-center">
+                                    <svg class="w-4 h-4 ${typeStyles.iconColor}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${typeStyles.icon}" />
+                                    </svg>
                                 </div>
                             </div>
-                            <p class="text-sm text-gray-600 mt-1 line-clamp-2">${message}</p>
-                            ${linkButton}
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between">
+                                    <p class="text-sm font-medium text-gray-900 truncate">${title}</p>
+                                    <div class="flex items-center gap-2">
+                                        ${!notification.read_at ? '<span class="w-2 h-2 bg-blue-500 rounded-full"></span>' : ''}
+                                        <span class="text-xs text-gray-500">${this.formatTime(notification.created_at)}</span>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1 line-clamp-2">${message}</p>
+                            </div>
                         </div>
+                        ${detailButton}
                     </div>
                 </div>
             `;
@@ -298,12 +298,21 @@ class NotificationManager {
         // Add click handlers to mark as read
         dropdown.querySelectorAll('.notification-item').forEach(item => {
             item.addEventListener('click', (e) => {
-                // Don't mark as read if clicking on link button
-                if (e.target.tagName === 'A' || e.target.closest('a')) {
+                // Don't mark as read if clicking on link button or detail button
+                if (e.target.tagName === 'A' || e.target.closest('a') || e.target.closest('.icon-notification-detail')) {
                     return;
                 }
                 const notificationId = item.dataset.id;
                 this.markAsRead(notificationId);
+            });
+        });
+
+        // Add click handlers for detail buttons
+        dropdown.querySelectorAll('.icon-notification-detail').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const notificationId = btn.dataset.id;
+                this.showNotificationDetail(notificationId);
             });
         });
     }
@@ -407,7 +416,27 @@ class NotificationManager {
             this.updateDropdown();
         }
     }
+
+    /**
+     * Show notification detail modal (to be implemented)
+     */
+    showNotificationDetail(notificationId) {
+        // Find the notification object by ID
+        const notification = this.notifications.find(n => n.id == notificationId);
+        if (notification) {
+            window.dispatchEvent(new CustomEvent('show-notification-detail', { detail: { object: notification } }));
+        } else {
+            console.warn('NotificationManager: Notification object not found for ID', notificationId);
+        }
+    }
 }
 
 // Export for use in other modules
 window.NotificationManager = NotificationManager; 
+
+// Make markAsRead globally accessible for Alpine.js
+window.markNotificationAsRead = (id) => {
+    if (window.notificationManager) {
+        window.notificationManager.markAsRead(id);
+    }
+}; 

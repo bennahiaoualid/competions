@@ -5,6 +5,7 @@
         case 'active':
         case 'processing':
         case 'approved':
+        case 'ready':
             $color = $outline ? 'bg-green-100' : 'bg-green-300';
             $color_border = 'border-green-300';
             break;
@@ -29,7 +30,7 @@
 @endphp
 
 <div class="text-nowrap">
-    <span {{ $attributes->merge(['class' => 'block py-1 px-3 text-center text-sm ' . $color . ' rounded-full font-semibold ' . ($outline ? ' border-2 ' . $color_border : '')]) }}>
+    <span {{ $attributes->merge(['class' => 'block capitalize py-1 px-3 text-center text-sm ' . $color . ' rounded-full font-semibold ' . ($outline ? ' border-2 ' . $color_border : '')]) }}>
         {{ $text }}
     </span>
 </div>

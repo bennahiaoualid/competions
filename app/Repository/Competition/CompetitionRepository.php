@@ -147,7 +147,12 @@ class CompetitionRepository implements CompetitionRepositoryInterface
         // This will perform a bulk insert if the pivot model ('admin_competition')
         // does not have timestamps or event listeners forcing individual inserts.
         if (!empty($new_auditor_ids)) {
-            $competition->auditors()->attach($new_auditor_ids);
+            $availableAuditorIds = Admin::whereIn('id', $new_auditor_ids)
+                ->whereHas('availability', function ($q) {
+                    $q->where('auditor', true);
+                })
+                ->pluck('id');
+            $competition->auditors()->attach($availableAuditorIds);
         }
 
         return true;

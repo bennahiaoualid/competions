@@ -1,15 +1,17 @@
 <?php
 namespace App\Services\Monitoring\DeletionRequest;
 
+use Exception;
+use RuntimeException;
 use App\Models\Admin\Admin;
 use Illuminate\Http\Request;
 use App\Contracts\FlasherInterface;
 use Illuminate\Support\Facades\Auth;
-use App\Jobs\Admin\HardDeleteAdminJob;
 use App\Models\Monitoring\DeletionRequest;
 use App\Jobs\Admin\DeleteAdminCoordinatorJob;
 use App\Services\Monitoring\JobTrackingService;
 use App\Interface\Monitoring\DeletionRequests\HardDeleteHandlerInterface;
+use App\Traits\RegisterLogs;
 
 /**
  * Handler for hard deleting admin entities.
@@ -23,6 +25,7 @@ use App\Interface\Monitoring\DeletionRequests\HardDeleteHandlerInterface;
  */
 class AdminHardDeleteHandler implements HardDeleteHandlerInterface
 {
+    use RegisterLogs;
     /**
      * Create a new admin hard delete handler instance.
      *
@@ -58,11 +61,15 @@ class AdminHardDeleteHandler implements HardDeleteHandlerInterface
     public function delete(): bool
     {
         $newAdmin = null;
-        if ($this->request && $this->request->admin_id) {
-            $newAdmin = Admin::find($this->request->admin_id);
-            if (!$newAdmin || !$newAdmin->hasRole(['super_admin', 'owner'], 'admin')) {
-                throw new \Exception('The provided admin_id is invalid or does not have the required role.');
-            }
+        $data_validated = $this->request && $this->request->admin_id;
+        if ($data_validated) {
+            $newAdmin = Admin::availableAsOwnershipTransfer()->where('id', $this->request->admin_id)->first();
+        }
+
+        if (!$newAdmin) {
+            $exp = new Exception('The provided admin_id is invalid or does not have the required role.');
+            $this->registerLogs('AdminHardDeleteHandler::delete',$exp);
+            throw $exp;
         }
 
         

@@ -38,6 +38,12 @@ return [
         'hard_delete' => "تأكيد الحذف النهائي",
         'restore' => "تأكيد الاستعادة",
     ],
+    'process_delayed' => [
+        'delete' => "ازالة سجل عملية مؤجلة",
+    ],
+    'notification' => [
+        'delete' => "ازالة الاشعارات",
+    ],
     'filter' => [
         'filter' => 'فلترة',
         'all' => 'الكل',
@@ -48,6 +54,7 @@ return [
         "update" => "تحديث",
         "change" => "تغيير",
         "delete" => "حذف",
+        "delete_all" => "ازالة الكل",
         "hard_delete" => "حذف نهائي",
         "restore" => "استعادة",
         "actions" => "الإجراءات",

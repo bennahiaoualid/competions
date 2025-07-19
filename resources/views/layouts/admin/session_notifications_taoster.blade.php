@@ -96,6 +96,5 @@
         }
     </script>
 @endif
-{{-- Include notification scripts --}}
-@vite(['resources/js/notifications/NotificationManager.js', 'resources/js/notifications/init.js'])
+
 

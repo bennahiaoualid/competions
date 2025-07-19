@@ -22,8 +22,18 @@ class AdminProfileController extends Controller
      */
     public function edit(Request $request): View
     {
+        $user = Auth::user();
+        $availability = $user->availability;
+        if (!$availability) {
+            $availability = $user->availability()->create([
+                'auditor' => false,
+                'level_manager' => false,
+                'ownership_transfer' => false,
+            ]);
+        }
         return view('pages.admin.profile.edit', [
-            'user' => Auth::user(),
+            'user' => $user,
+            'availability' => $availability,
         ]);
     }
 

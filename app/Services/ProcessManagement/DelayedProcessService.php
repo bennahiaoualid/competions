@@ -5,6 +5,7 @@ namespace App\Services\ProcessManagement;
 use App\Enums\ProcessTypeEnum;
 use App\Models\ProcessManagement\DelayedProcess;
 use Illuminate\Support\Facades\Log;
+use Nette\Schema\Expect;
 
 class DelayedProcessService
 {
@@ -65,11 +66,10 @@ class DelayedProcessService
     public function deleteProcess(DelayedProcess $process): bool
     {
         $deleted = $process->delete();
-
         if ($deleted) {
             Log::info('Delayed process deleted', [
                 'process_id' => $process->id,
-                'process_type' => $process->process_type->value,
+                'process_type' => $process->process_type,
                 'target_id' => $process->target_id,
             ]);
         }

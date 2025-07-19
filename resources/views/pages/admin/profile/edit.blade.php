@@ -19,11 +19,20 @@
 
     <div class="py-3">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="p-2 sm:p-4 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                     @include('pages.admin.profile.partials.update-profile-information-form')
+            <div class="md:flex md:flex-row md:justify-between items-start">
+                <div class="p-2 sm:p-4 bg-white shadow sm:rounded-lg md:w-[45%]">
+                    <div class="max-w-xl">
+                        @include('pages.admin.profile.partials.update-profile-information-form')
+                    </div>
+                </div>
+    
+                <div class="p-2 sm:p-4 bg-white shadow sm:rounded-lg md:w-[45%]">
+                    <div class="max-w-xl">
+                        @include('pages.admin.profile.partials.admin-availability-form')
+                    </div>
                 </div>
             </div>
+           
 
             <div class="p-2 sm:p-4 bg-white shadow sm:rounded-lg">
                 <div class="max-w-xl">

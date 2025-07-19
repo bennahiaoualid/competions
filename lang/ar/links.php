@@ -12,6 +12,7 @@ return [
         'job_tracking' => 'تتبع المهام',
         'job_list' => 'قائمة المهام',
         'deletion_records' => 'سجلات الحذف',
+        'delayed_processes' => 'العمليات المؤجلة',
     ],
     'user' =>[
         'list' => 'المستخدمين',

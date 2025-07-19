@@ -5,8 +5,8 @@ namespace App\Enums;
 enum ProcessTypeEnum: string
 {
     case DELETE_AUDITOR = 'delete_auditor';
-    case DELETE_COMPETITION = 'delete_competition';
-    case DELETE_USER = 'delete_user';
+    case SOFT_DELETE_ADMIN = 'soft_delete_auditor';
+
 
     /**
      * Get all enum values as array
@@ -19,12 +19,12 @@ enum ProcessTypeEnum: string
     /**
      * Get human-readable label for the process type
      */
-    public function getLabel(): string
+    public function label(): string
     {
         return match($this) {
-            self::DELETE_AUDITOR => 'Delete Auditor',
-            self::DELETE_COMPETITION => 'Delete Competition',
-            self::DELETE_USER => 'Delete User',
+            self::DELETE_AUDITOR => __('delayed_process.values.process_type.delete_auditor'),
+            self::SOFT_DELETE_ADMIN => __('delayed_process.values.process_type.soft_delete_admin'),
+
         };
     }
 
@@ -35,8 +35,8 @@ enum ProcessTypeEnum: string
     {
         return match($this) {
             self::DELETE_AUDITOR => 'Safely remove an admin from auditor roles in competitions',
-            self::DELETE_COMPETITION => 'Delete a competition and all associated data',
-            self::DELETE_USER => 'Delete a user account and associated data',
+            self::SOFT_DELETE_ADMIN => 'Safely soft admin',
+
         };
     }
 }

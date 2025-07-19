@@ -2,14 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use Redirect;
 use App\Models\Admin\Admin;
 use Illuminate\Http\Request;
+use App\Helpers\DateTimeHelper;
+use App\Helpers\PaginationHelper;
 use Illuminate\Http\JsonResponse;
+use App\Contracts\FlasherInterface;
 use Illuminate\Support\Facades\Auth;
+use App\Helpers\NotificationTranslator;
 use Illuminate\Notifications\DatabaseNotification;
 
 class NotificationController extends Controller
 {
+    protected FlasherInterface $flasherInterface;
+    public function __construct(FlasherInterface $flasherInterface)
+    {
+        $this->flasherInterface = $flasherInterface;
+    }
     /**
      * Get the current authenticated notifiable (user or admin).
      */
@@ -25,32 +35,17 @@ class NotificationController extends Controller
     public function index(Request $request)
     {
         $notifiable = $this->getNotifiable();
-    
+        
         if (!$notifiable) {
-            return response()->json(['error' => 'Not authenticated'], 401);
+            abort(404);
         }
-
         $notifications = $notifiable->notifications()
             ->orderBy('created_at', 'desc')
-            ->limit(5) // Limit to 5 notifications as requested
-            ->get();
-        $unreadCount = $notifiable->unreadNotifications()->count();
+            ->paginate(PaginationHelper::perPage());
 
-        // Transform and translate notifications
-        $transformedNotifications = $this->transformNotifications($notifications);
+        $notifications = $this->transformNotifications($notifications);
 
-        // If AJAX, return JSON
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'notifications' => $transformedNotifications,
-                'unread_count' => $unreadCount,
-            ]);
-        }
-        // Otherwise, return a view (optional, for full page)
-        return view('notifications.index', [
-            'notifications' => $transformedNotifications,
-            'unread_count' => $unreadCount,
-        ]);
+        return view('pages.admin.notifications.notificatios_list',compact('notifications'));
     }
 
     /**
@@ -70,7 +65,7 @@ class NotificationController extends Controller
             ->get();
         $unreadCount = $notifiable->unreadNotifications()->count();
 
-        // Transform and translate notifications
+        // Use NotificationTranslator for each notification
         $transformedNotifications = $this->transformNotifications($notifications);
 
         return response()->json([
@@ -113,7 +108,7 @@ class NotificationController extends Controller
                     'link' => $data['link'] ?? null,
                     'link_text' => $linkText,
                     'read_at' => $notification->read_at,
-                    'created_at' => $notification->created_at,
+                    'created_at' => DateTimeHelper::toLocalString($notification->created_at),
                 ];
             }
             
@@ -131,7 +126,7 @@ class NotificationController extends Controller
                 'link' => $data['link'] ?? null,
                 'link_text' => $linkText,
                 'read_at' => $notification->read_at,
-                'created_at' => $notification->created_at,
+                'created_at' => DateTimeHelper::toLocalString($notification->created_at),
             ];
         });
     }
@@ -186,45 +181,35 @@ class NotificationController extends Controller
     /**
      * Delete a notification
      */
-    public function destroy(Request $request, string $id)
+    public function destroy(Request $request)
     {
         $notifiable = $this->getNotifiable();
         
         if (!$notifiable) {
-            return response()->json(['error' => 'Not authenticated'], 401);
+            abort(401,'Not authenticated');
         }
 
-        $notification = $notifiable->notifications()->find($id);
+        $notification = $notifiable->notifications()->find($request->notification_id);
         if (!$notification) {
-            return $request->ajax() ? response()->json(['message' => 'Notification not found'], 404) : back()->with('error', 'Notification not found');
+            abort(404,'Notification not found');
         }
         $notification->delete();
-        if ($request->ajax()) {
-            return response()->json([
-                'message' => 'Notification deleted',
-                'unread_count' => $notifiable->unreadNotifications()->count(),
-            ]);
-        }
-        return back()->with('success', 'Notification deleted');
+        $this->flasherInterface->crudSuccess('deleted');
+        return redirect()->back();
     }
 
     /**
-     * Get notification statistics
+     * Bulk delete notifications
      */
-    public function stats(Request $request): JsonResponse
+    public function bulkDelete(Request $request)
     {
         $notifiable = $this->getNotifiable();
-        
         if (!$notifiable) {
-            return response()->json(['error' => 'Not authenticated'], 401);
+            abort(401, 'Not authenticated');
         }
-        
-        $stats = [
-            'total' => $notifiable->notifications()->count(),
-            'unread' => $notifiable->unreadNotifications()->count(),
-            'read' => $notifiable->readNotifications()->count(),
-        ];
-
-        return response()->json($stats);
+    
+        $deleted = $notifiable->notifications()->delete();
+        $this->flasherInterface->crudSuccess('deleted');
+        return redirect()->back();
     }
 } 

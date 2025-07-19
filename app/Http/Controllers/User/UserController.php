@@ -36,7 +36,7 @@ class UserController extends Controller
     public function index(): View
     {
         $data = $this->userService->index();
-        return view('pages.user.dashboard', $data);
+        return view('pages.user.dashboard', compact('data'));
     }
 
     function show() : View{

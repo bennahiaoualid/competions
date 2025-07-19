@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Monitoring\JobTracking;
 use App\Jobs\Admin\SafeDeleteAuditorJob;
 use App\Jobs\Admin\SoftDeleteAdminJob;
+use App\Jobs\Admin\HardDeleteAdminJob;
 use App\Exceptions\UserFriendlyException;
 use App\Models\Monitoring\DeletionRequest;
 use App\Services\Monitoring\JobTrackingService;
@@ -71,8 +72,8 @@ class DeleteAdminCoordinatorJob extends BaseTrackableJob
             entityType: 'Admin',
             entityId: $admin->id,
             jobType: $this->mode === 'hard'
-                ? JobTypeEnum::HARD_DELETE_ADMIN
-                : JobTypeEnum::SOFT_DELETE_ADMIN,
+                ? JobTypeEnum::HARD_DELETE_ADMIN->value
+                : JobTypeEnum::SOFT_DELETE_ADMIN->value,
             skipTrackingCreation: $skipTrackingCreation
         );
     }

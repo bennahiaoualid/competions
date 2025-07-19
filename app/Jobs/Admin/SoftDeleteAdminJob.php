@@ -8,9 +8,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Competition\Competition;
 use App\Exceptions\UserFriendlyException;
+use App\Exceptions\StopJobRetriesException;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use App\Events\Monitoring\DeletionRequested;
-
 /**
  * Handles the soft deletion of an admin, including business logic validation and cleanup.
  * 
@@ -26,20 +26,20 @@ class SoftDeleteAdminJob implements ShouldQueue
 {
 
     protected Admin $admin;
-    protected ?int $userId;
+    protected ?int $initiatorId;
     protected string $reason;
 
     /**
      * Create a new soft delete admin job instance.
      *
      * @param Admin $admin The admin to be soft deleted
-     * @param int|null $userId The ID of the user initiating the deletion (defaults to authenticated user)
+     * @param int|null $initiatorId The ID of the user initiating the deletion (defaults to authenticated user)
      * @param string $reason The reason for the deletion
      */
-    public function __construct(Admin $admin, ?int $userId, string $reason)
+    public function __construct(Admin $admin, ?int $initiatorId, string $reason)
     {
         $this->admin = $admin;
-        $this->userId = $userId ?? Auth::id();
+        $this->initiatorId = $initiatorId ?? Auth::id();
         $this->reason = $reason;
     }
 
@@ -65,7 +65,7 @@ class SoftDeleteAdminJob implements ShouldQueue
             $this->reassignLevelsToCompetitionOwner();
             $this->admin->delete();
             DB::afterCommit(function () {
-                $requestedBy = Admin::find($this->userId);
+                $requestedBy = Admin::find($this->initiatorId);
                 event(new DeletionRequested(
                     $this->admin,
                     $requestedBy,
@@ -96,13 +96,15 @@ class SoftDeleteAdminJob implements ShouldQueue
             ->get();
 
         if ($competitions->count() > 0) {
-            throw new UserFriendlyException(
+            throw new StopJobRetriesException(
                 translationKey: 'job.errors.owns_active_competition_with_running_level',
                 contextData: ['competitions' => $competitions->pluck('title')->toArray()],
-                message: 'Cannot delete admin: they own competitions with running levels.'
+                message: 'Cannot delete admin: they are the only auditor in some competitions.'
             );
         }
     }
+
+
 
     /**
      * Suspend all unfinished competitions owned by the admin.

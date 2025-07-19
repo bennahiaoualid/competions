@@ -9,10 +9,11 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Competition\Response;
 use App\Models\Competition\Competition;
 use App\Exceptions\UserFriendlyException;
+use App\Models\Monitoring\DeletionRequest;
 use Illuminate\Foundation\Queue\Queueable;
+use App\Exceptions\StopJobRetriesException;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use App\Events\Monitoring\DeletionRequested;
-use App\Models\Monitoring\DeletionRequest;
 
 /**
  * Handles the hard deletion of an admin, permanently removing them from the system.
@@ -75,11 +76,11 @@ class HardDeleteAdminJob implements ShouldQueue
         DB::transaction(function () {
             // Ensure the admin is soft deleted
             if (!$this->admin->trashed()) {
-                throw new UserFriendlyException(
+                throw new StopJobRetriesException(
                     translationKey: 'job.errors.admin_must_soft_deleted',
-                    message: 'Cannot delete admin: Admin must be soft deleted before hard delete.'
+                    contextData: ['admin' => $this->admin->name . '|' . $this->admin->email ],
+                    message: 'Cannot delete admin: Admin must be soft deleted before hard delete..'
                 );
-            
             }
 
             // 1. Delete suspended competitions owned by admin

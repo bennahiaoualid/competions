@@ -40,6 +40,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|DeletionRequest whereSnapshotDeleterName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|DeletionRequest whereSnapshotName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|DeletionRequest whereStatus($value)
+ * @method static \Database\Factories\Monitoring\DeletionRequestFactory factory($count = null, $state = [])
  * @mixin \Eloquent
  */
 class DeletionRequest extends Model

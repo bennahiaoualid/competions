@@ -23,4 +23,9 @@ return [
         'see_more' => 'See More',
         'view' => 'View',
     ],
+    'notifications' => 'Notifications',
+    'type' => 'Type',
+    'title' => 'Notification',
+    'data' => 'Detail',
+    'created_at' => 'Created At',
 ]; 

@@ -72,4 +72,91 @@ class NotificationTranslator
         
         return array_merge($baseData, $additionalData);
     }
+
+    /**
+     * Transform a notification model or array to a key-value array with translation and fallback.
+     *
+     * @param \Illuminate\Notifications\DatabaseNotification|array $notification
+     * @return array
+     */
+    public static function transformNotification($notification): array
+    {
+        $data = is_array($notification) ? ($notification['data'] ?? []) : $notification->data;
+        $id = is_array($notification) ? ($notification['id'] ?? null) : $notification->id;
+        $readAt = is_array($notification) ? ($notification['read_at'] ?? null) : $notification->read_at;
+        $createdAt = is_array($notification) ? ($notification['created_at'] ?? null) : $notification->created_at;
+
+        // If notification has translation key, translate it server-side
+        if (isset($data['translation_key'])) {
+            $translationKey = $data['translation_key'];
+            $translationData = $data['translation_data'] ?? [];
+
+            $titleKey = $translationKey . '.title';
+            $messageKey = $translationKey . '.message';
+
+            $translatedTitle = __( $titleKey, $translationData );
+            $translatedMessage = __( $messageKey, $translationData );
+
+            $linkText = null;
+            if (!empty($data['link'])) {
+                $linkText = __('notifications.link_text.detail');
+            }
+
+            return [
+                'id' => $id,
+                'title' => $translatedTitle,
+                'message' => $translatedMessage,
+                'notification_priority_type' => $data['notification_priority_type'] ?? 'info',
+                'link' => $data['link'] ?? null,
+                'link_text' => $linkText,
+                'read_at' => $readAt,
+                'created_at' => $createdAt,
+            ];
+        }
+
+        // Fallback for notifications without translation keys
+        $linkText = null;
+        if (!empty($data['link'])) {
+            $linkText = __('notifications.link_text.detail');
+        }
+
+        return [
+            'id' => $id,
+            'title' => $data['title'] ?? 'Notification',
+            'message' => $data['message'] ?? '',
+            'notification_priority_type' => $data['notification_priority_type'] ?? 'info',
+            'link' => $data['link'] ?? null,
+            'link_text' => $linkText,
+            'read_at' => $readAt,
+            'created_at' => $createdAt,
+        ];
+    }
+
+    /**
+     * Get a field value from notification data, using translation if available, otherwise pure value, or empty if not present.
+     *
+     * @param \Illuminate\Notifications\DatabaseNotification|array $notification
+     * @param string $fieldName (e.g., 'title' or 'message')
+     * @return string
+     */
+    public static function getFieldOrTranslation($notification, string $fieldName): string
+    {
+        $data = is_array($notification) ? ($notification['data'] ?? []) : $notification->data;
+        // If translation key exists, try to translate
+        if (isset($data['translation_key'])) {
+            $translationKey = $data['translation_key'] . '.' . $fieldName;
+            $translationData = $data['translation_data'] ?? [];
+            $translated = __($translationKey, $translationData);
+            // If translation exists and is not the key itself, return it
+            if ($translated !== $translationKey) {
+                return $translated;
+            }
+        }
+        // Fallback: return pure value if exists
+        if (isset($data[$fieldName])) {
+            return $data[$fieldName];
+        }
+        // Otherwise, return empty string
+        return '';
+    }
 } 
