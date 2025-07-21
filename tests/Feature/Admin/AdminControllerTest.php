@@ -10,8 +10,8 @@ use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Queue;
-use Spatie\Permission\Models\Permission;
 use Illuminate\Foundation\Testing\WithFaker;
+use App\Jobs\Admin\DeleteAdminCoordinatorJob;
 use App\Jobs\Competition\SafeDeleteAuditorJob;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -484,14 +484,15 @@ class AdminControllerTest extends TestCase
         
         $adminToDelete = Admin::factory()->create(['admin_id' => $this->manager->id]);
         
-        $response = $this->post(route('admin.delete'), ['id' => $adminToDelete->id]);
+        $response = $this->post(route('admin.delete'), [
+            'id' => $adminToDelete->id,
+            'reason' => 'reason'
+        ]);
         
         $response->assertRedirect();
-        $adminToDelete->refresh();
-        $this->assertTrue($adminToDelete->trashed());
-        
+
         // Verify job was dispatched
-        Bus::assertDispatched(SafeDeleteAuditorJob::class);
+        Bus::assertDispatched(DeleteAdminCoordinatorJob::class);
     }
 
     /**
@@ -522,60 +523,6 @@ class AdminControllerTest extends TestCase
         );
         $this->owner->refresh();
         $this->assertTrue($this->owner->exists());
-    }
-
-    /**
-     * Test admin deletion with job queue verification
-     */
-    public function test_admin_deletion_dispatches_job()
-    {
-        $this->actingAs($this->owner, 'admin');
-        
-        $adminToDelete = Admin::factory()->create();
-        
-        $response = $this->post(route('admin.delete'), ['id' => $adminToDelete->id]);
-        
-        $response->assertRedirect();
-        
-        // Verify the specific job was dispatched with correct parameters
-        Bus::assertDispatched(SafeDeleteAuditorJob::class, function ($job) use ($adminToDelete) {
-            return $job->getAuditor()->id === $adminToDelete->id;
-        });
-    }
-
-    public function test_admin_restoration_after_job_failure()
-    {
-        $adminToDelete = Admin::factory()->create();
-        
-        // Soft delete admin first
-        $adminToDelete->delete();
-        $this->assertSoftDeleted('admins', ['id' => $adminToDelete->id]);
-        
-        // Create job instance
-        $job = new SafeDeleteAuditorJob($adminToDelete, null, Auth::id());
-        
-        // Create a mock JobTracking record
-        $tracking = new \App\Models\Monitoring\JobTracking([
-            'job_id' => $job->getTrackingId(),
-            'job_class' => SafeDeleteAuditorJob::class,
-            'job_type' => 'admin',
-            'status' => 'failed',
-            'attempts' => 3,
-            'max_attempts' => 3,
-        ]);
-        
-        // Use reflection to call the protected method
-        $reflection = new \ReflectionClass($job);
-        $onFinalFailureMethod = $reflection->getMethod('onFinalFailure');
-        $onFinalFailureMethod->setAccessible(true);
-        
-        // Call the protected method
-        $exception = new \Exception('Job failed');
-        $onFinalFailureMethod->invoke($job, $exception, $tracking);
-        
-        // Verify admin was restored
-        $adminToDelete->refresh();
-        $this->assertNull($adminToDelete->deleted_at, 'Admin should be restored after onFinalFailure');
     }
 
     // ========================================

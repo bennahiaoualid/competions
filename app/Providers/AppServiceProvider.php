@@ -9,7 +9,6 @@ use App\Contracts\FlasherInterface;
 use App\Services\Admin\AdminService;
 use App\Services\Notification\Flasher;
 use Illuminate\Support\ServiceProvider;
-use App\Repository\Admin\AdminRepository;
 use Illuminate\Validation\Rules\Password;
 use App\Services\Competition\AuditService;
 use App\Services\Competition\LevelService;
@@ -25,7 +24,6 @@ use App\Services\Monitoring\JobTrackingService;
 use App\Repository\Admin\AdminProfileRepository;
 use App\Services\Competition\CompetitionService;
 use Illuminate\Auth\Notifications\ResetPassword;
-use App\Interface\Admin\AdminRepositoryInterface;
 use App\Repository\Competition\QuestionRepository;
 use App\Repository\GuestUsers\UserGuestRepository;
 use App\Repository\User\UserCompetitionRepository;
@@ -43,9 +41,6 @@ use App\Repository\Monitoring\InMemoryJobTrackingStrategy;
 use App\Repository\Monitoring\DatabaseJobTrackingStrategy;
 use App\Interface\Competition\CompetitionRepositoryInterface;
 use App\Interface\GuestUsers\GlobalQuestionRepositoryInterface;
-use Illuminate\Support\Facades\Event;
-use App\Events\Notifications\Admin\AuditorDeletionFailed;
-use App\Listeners\Notifications\Admin\NotifyCompetitionOwnerOfAuditorIssue;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -58,10 +53,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(AdminProfileService::class, function ($app) {
             return new AdminProfileService($app->make(AdminProfileRepositoryInterface::class));
         });
-        $this->app->bind(AdminRepositoryInterface::class, AdminRepository::class);
         $this->app->bind(AdminService::class, function ($app) {
             return new AdminService(
-                $app->make(AdminRepositoryInterface::class),
                 $app->make(TransactionManagerInterface::class),
                 $app->make(FlasherInterface::class),
                 $app->make(JobTrackingService::class)

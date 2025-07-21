@@ -249,4 +249,36 @@ class DeleteAdminCoordinatorJob extends BaseTrackableJob
             throw new \InvalidArgumentException("Invalid delete mode: {$this->mode}");
         }
     }
+
+    /*********** getters for testing  */
+    public function getAdmin(): Admin
+    {
+        return $this->admin;
+    }
+
+    public function getMode(): string
+    {
+        return $this->mode;
+    }
+
+    public function getInitiatorId(): ?int
+    {
+        return $this->initiatorId;
+    }
+
+    public function getReason(): ?string
+    {
+        return $this->reason;
+    }
+
+    public function getTransferAdmin(): ?Admin
+    {
+        return $this->transferAdmin;
+    }
+
+    public function getDeletionRequest(): ?DeletionRequest
+    {
+        return $this->deletionRequest;
+    }
+
 }
