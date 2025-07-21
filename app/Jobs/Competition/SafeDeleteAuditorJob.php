@@ -128,6 +128,26 @@ class SafeDeleteAuditorJob extends BaseTrackableJob
     {
         return $this->auditor;
     }
+
+    /**
+     * Get the userId for the job.
+     * usualy used in test to get the user id
+     * @return Admin
+     */
+    public function getUserId()
+    {
+        return $this->userId;
+    }
+
+    /**
+     * Get the competition for the job.
+     * usualy used in test to get the competition
+     * @return Admin
+     */
+    public function getCompetition(): Competition
+    {
+        return $this->competition;
+    }
     
 
     /**

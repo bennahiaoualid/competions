@@ -62,7 +62,7 @@ class CompetitionService
     {
         try {
             $result = $this->transactionManager->run(function () use ($data) {
-                $competition = $this->competitionRepository->create($data);
+                $competition = Competition::create(array_merge($data, ['admin_id' => Auth::id()]));
                 SyncCompetitionParticipants::dispatch($competition)->afterCommit();
                 return true;
             });
@@ -122,12 +122,12 @@ class CompetitionService
                 return false;
             }
 
-            if (!($competition->canEdit() || (Auth::user() instanceof User && Auth::user()->hasRole('owner')))) {
+            if (!($competition->canEdit())) {
                 $this->flasher->error(__('messages.validation.not_allow.competition_delete'));
                 return false;
             }
 
-            $this->competitionRepository->delete($competition);
+            $competition->delete();
             $this->flasher->crudSuccess('deleted');
             return true;
 
@@ -177,7 +177,7 @@ class CompetitionService
                 return false;
             };
             $result = $this->transactionManager->run(function () use ($competition, $user_id) {
-                $this->competitionRepository->removeUserFromCompetition($competition, $user_id);
+                $competition->users()->detach($user_id);
                 return true;
             });
 
@@ -238,7 +238,7 @@ class CompetitionService
                 $this->flasher->error(__('messages.validation.not_allow.remove_auditor_only_one'));
                 return false;
             }
-            $admin = $this->competitionRepository->getAdmin($auditor_id);
+            $admin = Admin::find($auditor_id);
 
             $job = $this->createDeleteJob($admin, $competition);
             $this->jobTrackingService->dispatchWithTracking($job);
@@ -284,7 +284,7 @@ class CompetitionService
 
             $result = $this->transactionManager->run(function () use ($competition) {
                 $competition->start_date = now();
-                $this->competitionRepository->activate($competition);
+                $competition->update(['status' => Competition::STATUS_ACTIVE]);
                 UserNotifyEmail::usersActivateCompetition($competition);
                 return true;
             });

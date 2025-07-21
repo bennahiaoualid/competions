@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Bus;
 use App\Models\Competition\Competition;
 use App\Jobs\Competition\DeleteAuditorJob;
 use Illuminate\Foundation\Testing\WithFaker;
+use App\Jobs\Competition\SafeDeleteAuditorJob;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Jobs\Competetion\SyncCompetitionParticipants;
 
@@ -288,29 +289,23 @@ class CompetitionTest extends TestCase
         $response->assertSessionHasErrors(['competition_id', 'user_id']);
     }
 
-    public function it_can_display_competition_auditors()
-    {
-        $competition = Competition::factory()->create(['admin_id' => $this->admin->id]);
-        $id_b64 = base64_encode($competition->id);
-
-        $response = $this->get(route('admin.competitions.auditors', $id_b64));
-
-        $response->assertOk()
-            ->assertViewIs('pages.admin.competitions.competition_auditors')
-            ->assertViewHas('competition');
-    }
-
     public function test_admin_can_successfully_add_auditors_to_competition()
     {
         $competition = Competition::factory()->create(['admin_id' => $this->admin->id]);
         $auditors = Admin::factory()->count(3)->create();
+        // Create availability records for these auditors
+        foreach ($auditors as $auditor) {
+            $auditor->availability()->first()->update(['auditor' => true]);
+        }
         $auditorIds = $auditors->pluck('id')->toArray();
-
+        
         $response = $this->post(route('admin.competitions.auditor.store', ['competition' => $competition]), [
             'auditor_ids' => implode(',', $auditorIds)
         ]);
 
         $response->assertRedirectBack();
+        $competition->fresh();
+
         foreach ($auditorIds as $auditorId) {
             $this->assertDatabaseHas('admin_competition', [
                 'competition_id' => $competition->id,
@@ -356,9 +351,9 @@ class CompetitionTest extends TestCase
         ]);
 
         $response->assertRedirectBack();
-        Bus::assertDispatched(DeleteAuditorJob::class, function ($job) use ($competition, $auditor) {
+        Bus::assertDispatched(SafeDeleteAuditorJob::class, function ($job) use ($competition, $auditor) {
             return $job->getCompetition()->id === $competition->id
-                && $job->getAuditorId() === $auditor->first()->id;
+                && $job->getAuditor()->id === $auditor->first()->id;
         });
     }
 
@@ -422,7 +417,7 @@ class CompetitionTest extends TestCase
         );
         $this->assertDatabaseHas('competitions', [
             'id' => $competition->id,
-            'status' => 1
+            'status' => Competition::STATUS_ACTIVE
         ]);
     }
 
@@ -443,7 +438,7 @@ class CompetitionTest extends TestCase
         );
         $this->assertDatabaseHas('competitions', [
             'id' => $competition->id,
-            'status' => 0
+            'status' => Competition::STATUS_PENDING
         ]);
     }
     /** private methods */

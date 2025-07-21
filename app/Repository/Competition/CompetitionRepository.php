@@ -32,17 +32,6 @@ class CompetitionRepository implements CompetitionRepositoryInterface
         return $query->find($id);
     }
 
-    /**
-     * Create a new competition.
-     *
-     * @param array $data The data to create the competition with.
-     * @return Competition The created competition.
-     */
-    public function create(array $data): Competition
-    {
-        $data["admin_id"] = Auth::id();
-        return  Competition::create($data);
-    }
 
     /**
      * Update a competition and return an array with the resyncCompetitionParticipants flag and the competition object.
@@ -64,18 +53,6 @@ class CompetitionRepository implements CompetitionRepositoryInterface
                 'resyncCompetitionParticipants' => $resyncCompetitionParticipants,
                 'competition' => $competition
                 ];
-    }
-
-    /**
-     * Delete a competition.
-     *
-     * @param Competition $competition The competition to delete.
-     * @return bool True if the competition was deleted successfully, false otherwise.
-     */
-    public function delete(Competition $competition): bool
-    {
-        $result = $competition->delete();
-        return $result;
     }
 
     /**
@@ -108,19 +85,6 @@ class CompetitionRepository implements CompetitionRepositoryInterface
         return true;
     }
 
-    /**
-     * Remove a user from a competition.
-     *
-     * @param Competition $competition The competition to remove the user from.
-     * @param int $user_id The ID of the user to remove.
-     * @return bool True if the user was removed successfully, false otherwise.
-     */   
-    public function removeUserFromCompetition(Competition $competition, int $user_id): bool
-    {
-            $competition->users()->detach($user_id);
-            return true;
-    }
-
     /** 
     * Add auditors to a competition.
     *
@@ -132,7 +96,7 @@ class CompetitionRepository implements CompetitionRepositoryInterface
     {
         // 1. Filter out empty/non-numeric IDs and get unique input IDs
         $unique_input_auditor_ids = array_values(array_unique(array_filter($auditor_ids, 'is_numeric')));
-
+        
         if (empty($unique_input_auditor_ids)) {
             return true; // No valid IDs to process
         }
@@ -158,27 +122,6 @@ class CompetitionRepository implements CompetitionRepositoryInterface
         return true;
     }
 
-    /**
-    * Activate a competition.
-    *
-    * @param Competition $competition The competition to activate.
-    * @return bool True if the competition was activated successfully, false otherwise.
-    */
-    public function activate(Competition $competition): bool
-    {
-        $competition->status = Competition::STATUS_ACTIVE;
-        $result = $competition->save();
-        return $result;
-    }
 
-    /**
-     * Get an admin by ID.
-     *
-     * @param int $id The ID of the admin to get.
-     * @return Admin The admin if found, null otherwise.
-     */
-    public function getAdmin($id): Admin
-    {
-        return Admin::findOrFail($id);
-    }
+
 }
