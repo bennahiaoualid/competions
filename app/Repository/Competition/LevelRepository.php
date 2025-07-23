@@ -45,19 +45,6 @@ class LevelRepository implements LevelRepositoryInterface
     }
 
     /**
-     * check if the competition already get maximum number of levels
-     * @param Competition $competition
-     * @return boolean
-     */
-    public function checkCompetitionMaxLevelNumbers(Competition $competition): bool
-    {
-        if($competition->levels->count() == $competition->levels_number){
-            return true;
-        }
-        return false;
-    }
-
-    /**
      * check if the timing of the new level is conflict with the other levels in the same competition
      * @param int $competitionId
      * @param string $startDate
@@ -152,8 +139,6 @@ class LevelRepository implements LevelRepositoryInterface
                 'level_id' => $level->id,
                 'user_id' => $user->id,
                 'admin_id' => $auditor->id,
-                'created_at' => now(),
-                'updated_at' => now(),
             ];
             $index++;
         }
@@ -166,4 +151,8 @@ class LevelRepository implements LevelRepositoryInterface
         }
     }
 
+    public function isAdminAllowedToBeLevelManager($adminID) : bool 
+    {
+        return Admin::availableAsLevelManager()->where('id', $adminID)->exists();
+    }
 }

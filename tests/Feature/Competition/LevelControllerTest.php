@@ -29,6 +29,7 @@ class LevelControllerTest extends TestCase
         
         // Create test data that will be used across multiple tests
         $this->admin = Admin::factory()->create();
+        $this->admin->availability()->update(['level_manager' => true]);
         
         // seed role
         $this->seed(RoleSeeder::class);
@@ -36,7 +37,7 @@ class LevelControllerTest extends TestCase
         // Create a competition
         $this->competition = Competition::factory()->create([
             'admin_id' => $this->admin->id,
-            'status' => 0, // Not activated
+            'status' => 'pending', // Not activated
             'start_date' => now()->addDays(7),
             'levels_number' => 3
         ]);
@@ -44,7 +45,7 @@ class LevelControllerTest extends TestCase
         // Create a level
         $this->level = Level::factory()->create([
             'competition_id' => $this->competition->id,
-            'status' => 0, // Not activated
+            'status' => 'pending', // Not activated
             'start_date' => now()->addDays(8),
             'duration' => 60, // 60 minutes
             'questions_number' => 5
@@ -169,6 +170,27 @@ class LevelControllerTest extends TestCase
             'competition_id' => $competition->id
         ]);
     }
+
+    public function test_can_not_store_level_admin_not_available_as_manager()
+    {
+        $otherAdmin = Admin::factory()->create();
+        $levelData = [
+            'name' => 'Test Level',
+            'description' => 'Test Description',
+            'start_date' => now()->addDays(8)->format('Y-m-d H:i'),
+            'duration' => 45,
+            'questions_number' => 3,
+            'admin_id' => $otherAdmin->id
+        ];
+
+        $response = $this->post(route('admin.competitions.level.store', $this->competition), $levelData);           
+
+        $response->assertRedirectBack();
+        $this->assertDatabaseMissing('levels', [
+            'name' => $levelData['name'],
+            'competition_id' => $this->competition->id
+        ]);
+    }
     
     public function test_can_update_level_successfully()
     {
@@ -250,6 +272,32 @@ class LevelControllerTest extends TestCase
         );
     }
 
+    public function test_can_not_update_level_admin_not_available_as_manager()
+    {
+        $updateData = [
+            'name' => 'Updated Level',
+            'description' => 'Updated Description',
+            'start_date' => now()->addDays(10)->format('Y-m-d H:i'),
+            'duration' => 90,
+            'admin_id' =>  (Admin::factory()->create())->id
+        ];
+
+        $response = $this->patch(route('admin.competitions.level.update', $this->level), $updateData);
+
+        $response->assertRedirectBack();
+        $this->assertDatabaseMissing('levels', [
+            'id' => $this->level->id,
+            'name' => $updateData['name'],
+            'competition_id' => $this->competition->id
+        ]);
+
+        $this->assertDatabaseHas('levels', [
+            'id' => $this->level->id,
+            'name' => $this->level->name,
+            'competition_id' => $this->competition->id
+        ]);
+    }
+
     public function test_can_delete_level_successfully()
     {
         $response = $this->delete(route('admin.competitions.level.delete', $this->level));
@@ -261,7 +309,7 @@ class LevelControllerTest extends TestCase
     
     public function test_can_not_delete_activated_competition()
     {
-        $this->competition->update(['status' => 1]);
+        $this->competition->update(['status' => 'active']);
 
         $response = $this->delete(route('admin.competitions.level.delete', $this->level));
 
@@ -290,7 +338,7 @@ class LevelControllerTest extends TestCase
     public function test_can_activate_level_successfully()
     {
         // Setup required conditions
-        $this->competition->update(['status' => 1]); // Activate competition
+        $this->competition->update(['status' => 'active']); // Activate competition
         $this->level->update(['start_date' => now()->subHour()]); // Set start date in past
         
         // Create required number of questions
@@ -303,14 +351,14 @@ class LevelControllerTest extends TestCase
         $response->assertRedirect();
         $this->assertDatabaseHas('levels', [
             'id' => $this->level->id,
-            'status' => 1
+            'status' => 'active'
         ]);
     }
 
     
     public function test_cannot_activate_level_without_required_questions()
     {
-        $this->competition->update(['status' => 1]);
+        $this->competition->update(['status' => 'active']);
         $this->level->update(['start_date' => now()->subHour()]);
 
         $response = $this->post(route('admin.competitions.level.activate', $this->level));
@@ -342,7 +390,7 @@ class LevelControllerTest extends TestCase
         // Setup required conditions
         Bus::fake();
         $this->level->update([
-            'status' => 1,
+            'status' => 'active',
             'start_date' => now()->subHours(2),
             'duration' => 60
         ]);
@@ -360,7 +408,7 @@ class LevelControllerTest extends TestCase
     {
         Bus::fake();
         $this->level->update([
-            'status' => 1,
+            'status' => 'active',
             'start_date' => now()->subMinutes(30),
             'duration' => 60
         ]);

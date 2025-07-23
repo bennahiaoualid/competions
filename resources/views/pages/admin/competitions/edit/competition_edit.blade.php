@@ -147,7 +147,7 @@
             <!-- section title -->
             <div class="flex justify-between items-center my-2 p-2 shadow-sm" >
                 <h2 class="text-xl font-bold capitalize">{{__('competition.level.information')}}</h2>
-                @can($competition->canEdit())
+                @if($competition->canEdit())
                     <div x-data>
                         <x-button
                             name="add_level-"
@@ -158,7 +158,7 @@
                             {{__("form.actions.add")}}
                         </x-button>
                     </div>
-                @endcan
+                @endif
             </div>
             @include("pages.admin.competitions.levels_list")
         </div>
@@ -211,12 +211,18 @@
             <x-input-label for="" :value=" ucwords(__('competition.level.admin'))" />
             @php
                 $options = [] ;
+                foreach ($admins as $admin) {
+                    $options[] = ['value' => $admin->id, 'text' => $admin->name, 'selected' => false];
+                }
             @endphp
-            @foreach($admins as $admin)
-                @php $options[] = ['value' => $admin->id, 'text' => $admin->name, 'selected' => false] @endphp
-            @endforeach
-            <x-form.select-box id="" name="admin_id"  :options="$options">
-            </x-form.select-box>
+            
+            <x-form.searchable-select
+                name="admin_id"
+                :options="$options"
+                :placeholder="__('messages.global.choose')"
+                :value="old('admin_id')"
+                :disabled="false"
+            />
             <x-input-error :messages="$errors->createLevel->get('admin_id')" class="mt-2" />
         </div>
     </form>

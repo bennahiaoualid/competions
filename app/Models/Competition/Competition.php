@@ -152,6 +152,15 @@ class Competition extends Model
     }
 
     /**
+     * Check if the competition has reached its maximum number of levels.
+     * @return bool
+     */
+    public function hasReachedMaxLevels(): bool
+    {
+        return $this->levels()->count() >= $this->levels_number;
+    }
+
+    /**
      * check if all competition levels start_time are greater then now before competition activation
      * we need to make now as new start date for the level
      * so we make sure all the other levels are after now to avoid time conflict

@@ -99,12 +99,18 @@
                     <x-input-label for="" :value=" ucwords(__('competition.level.admin'))" />
                     @php
                         $options = [] ;
+                        foreach ($admins as $admin) {
+                            $options[] = ['value' => $admin->id, 'text' => $admin->name, 'selected' => false];
+                        }
                     @endphp
-                    @foreach($admins as $admin)
-                        @php $options[] = ['value' => $admin->id, 'text' => $admin->name, 'selected' => $admin->id == $level->admin_id] @endphp
-                    @endforeach
-                    <x-form.select-box id="" name="admin_id"  :options="$options">
-                    </x-form.select-box>
+                    
+                    <x-form.searchable-select
+                        name="admin_id"
+                        :options="$options"
+                        :placeholder="__('messages.global.choose')"
+                        :value="old('admin_id')"
+                        :disabled="false"
+                    />
                     <x-input-error :messages="$errors->updateLevel->get('admin_id')" class="mt-2" />
                 </div>
                 <div class="flex justify-end">

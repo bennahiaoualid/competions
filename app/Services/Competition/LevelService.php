@@ -35,30 +35,33 @@ class LevelService
     public function create(array $data, Competition $competition): bool
     {
         try {
-            if ($this->levelRepository->checkCompetitionMaxLevelNumbers($competition)) {
-                $this->flasher->notify(__('messages.validation.not_allow.competition_max_levels'), 'error');
+            if(!$this->levelRepository->isAdminAllowedToBeLevelManager($data['admin_id'])){
+                return false;
+            }
+            if ($competition->hasReachedMaxLevels()) {
+                $this->flasher->error(__('messages.validation.not_allow.competition_max_levels'));
                 return false;
             }
 
             if ($competition->start_date->gt(Carbon::parse($data["start_date"]))) {
-                $this->flasher->notify(__('validation.custom.start_date_gt_competition'), 'error');
+                $this->flasher->error(__('validation.custom.start_date_gt_competition'));
                 return false;
             }
 
             if ($this->levelRepository->hasTimeConflict($competition->id, $data["start_date"], $data["duration"])) {
-                $this->flasher->notify(__('messages.validation.not_allow.level_time_conflict'), 'error');
+                $this->flasher->error(__('messages.validation.not_allow.level_time_conflict'));
                 return false;
             }
 
             $level = $this->levelRepository->create(array_merge($data, ['competition_id' => $competition->id]));
             UserNotifyEmail::adminLevel($level);
 
-            $this->flasher->notifyCrudResult(true, 'saved');
+            $this->flasher->crudSuccess('saved');
             return true;
 
         } catch (Exception $exception) {
             $this->registerLogs('LevelService creation error: ', $exception);
-            $this->flasher->notifyCrudResult(false, 'saved');
+            $this->flasher->crudFailure('saved');
             return false;
         }
     }
@@ -72,11 +75,11 @@ class LevelService
     {
         try {
             $level = Level::findOrFail(base64_decode($encodedId));
-            $admins = Admin::all();
+            $admins = Admin::availableAsLevelManager()->get();
             return ['status' => 'success', 'level' => $level, 'admins' => $admins];
         } catch (Exception $exception) {
             $this->registerLogs('LevelService getEditData error: ', $exception);
-            $this->flasher->notify(__('messages.fetch_error_detailed'), 'error');
+            $this->flasher->error(__('messages.fetch_error_detailed'));
             return ['status' => 'error'];
         }
     }
@@ -92,13 +95,17 @@ class LevelService
         try {
             $competition = $level->competition;
 
+            if(!$this->levelRepository->isAdminAllowedToBeLevelManager($data['admin_id'])){
+                return false;
+            }
+
             if($competition->status != Competition::STATUS_PENDING){
-                $this->flasher->notify(__('messages.validation.not_allow.active_competition_update'), 'error');
+                $this->flasher->error(__('messages.validation.not_allow.active_competition_update'));
                 return false;
             }
 
             if ($level->status != Level::STATUS_PENDING) {
-                $this->flasher->notify(__('messages.validation.not_allow.active_level_update'), 'error');
+                $this->flasher->error(__('messages.validation.not_allow.active_level_update'));
                 return false;
             }
 
@@ -108,11 +115,11 @@ class LevelService
 
             if ($startDateChanged) {
                 if ($this->levelRepository->hasTimeConflict($level->competition_id, $data['start_date'], $level->duration, $level->id)) {
-                    $this->flasher->notify(__('messages.validation.not_allow.level_activate_time_conflict'), 'error');
+                    $this->flasher->error(__('messages.validation.not_allow.level_activate_time_conflict'));
                     return false;
                 }
                 if($newStartDate->lt($competition->start_date)){
-                    $this->flasher->notify(__('validation.custom.start_date_gt_competition'), 'error');
+                    $this->flasher->error(__('validation.custom.start_date_gt_competition'));
                     return false;
                 }
             }
@@ -124,12 +131,12 @@ class LevelService
                 UserNotifyEmail::usersUpdateLevel($competition, $level);
             }
 
-            $this->flasher->notifyCrudResult(true, 'updated');
+            $this->flasher->crudSuccess('updated');
             return true;
 
         } catch (Exception $exception) {
             $this->registerLogs('LevelService update error: ', $exception);
-            $this->flasher->notifyCrudResult(false, 'updated');
+            $this->flasher->crudFailure('updated');
             return false;
         }
     }
@@ -145,23 +152,23 @@ class LevelService
             $competition = $level->competition;
 
             if (!$level->canEdit()) {
-                $this->flasher->notify(__('messages.validation.not_allow.competition_update'), 'error');
+                $this->flasher->error(__('messages.validation.not_allow.competition_update'));
                 return false;
             }
 
             if ($competition->status != Competition::STATUS_PENDING) {
-                $this->flasher->notify(__('messages.validation.not_allow.active_competition_update'), 'error');
+                $this->flasher->error(__('messages.validation.not_allow.active_competition_update'));
                 return false;
             }
 
             $this->levelRepository->delete($level);
-            $this->flasher->notifyCrudResult(true, 'deleted');
+            $this->flasher->crudSuccess('deleted');
 
             return true;
 
         } catch (Exception $exception) {
             $this->registerLogs('LevelService delete error: ', $exception);
-            $this->flasher->notifyCrudResult(false, 'deleted');
+            $this->flasher->crudFailure('deleted');
             return false;
         }
     }
@@ -171,58 +178,58 @@ class LevelService
         try {
             $competition = $level->competition;
 
-            if($level->status == Level::STATUS_ACTIVE){
+            if($level->status != Level::STATUS_PENDING){
                 return false;
             }
 
             if (!$level->canEdit()) {
-                $this->flasher->notify(__('messages.validation.not_allow.competition_update'), 'error');
+                $this->flasher->error(__('messages.validation.not_allow.competition_update'));
                 return false;
             }
 
             if ($competition->status != Competition::STATUS_ACTIVE) {
-                $this->flasher->notify(__('messages.validation.not_allow.level_activate_before_competition'), 'error');
+                $this->flasher->error(__('messages.validation.not_allow.level_activate_before_competition'));
                 return false;
             }
             if ($level->start_date->gte(now())) {
-                $this->flasher->notify(__('messages.validation.not_allow.level_activate_early'), 'error');
+                $this->flasher->error(__('messages.validation.not_allow.level_activate_early'));
                 return false;
             }
             if ($level->questions->count() != $level->questions_number) {
-                $this->flasher->notify(__('messages.validation.not_allow.level_activate_match_questions'), 'error');
+                $this->flasher->error(__('messages.validation.not_allow.level_activate_match_questions'));
                 return false;
             }
             if (!$level->isTheEarliest()) {
-                $this->flasher->notify(__('messages.validation.not_allow.level_activate_not_its_tour'), 'error');
+                $this->flasher->error(__('messages.validation.not_allow.level_activate_not_its_tour'));
                 return false;
             }
             if (!$level->isThePreviousAudit()) {
-                $this->flasher->notify(__('messages.validation.not_allow.level_activate_previous_not_audit'), 'error');
+                $this->flasher->error(__('messages.validation.not_allow.level_activate_previous_not_audit'));
                 return false;
             }
             if (!$competition->isAllLevelAfterNow($level->id)) {
-                $this->flasher->notify(__('messages.validation.not_allow.competition_activate_level_pass'), 'error');
+                $this->flasher->error(__('messages.validation.not_allow.competition_activate_level_pass'));
                 return false;
             }
 
             $newStartDate = now();
             if ($this->levelRepository->hasTimeConflict($level->competition_id, $newStartDate->format('Y-m-d H:i'), $level->duration, $level->id)) {
-                $this->flasher->notify(__('messages.validation.not_allow.level_activate_time_conflict'), 'error');
+                $this->flasher->error(__('messages.validation.not_allow.level_activate_time_conflict'));
                 return false;
             }
 
-            $updated = $this->levelRepository->update($level, ['start_date' => $newStartDate, 'status' => "1"]);
+            $updated = $this->levelRepository->update($level, ['start_date' => $newStartDate, 'status' => "active"]);
             
             if ($updated) {
                 UserNotifyEmail::usersActivateLevel($competition, $level);
             }
 
-            $this->flasher->notifyCrudResult(true, 'activated');
+            $this->flasher->crudSuccess('activated');
             return true;
 
         } catch (Exception $exception) {
             $this->registerLogs('LevelService activateLevel error: ', $exception);
-            $this->flasher->notifyCrudResult(false, 'activated');
+            $this->flasher->crudFailure(false, 'activated');
             return false;
         }
     }
@@ -230,12 +237,12 @@ class LevelService
     public function finishLevel(Level $level): bool
     {    
         if (!$level->canEdit()) {
-            $this->flasher->notify(__('messages.validation.not_allow.level_edit_restricted_finish'), 'error');
+            $this->flasher->error(__('messages.validation.not_allow.level_edit_restricted_finish'));
             return false;
         }
     
         if (!($level->status == Level::STATUS_ACTIVE && !$level->isStillActive())) {
-            $this->flasher->notify(__('messages.validation.not_allow.level_finish_still_active'), 'error');
+            $this->flasher->error(__('messages.validation.not_allow.level_finish_still_active'));
             return false;
         }
         FinishLevelJob::dispatchSync($level);

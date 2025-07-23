@@ -45,7 +45,7 @@ class FinishLevelJob implements ShouldQueue
             if ($updated) {
                 UserNotifyEmail::auditorsFinishLevel($level->competition, $level);
             }
-            \Log::info('تم تحديث المستوى؟', ['updated' => $updated]);
+            \Log::info('level updated', ['updated' => $updated]);
             return $updated;
         });
 

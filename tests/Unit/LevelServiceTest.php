@@ -4,10 +4,8 @@ namespace Tests\Unit;
 
 use Bus;
 use Mockery;
-use Exception;
 use Carbon\Carbon;
 use Tests\TestCase;
-use App\Models\User;
 use App\Models\Admin\Admin;
 use App\Models\Competition\Level;
 use Illuminate\Support\Collection;
@@ -84,10 +82,11 @@ class LevelServiceTest extends TestCase
         return array_merge([
             'name' => 'Test Level',
             'description' => 'Test Description',
+            'admin_id' => 1,
             'start_date' => $strDate ? $startDate : Carbon::parse($startDate),
             'duration' => 60,
             'questions_number' => 10,
-            'status' => '0', // inactive
+            'status' => 'pending', // inactive
         ], $overrides);
     
     }
@@ -105,16 +104,17 @@ class LevelServiceTest extends TestCase
         $data = $this->createLevelData(strDate: true);
         $competition = $this->competition_partial;
         $level = $this->level_partial;
-        
+    
+        $competition->shouldReceive('hasReachedMaxLevels')->once()->andReturn(false);
         $competition->shouldReceive('getAttribute')->with('start_date')->andReturn(now()->subDay());
-        $competition->shouldReceive('getAttribute')->with('levels')->andReturn(collect([]));
-        
+
         $this->levelRepository
-            ->shouldReceive('checkCompetitionMaxLevelNumbers')
-            ->with($competition)
+            ->shouldReceive('isAdminAllowedToBeLevelManager')
+            ->with($data['admin_id'],)
             ->once()
-            ->andReturn(false);
-            
+            ->andReturn(true);
+        
+
         $this->levelRepository
             ->shouldReceive('hasTimeConflict')
             ->with($competition->id, $data['start_date'], $data['duration'])
@@ -133,8 +133,8 @@ class LevelServiceTest extends TestCase
             ->once();
             
         $this->flasher
-            ->shouldReceive('notifyCrudResult')
-            ->with(true, 'saved')
+            ->shouldReceive('crudSuccess')
+            ->with('saved')
             ->once();
             
         // Act
@@ -144,21 +144,41 @@ class LevelServiceTest extends TestCase
         $this->assertTrue($result);
     }
 
+    public function test_create_level_faild_manager_admin_not_aviable()
+    {
+        // Arrange
+        $data = $this->createLevelData(strDate: true);
+        $competition = $this->competition_partial;
+    
+
+        $this->levelRepository
+            ->shouldReceive('isAdminAllowedToBeLevelManager')
+            ->with($data['admin_id'],)
+            ->once()
+            ->andReturn(false);
+            
+        // Act
+        $result = $this->levelService->create($data, $competition);
+        
+        // Assert
+        $this->assertFalse($result);
+    }
+
     public function test_create_level_max_levels_reached()
     {
         // Arrange
         $data = $this->createLevelData(strDate: true);
         $competition = $this->competition_partial;
         
+        $competition->shouldReceive('hasReachedMaxLevels')->once()->andReturn(true);
         $this->levelRepository
-            ->shouldReceive('checkCompetitionMaxLevelNumbers')
-            ->with($competition)
+            ->shouldReceive('isAdminAllowedToBeLevelManager')
+            ->with($data['admin_id'],)
             ->once()
-            ->andReturn(true);
-            
+            ->andReturn(true);    
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.competition_max_levels'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.competition_max_levels'))
             ->once();
             
         // Act
@@ -174,14 +194,13 @@ class LevelServiceTest extends TestCase
         $data = $this->createLevelData(strDate: true);
         $competition = $this->competition_partial;
         
+        $competition->shouldReceive('hasReachedMaxLevels')->once()->andReturn(false);
         $competition->shouldReceive('getAttribute')->with('start_date')->andReturn(now()->subDay());
-        
         $this->levelRepository
-            ->shouldReceive('checkCompetitionMaxLevelNumbers')
-            ->with($competition)
+            ->shouldReceive('isAdminAllowedToBeLevelManager')
+            ->with($data['admin_id'],)
             ->once()
-            ->andReturn(false);
-            
+            ->andReturn(true);            
         $this->levelRepository
             ->shouldReceive('hasTimeConflict')
             ->with($competition->id, $data['start_date'], $data['duration'])
@@ -189,8 +208,8 @@ class LevelServiceTest extends TestCase
             ->andReturn(true);
             
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.level_time_conflict'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.level_time_conflict'))
             ->once();
             
         // Act
@@ -206,17 +225,16 @@ class LevelServiceTest extends TestCase
         $data = $this->createLevelData(strDate: true);
         $competition = $this->competition_partial;
         
+        $competition->shouldReceive('hasReachedMaxLevels')->once()->andReturn(false);
         $competition->shouldReceive('getAttribute')->with('start_date')->andReturn(now()->addDay());
-        
         $this->levelRepository
-            ->shouldReceive('checkCompetitionMaxLevelNumbers')
-            ->with($competition)
+            ->shouldReceive('isAdminAllowedToBeLevelManager')
+            ->with($data['admin_id'],)
             ->once()
-            ->andReturn(false);
-
+            ->andReturn(true);          
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('validation.custom.start_date_gt_competition'), 'error')
+            ->shouldReceive('error')
+            ->with(__('validation.custom.start_date_gt_competition'))
             ->once();
 
         // Act
@@ -238,7 +256,7 @@ class LevelServiceTest extends TestCase
         
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
         
-        $competition->shouldReceive('getAttribute')->with('status')->andReturn('0');
+        $competition->shouldReceive('getAttribute')->with('status')->andReturn('pending');
         $competition->shouldReceive('getAttribute')->with('start_date')->andReturn(now()->subDay());
         
         $updatedData = [
@@ -248,7 +266,11 @@ class LevelServiceTest extends TestCase
             'duration' => 60,
             'admin_id' => 1,
         ];
-            
+        $this->levelRepository
+            ->shouldReceive('isAdminAllowedToBeLevelManager')
+            ->with($data['admin_id'],)
+            ->once()
+            ->andReturn(true);              
         $this->levelRepository
             ->shouldReceive('update')
             ->with($level, Mockery::any())
@@ -256,8 +278,8 @@ class LevelServiceTest extends TestCase
             ->andReturn(true);
             
         $this->flasher
-            ->shouldReceive('notifyCrudResult')
-            ->with(true, 'updated')
+            ->shouldReceive('crudSuccess')
+            ->with('updated')
             ->once();
             
         // Act
@@ -267,7 +289,7 @@ class LevelServiceTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function test_update_level_success_wit_start_date_change()
+    public function test_update_level_success_with_start_date_change()
     {
         // Arrange
         $competition = $this->competition_partial;
@@ -280,7 +302,7 @@ class LevelServiceTest extends TestCase
         
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
         
-        $competition->shouldReceive('getAttribute')->with('status')->andReturn('0');
+        $competition->shouldReceive('getAttribute')->with('status')->andReturn('pending');
         $competition->shouldReceive('getAttribute')->with('start_date')->andReturn(now()->subDay());
         
         $updatedData = [
@@ -295,7 +317,11 @@ class LevelServiceTest extends TestCase
             ->with($competition->id, $updatedData['start_date'], $updatedData['duration'], $level->id)
             ->once()
             ->andReturn(false);
-
+        $this->levelRepository
+            ->shouldReceive('isAdminAllowedToBeLevelManager')
+            ->with($data['admin_id'],)
+            ->once()
+            ->andReturn(true);  
         $this->levelRepository
             ->shouldReceive('update')
             ->with($level, Mockery::any())
@@ -308,8 +334,8 @@ class LevelServiceTest extends TestCase
             ->once();
             
         $this->flasher
-            ->shouldReceive('notifyCrudResult')
-            ->with(true, 'updated')
+            ->shouldReceive('crudSuccess')
+            ->with('updated')
             ->once();
             
         // Act
@@ -326,14 +352,18 @@ class LevelServiceTest extends TestCase
         $data = $this->createLevelData();
         $level = $this->level_partial;
         
-        $level->shouldReceive('getAttribute')->with('status')->andReturn('1');
+        $level->shouldReceive('getAttribute')->with('status')->andReturn('active');
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
         
-        $competition->shouldReceive('getAttribute')->with('status')->andReturn('0');
-        
+        $competition->shouldReceive('getAttribute')->with('status')->andReturn('pending');
+        $this->levelRepository
+            ->shouldReceive('isAdminAllowedToBeLevelManager')
+            ->with($data['admin_id'],)
+            ->once()
+            ->andReturn(true);          
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.active_level_update'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.active_level_update'))
             ->once();
             
         // Act
@@ -350,14 +380,18 @@ class LevelServiceTest extends TestCase
         $data = $this->createLevelData();
         $level = $this->level_partial;  
 
-        $level->shouldReceive('getAttribute')->with('status')->andReturn('0');
+        $level->shouldReceive('getAttribute')->with('status')->andReturn('pending');
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
         
-        $competition->shouldReceive('getAttribute')->with('status')->andReturn('1');    
-        
+        $competition->shouldReceive('getAttribute')->with('status')->andReturn('active');    
+        $this->levelRepository
+            ->shouldReceive('isAdminAllowedToBeLevelManager')
+            ->with($data['admin_id'],)
+            ->once()
+            ->andReturn(true);          
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.active_competition_update'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.active_competition_update'))
             ->once();
             
         // Act  
@@ -367,7 +401,7 @@ class LevelServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    public function test_update_level_new_start_date_less_than_competition_start_date()
+    public function test_update_level_new_start_date_less_than_competition()
     {
         // Arrange
         $competition = $this->competition_partial;
@@ -380,7 +414,7 @@ class LevelServiceTest extends TestCase
 
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
         
-        $competition->shouldReceive('getAttribute')->with('status')->andReturn('0');
+        $competition->shouldReceive('getAttribute')->with('status')->andReturn('pending');
         $competition->shouldReceive('getAttribute')->with('start_date')->andReturn(now()->subDay());
         
         $updatedData = [
@@ -390,6 +424,12 @@ class LevelServiceTest extends TestCase
             'duration' => 60,
             'admin_id' => 1,
         ];
+
+        $this->levelRepository
+            ->shouldReceive('isAdminAllowedToBeLevelManager')
+            ->with($data['admin_id'],)
+            ->once()
+            ->andReturn(true);          
         $this->levelRepository
             ->shouldReceive('hasTimeConflict')
             ->with($competition->id, $updatedData['start_date'], $updatedData['duration'], $level->id)
@@ -397,8 +437,8 @@ class LevelServiceTest extends TestCase
             ->andReturn(false);
 
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('validation.custom.start_date_gt_competition'), 'error')
+            ->shouldReceive('error')
+            ->with(__('validation.custom.start_date_gt_competition'))
             ->once();
             
         // Act
@@ -421,7 +461,7 @@ class LevelServiceTest extends TestCase
 
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
         
-        $competition->shouldReceive('getAttribute')->with('status')->andReturn('0');
+        $competition->shouldReceive('getAttribute')->with('status')->andReturn('pending');
         $competition->shouldReceive('getAttribute')->with('start_date')->andReturn(now()->subDay());
         
         $updatedData = [
@@ -431,6 +471,12 @@ class LevelServiceTest extends TestCase
             'duration' => 60,
             'admin_id' => 1,
         ];
+
+        $this->levelRepository
+            ->shouldReceive('isAdminAllowedToBeLevelManager')
+            ->with($data['admin_id'],)
+            ->once()
+            ->andReturn(true);  
         $this->levelRepository
             ->shouldReceive('hasTimeConflict')
             ->with($competition->id, $updatedData['start_date'], $updatedData['duration'], $level->id)
@@ -438,8 +484,8 @@ class LevelServiceTest extends TestCase
             ->andReturn(true);
 
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.level_activate_time_conflict'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.level_activate_time_conflict'))
             ->once();
             
         // Act
@@ -448,6 +494,42 @@ class LevelServiceTest extends TestCase
         // Assert
         $this->assertFalse($result);    
     }
+
+    public function test_update_level_faild_admin_manager_not_aviable()
+    {
+        // Arrange
+        $competition = $this->competition_partial;
+        $data = $this->createLevelData();
+        $level = $this->level_partial;
+        $level->competition_id = 1;
+        foreach($data as $key => $value){
+            $level->shouldReceive('getAttribute')->with($key)->andReturn($value);
+        }
+
+        $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
+        
+        
+        $updatedData = [
+            'name' => 'new name',
+            'description' => 'new description',
+            'start_date' => now()->addDay(2)->format('Y-m-d H:i'),
+            'duration' => 60,
+            'admin_id' => 1,
+        ];
+
+        $this->levelRepository
+            ->shouldReceive('isAdminAllowedToBeLevelManager')
+            ->with($data['admin_id'],)
+            ->once()
+            ->andReturn(false);  
+            
+        // Act
+        $result = $this->levelService->update($level, $updatedData);
+        
+        // Assert
+        $this->assertFalse($result);    
+    }
+    
     
     public function test_delete_level_success()
     {
@@ -458,7 +540,7 @@ class LevelServiceTest extends TestCase
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
         $level->shouldReceive('canEdit')->andReturn(true);
         
-        $competition->shouldReceive('getAttribute')->with('status')->andReturn('0');
+        $competition->shouldReceive('getAttribute')->with('status')->andReturn('pending');
         
         $this->levelRepository
             ->shouldReceive('delete')
@@ -467,8 +549,8 @@ class LevelServiceTest extends TestCase
             ->andReturn(true);
             
         $this->flasher
-            ->shouldReceive('notifyCrudResult')
-            ->with(true, 'deleted')
+            ->shouldReceive('crudSuccess')
+            ->with('deleted')
             ->once();
             
         // Act
@@ -478,7 +560,7 @@ class LevelServiceTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function test_delete_level_active_competition()
+    public function test_delete_level_faild_active_competition()
     {
         // Arrange
         $level = $this->level_partial;
@@ -487,11 +569,11 @@ class LevelServiceTest extends TestCase
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
         $level->shouldReceive('canEdit')->andReturn(true);
         
-        $competition->shouldReceive('getAttribute')->with('status')->andReturn('1');
+        $competition->shouldReceive('getAttribute')->with('status')->andReturn('active');
         
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.active_competition_update'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.active_competition_update'))
             ->once();
             
         // Act
@@ -501,7 +583,7 @@ class LevelServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    public function test_delete_level_unauthorized()
+    public function test_delete_level_faild_unauthorized()
     {
         // Arrange
         $level = $this->level_partial;
@@ -511,8 +593,8 @@ class LevelServiceTest extends TestCase
         $level->shouldReceive('canEdit')->andReturn(false);
         
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.competition_update'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.competition_update'))
             ->once();
             
         // Act
@@ -530,17 +612,19 @@ class LevelServiceTest extends TestCase
 
         $level = $this->level_partial;
         $competition = $this->competition_partial;
+        $competition->shouldReceive('getAttribute')->with('status')->andReturn('active');
 
         $data = $this->createLevelData(
             ['start_date' => now()->subMinutes(5)],
             strDate: false
         );
+        unset($data['admin_id']);
         foreach($data as $key => $value){
             $level->shouldReceive('getAttribute')->with($key)->andReturn($value);
         }
-        
+
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
-        $level->shouldReceive('getAttribute')->with('competition_id')->andReturn(1);
+        $level->shouldReceive('getAttribute')->with('competition_id')->andReturn($competition->id);
         
         $questions = Mockery::mock(Collection::class);
         $questions->shouldReceive('count')->andReturn(10);
@@ -562,7 +646,7 @@ class LevelServiceTest extends TestCase
             
         $this->levelRepository
             ->shouldReceive('update')
-            ->with($level, ['start_date' => $newStartDate, 'status' => '1'])
+            ->with($level, ['start_date' => $newStartDate, 'status' => 'active'])
             ->once()
             ->andReturn(true);
             
@@ -572,8 +656,8 @@ class LevelServiceTest extends TestCase
             ->once();
             
         $this->flasher
-            ->shouldReceive('notifyCrudResult')
-            ->with(true, 'activated')
+            ->shouldReceive('crudSuccess')
+            ->with('activated')
             ->once();
             
         // Act
@@ -583,14 +667,14 @@ class LevelServiceTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function test_activate_level_already_active()
+    public function test_activate_level_faild_already_active()
     {
         // Arrange
         $level = $this->level_partial;
         $competition = $this->competition_partial;
         
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
-        $level->shouldReceive('getAttribute')->with('status')->andReturn('1');
+        $level->shouldReceive('getAttribute')->with('status')->andReturn('active');
         
             
         // Act
@@ -600,21 +684,21 @@ class LevelServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    public function test_activate_level_not_active_competition()
+    public function test_activate_level_faild_not_active_competition()
     {
         // Arrange
         $level = $this->level_partial;
         $competition = $this->competition_partial;
         
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
-        $level->shouldReceive('getAttribute')->with('status')->andReturn('0');
+        $level->shouldReceive('getAttribute')->with('status')->andReturn('pending');
         $level->shouldReceive('canEdit')->andReturn(true);
         
-        $competition->shouldReceive('getAttribute')->with('status')->andReturn('0');
+        $competition->shouldReceive('getAttribute')->with('status')->andReturn('pending');
         
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.level_activate_before_competition'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.level_activate_before_competition'))
             ->once();
             
         // Act
@@ -624,19 +708,19 @@ class LevelServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    public function test_activate_level_unauthorized()
+    public function test_activate_level_faild_unauthorized()
     {
         // Arrange
         $level = $this->level_partial;
         $competition = $this->competition_partial;
 
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
-        $level->shouldReceive('getAttribute')->with('status')->andReturn('0');
+        $level->shouldReceive('getAttribute')->with('status')->andReturn('pending');
         $level->shouldReceive('canEdit')->andReturn(false);
 
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.level_edit_restricted'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.competition_update'))
             ->once();
 
         // Act
@@ -646,22 +730,22 @@ class LevelServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    public function test_activate_level_start_date_greater_than_now()
+    public function test_activate_level_faild_start_date_greater_than_now()
     {
         // Arrange
         $level = $this->level_partial;
         $competition = $this->competition_partial;
 
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
-        $level->shouldReceive('getAttribute')->with('status')->andReturn('0');
+        $level->shouldReceive('getAttribute')->with('status')->andReturn('pending');
         $level->shouldReceive('getAttribute')->with('start_date')->andReturn(now()->addDay());
         $level->shouldReceive('canEdit')->andReturn(true);
         
-        $competition->shouldReceive('getAttribute')->with('status')->andReturn('1');
+        $competition->shouldReceive('getAttribute')->with('status')->andReturn('active');
 
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.level_activate_early'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.level_activate_early'))
             ->once();
 
         // Act
@@ -671,14 +755,16 @@ class LevelServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    public function test_activate_level_questions_number_not_match_questions_count()
+    public function test_activate_level_faild_questions_number_not_match_questions_count()
     {
         // Arrange
         $level = $this->level_partial;
         $competition = $this->competition_partial;
+        $competition->shouldReceive('getAttribute')->with('status')->andReturn('active');
+
 
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
-        $level->shouldReceive('getAttribute')->with('status')->andReturn('0');
+        $level->shouldReceive('getAttribute')->with('status')->andReturn('pending');
         $level->shouldReceive('getAttribute')->with('start_date')->andReturn(now()->subMinutes(5));
         $level->shouldReceive('canEdit')->andReturn(true);
         
@@ -689,8 +775,8 @@ class LevelServiceTest extends TestCase
         $competition->shouldReceive('getAttribute')->with('status')->andReturn('1');
 
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.level_activate_match_questions'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.level_activate_match_questions'))
             ->once();
 
         // Act
@@ -700,14 +786,15 @@ class LevelServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    public function test_activate_level_not_its_tour()
+    public function test_activate_level_faild_not_its_tour()
     {
         // Arrange
         $level = $this->level_partial;
         $competition = $this->competition_partial;
+        $competition->shouldReceive('getAttribute')->with('status')->andReturn('active');
 
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
-        $level->shouldReceive('getAttribute')->with('status')->andReturn('0');
+        $level->shouldReceive('getAttribute')->with('status')->andReturn('pending');
         $level->shouldReceive('getAttribute')->with('start_date')->andReturn(now()->subMinutes(5));
         $level->shouldReceive('getAttribute')->with('questions_number')->andReturn(10);
         $level->shouldReceive('canEdit')->andReturn(true);
@@ -720,8 +807,8 @@ class LevelServiceTest extends TestCase
         $competition->shouldReceive('getAttribute')->with('status')->andReturn('1');
 
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.level_activate_not_its_tour'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.level_activate_not_its_tour'))
             ->once();   
 
         // Act
@@ -731,14 +818,15 @@ class LevelServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    public function test_activate_level_previous_not_audit()
+    public function test_activate_level_faild_previous_not_audit()
     {
         // Arrange
         $level = $this->level_partial;
         $competition = $this->competition_partial;
+        $competition->shouldReceive('getAttribute')->with('status')->andReturn('active');
 
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
-        $level->shouldReceive('getAttribute')->with('status')->andReturn('0');
+        $level->shouldReceive('getAttribute')->with('status')->andReturn('pending');
         $level->shouldReceive('getAttribute')->with('start_date')->andReturn(now()->subMinutes(5));
         $level->shouldReceive('getAttribute')->with('questions_number')->andReturn(10);
         $level->shouldReceive('canEdit')->andReturn(true);
@@ -752,8 +840,8 @@ class LevelServiceTest extends TestCase
         $competition->shouldReceive('getAttribute')->with('status')->andReturn('1');
 
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.level_activate_previous_not_audit'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.level_activate_previous_not_audit'))
             ->once();   
 
         // Act
@@ -767,14 +855,15 @@ class LevelServiceTest extends TestCase
     * TODO: the activtion fail due to another level in the same competition 
     * will be earliar then the target level after update the start date
     */
-    public function test_activate_level_not_all_levels_after_now()
+    public function test_activate_level_faild_there_is_levels_with_start_date_earliest_then_now()
     {
         // Arrange
         $level = $this->level_partial;
         $competition = $this->competition_partial;
+        $competition->shouldReceive('getAttribute')->with('status')->andReturn('active');
 
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
-        $level->shouldReceive('getAttribute')->with('status')->andReturn('0');
+        $level->shouldReceive('getAttribute')->with('status')->andReturn('pending');
         $level->shouldReceive('getAttribute')->with('start_date')->andReturn(now()->subMinutes(5));
         $level->shouldReceive('getAttribute')->with('questions_number')->andReturn(10);
         $level->shouldReceive('canEdit')->andReturn(true);
@@ -785,12 +874,11 @@ class LevelServiceTest extends TestCase
         $questions->shouldReceive('count')->andReturn(10);
         $level->shouldReceive('getAttribute')->with('questions')->andReturn($questions);
         
-        $competition->shouldReceive('getAttribute')->with('status')->andReturn('1');
         $competition->shouldReceive('isAllLevelAfterNow')->with($level->id)->andReturn(false);
 
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.competition_activate_level_pass'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.competition_activate_level_pass'))
             ->once();   
 
         // Act
@@ -800,15 +888,16 @@ class LevelServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    public function test_activate_level_time_conflict()
+    public function test_activate_level_faild_time_conflict()
     {
         // Arrange
         Carbon::setTestNow(now());
         $level = $this->level_partial;
         $competition = $this->competition_partial;
+        $competition->shouldReceive('getAttribute')->with('status')->andReturn('active');
 
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
-        $level->shouldReceive('getAttribute')->with('status')->andReturn('0');
+        $level->shouldReceive('getAttribute')->with('status')->andReturn('pending');
         $level->shouldReceive('getAttribute')->with('start_date')->andReturn(now()->subMinutes(5));
         $level->shouldReceive('getAttribute')->with('duration')->andReturn(60); 
         $level->shouldReceive('getAttribute')->with('competition_id')->andReturn(1);
@@ -822,7 +911,6 @@ class LevelServiceTest extends TestCase
         $questions->shouldReceive('count')->andReturn(10);
         $level->shouldReceive('getAttribute')->with('questions')->andReturn($questions);
 
-        $competition->shouldReceive('getAttribute')->with('status')->andReturn('1');
         $competition->shouldReceive('isAllLevelAfterNow')->andReturn(true);
 
         $this->levelRepository
@@ -832,8 +920,8 @@ class LevelServiceTest extends TestCase
             ->andReturn(true);
 
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.level_activate_time_conflict'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.level_activate_time_conflict'))
             ->once();
 
         // Act
@@ -853,7 +941,7 @@ class LevelServiceTest extends TestCase
         
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
         $level->shouldReceive('getAttribute')->with('id')->andReturn(1);
-        $level->shouldReceive('getAttribute')->with('status')->andReturn('1');
+        $level->shouldReceive('getAttribute')->with('status')->andReturn('active');
         $level->shouldReceive('canEdit')->andReturn(true);
         $level->shouldReceive('isStillActive')->andReturn(false);
         $level->shouldReceive('fresh')->with('competition.users', 'competition.auditors')->andReturn($level);
@@ -870,7 +958,7 @@ class LevelServiceTest extends TestCase
         });
     }
 
-    public function test_finish_level_unauthorized()
+    public function test_finish_level_faild_unauthorized()
     {
         Bus::fake();
         // Arrange
@@ -881,8 +969,8 @@ class LevelServiceTest extends TestCase
         $level->shouldReceive('canEdit')->andReturn(false);
 
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.level_edit_restricted_finish'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.level_edit_restricted_finish'))
             ->once();
 
         // Act
@@ -893,7 +981,7 @@ class LevelServiceTest extends TestCase
         Bus::assertNotDispatched(FinishLevelJob::class);
     }
 
-    public function test_finish_level_still_active()
+    public function test_finish_level_faild_still_active()
     {
         Bus::fake();
         // Arrange
@@ -905,8 +993,8 @@ class LevelServiceTest extends TestCase
         $level->shouldReceive('isStillActive')->andReturn(true);
 
         $this->flasher
-            ->shouldReceive('notify')
-            ->with(__('messages.validation.not_allow.level_finish_still_active'), 'error')
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.level_finish_still_active'))
             ->once();
 
         // Act

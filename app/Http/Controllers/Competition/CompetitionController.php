@@ -53,7 +53,7 @@ class CompetitionController extends Controller
         if (!$competition) {
             abort(404, 'Competition not found.');
         }
-        $admins = Admin::all();
+        $admins = Admin::availableAsLevelManager()->get();
         return view("pages.admin.competitions.edit.competition_edit", compact("competition", "admins"));
     }
 
