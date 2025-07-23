@@ -69,9 +69,9 @@ class UserCompetitionController extends Controller
      * @param Level $level
      * @return View|RedirectResponse
      */
-    public function levelStart(Level $level): View|RedirectResponse
+    public function beginUserLevelAttempt(Level $level): View|RedirectResponse
     {
-        $request_result =  $this->userCompetitionService->levelStart($level);
+        $request_result =  $this->userCompetitionService->beginUserLevelAttempt($level);
         if($request_result['status'] == 'success'){
             return view('pages.user.question_response', $request_result);
         }

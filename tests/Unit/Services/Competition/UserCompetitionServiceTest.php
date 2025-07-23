@@ -64,7 +64,7 @@ class UserCompetitionServiceTest extends TestCase
         $this->level = Mockery::mock(Level::class)->makePartial();
         $this->level->shouldReceive('getAttribute')->with('id')->andReturn(1);
         $this->level->shouldReceive('getAttribute')->with('questions_number')->andReturn(10);
-        $this->level->shouldReceive('getAttribute')->with('status')->andReturn(1);
+        $this->level->shouldReceive('getAttribute')->with('status')->andReturn('active');
         $this->level->shouldReceive('getAttribute')->with('competition')->andReturn($this->competition);
 
 
@@ -143,7 +143,7 @@ class UserCompetitionServiceTest extends TestCase
             ->andReturn($response);
 
         // Act
-        $result = $this->userCompetitionService->levelStart($this->level);
+        $result = $this->userCompetitionService->beginUserLevelAttempt($this->level);
 
         // Assert
         $this->assertIsArray($result);
@@ -172,7 +172,7 @@ class UserCompetitionServiceTest extends TestCase
             ->andReturn($questions);
         
         // Act
-        $result = $this->userCompetitionService->levelStart($this->level);
+        $result = $this->userCompetitionService->beginUserLevelAttempt($this->level);
 
         // Assert
         $this->assertEquals('empty', $result['status']);
@@ -192,7 +192,7 @@ class UserCompetitionServiceTest extends TestCase
             ->with(false, 'something_went_wrong')
             ->once();
         // Act
-        $result = $this->userCompetitionService->levelStart($this->level);
+        $result = $this->userCompetitionService->beginUserLevelAttempt($this->level);
 
         // Assert
         $this->assertEquals('error', $result['status']);
@@ -217,7 +217,7 @@ class UserCompetitionServiceTest extends TestCase
             ->once();
 
         // Act
-        $result = $this->userCompetitionService->levelStart($this->level);
+        $result = $this->userCompetitionService->beginUserLevelAttempt($this->level);
         
         // Assert
         $this->assertEquals('error', $result['status']);

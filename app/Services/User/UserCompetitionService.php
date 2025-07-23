@@ -98,11 +98,11 @@ class UserCompetitionService
     }
 
     /**
-     * Start a level
+     * Start a level for a user
      * @param Level $level
      * @return array|bool status:success, question, question_count, level, empty, error
      */
-    public function levelStart(Level $level): array|bool
+    public function beginUserLevelAttempt(Level $level): array|bool
     {
         try {
             // Check if the level is available
