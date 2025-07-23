@@ -5,7 +5,6 @@ namespace App\Repository\Competition;
 use App\Models\User;
 use App\Traits\Filterable;
 use App\Traits\RegisterLogs;
-use App\Traits\RoleManipulation;
 use App\Helpers\PaginationHelper;
 use App\Models\Competition\Level;
 use Illuminate\Support\Collection;
@@ -13,7 +12,6 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Competition\Question;
 use App\Models\Competition\Response;
 use Illuminate\Support\Facades\Auth;
-use App\Traits\CrudOperationNotificationAlert;
 use App\Interface\Competition\AuditRepositoryInterface;
 
 class AuditRepository implements AuditRepositoryInterface

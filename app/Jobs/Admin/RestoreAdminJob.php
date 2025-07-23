@@ -198,4 +198,35 @@ class RestoreAdminJob extends BaseTrackableJob
             'completed_at' => now(),
         ];
     }
+
+    /* getters for testing porpuse */
+    /**
+     * Get the admin instance.
+     *
+     * @return Admin
+     */
+    public function getAdmin(): Admin
+    {
+        return $this->admin;
+    }
+
+    /**
+     * Get the deletion request instance.
+     *
+     * @return DeletionRequest
+     */
+    public function getDeletionRequest(): DeletionRequest
+    {
+        return $this->deletionRequest;
+    }
+
+    /**
+     * Get the initiator admin instance.
+     *
+     * @return Admin
+     */
+    public function getInitiatorAdmin(): Admin
+    {
+        return $this->initiatorAdmin;
+    }
 } 

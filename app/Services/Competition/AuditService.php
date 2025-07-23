@@ -3,8 +3,6 @@
 namespace App\Services\Competition;
 
 use App\Models\User;
-use Illuminate\View\View;
-use App\Models\Admin\Admin;
 use App\Traits\RegisterLogs;
 use App\Models\Competition\Level;
 use App\Contracts\FlasherInterface;

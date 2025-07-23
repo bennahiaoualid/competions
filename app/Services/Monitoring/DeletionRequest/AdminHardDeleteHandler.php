@@ -65,7 +65,7 @@ class AdminHardDeleteHandler implements HardDeleteHandlerInterface
         if ($data_validated) {
             $newAdmin = Admin::availableAsOwnershipTransfer()->where('id', $this->request->admin_id)->first();
         }
-
+        
         if (!$newAdmin) {
             $exp = new Exception('The provided admin_id is invalid or does not have the required role.');
             $this->registerLogs('AdminHardDeleteHandler::delete',$exp);
