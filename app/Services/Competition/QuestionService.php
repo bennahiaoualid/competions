@@ -3,22 +3,18 @@
 namespace App\Services\Competition;
 
 use Exception;
-use Illuminate\View\View;
 use App\Traits\RegisterLogs;
-use Illuminate\Http\Request;
+use App\Helpers\PaginationHelper;
 use App\Models\Competition\Level;
 use App\Contracts\FlasherInterface;
 use App\Models\Competition\Question;
-use Illuminate\Pagination\Paginator;
 use App\Contracts\TransactionManagerInterface;
-use App\Interface\Competition\QuestionRepositoryInterface;
 
 class QuestionService
 {
     use RegisterLogs;
 
     public function __construct(
-        protected QuestionRepositoryInterface $questionRepository,
         protected TransactionManagerInterface $transactionManager,
         protected FlasherInterface $flasher
     ) {
@@ -31,7 +27,9 @@ class QuestionService
      */
     public function all(Level $level)
     {
-        return $this->questionRepository->getQuestionsByLevel($level);
+        return Question::with("level")
+            ->where("level_id", $level->id)
+            ->paginate(PaginationHelper::perPage());
     }
 
     /**
@@ -47,6 +45,7 @@ class QuestionService
             if(!isset($data['question_text'])){
                 return false;
             }
+            
             if(!$level->canEditQuestion()){
                 $this->flasher->notify(
                     __('messages.validation.not_allow.question_update'),
@@ -54,6 +53,7 @@ class QuestionService
                 );
                 return false;
             }
+            
             if($level->status != Level::STATUS_PENDING){
                 $this->flasher->notify(
                     __('messages.validation.not_allow.active_level_update'),
@@ -80,7 +80,7 @@ class QuestionService
                     ];
                 })->toArray();
                 
-                $this->questionRepository->insert($questions);
+                Question::insert($questions);
                 return true;
             });
 
@@ -103,7 +103,11 @@ class QuestionService
     public function update(Question $question, array $data): bool
     {
         try {
-            $level = $this->questionRepository->findOrFailLevel($question->level_id);
+            $level = $question->level;
+
+            if(!$level){
+                return false;
+            }
             
             if(!$level->canEditQuestion()){
                 $this->flasher->notify(
@@ -121,7 +125,7 @@ class QuestionService
             }
 
             $result = $this->transactionManager->run(function () use ($question, $data) {
-                return $this->questionRepository->update($question, $data);
+                return $question->update($data);
             });
 
             $this->flasher->notifyCrudResult(true, "saved");

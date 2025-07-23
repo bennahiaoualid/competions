@@ -4,7 +4,6 @@ namespace Tests\Unit\Services\Competition;
 
 use Bus;
 use Mockery;
-use Mockery\Mock;
 use Tests\TestCase;
 use App\Models\User;
 use App\Models\Admin\Admin;
@@ -12,7 +11,6 @@ use App\Helpers\UserNotifyEmail;
 use App\Models\Competition\Level;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Competition\Competition;
-use App\Jobs\Competition\SafeDeleteAuditorJob;
 use App\Services\Competition\CompetitionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Jobs\Competetion\SyncCompetitionParticipants;

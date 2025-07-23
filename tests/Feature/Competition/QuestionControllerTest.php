@@ -25,7 +25,7 @@ class QuestionControllerTest extends TestCase
         
         // Create a level
         $this->level = Level::factory()->create([
-            'status' => 0 // Inactive level
+            'status' => 'pending' // Inactive level
         ]);
 
         // Create a question
@@ -41,7 +41,6 @@ class QuestionControllerTest extends TestCase
     {
         // Arrange
         $data = [
-            'level_id' => $this->level->id,
             'question_text' => ['New Question 1', 'New Question 2'],
             'duration' => [30, 45],
             'max_score' => [10, 15]
@@ -79,7 +78,7 @@ class QuestionControllerTest extends TestCase
     public function test_store_questions_active_level_failure()
     {
         // Arrange
-        $this->level->update(['status' => 1]); // Make level active
+        $this->level->update(['status' => 'active']); // Make level active
         $data = [
             'level_id' => $this->level->id,
             'question_text' => ['New Question'],
@@ -169,7 +168,7 @@ class QuestionControllerTest extends TestCase
     public function test_update_question_active_level_failure()
     {
         // Arrange
-        $this->level->update(['status' => 1]); // Make level active
+        $this->level->update(['status' => 'active']); // Make level active
         $data = [
             'question_text' => 'Updated Question',
             'duration' => 45,

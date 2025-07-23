@@ -42,7 +42,7 @@ class QuestionController extends Controller
      */
     function store(StoreQuestionRequest $request, Level $level): RedirectResponse
     {
-        $this->questionService->create($request->all(),$level);
+        $this->questionService->create($request->validated(),$level);
         return Redirect::back();
     }
 

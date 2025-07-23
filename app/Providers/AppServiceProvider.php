@@ -91,10 +91,8 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // question
-        $this->app->bind(QuestionRepositoryInterface::class, QuestionRepository::class);
         $this->app->bind(QuestionService::class, function ($app) {
             return new QuestionService(
-                $app->make(QuestionRepositoryInterface::class),
                 $app->make(TransactionManagerInterface::class),
                 $app->make(FlasherInterface::class)
             );
