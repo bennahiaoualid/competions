@@ -32,7 +32,7 @@
                 {{__('competition.global.condition.final_score')}}
             </li>
             <li class="flex justify-center">
-                @if(\Illuminate\Support\Facades\Auth::guard('web')->check() && ! \Illuminate\Support\Facades\Auth::user()->guest)
+                @if(\Illuminate\Support\Facades\Auth::guard('web')->check())
                     <x-button form="add-form" color_type="success"
                               :islink="true" href="{{route('user.global_questions.response')}}">
                         {{ __('form.actions.start') }}

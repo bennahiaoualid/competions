@@ -2,9 +2,11 @@
 
 namespace App\Models\GuestUsers;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\GuestUsers\GlobalQuestion;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * 
@@ -64,5 +66,15 @@ class GlobalResponse extends Model
     public function choice(): BelongsTo
     {
         return $this->belongsTo(Choice::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function question(): BelongsTo
+    {
+        return $this->belongsTo(GlobalQuestion::class);
     }
 }

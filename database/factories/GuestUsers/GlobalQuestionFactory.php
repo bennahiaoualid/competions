@@ -30,7 +30,7 @@ class GlobalQuestionFactory extends Factory
             'score' => $this->faker->numberBetween(1, 10),
             'duration' => $this->faker->numberBetween(30, 90), // Duration in seconds
             'admin_id' => Admin::factory(), // The admin who created the question
-            'approved' => $this->faker->optional(0.8)->randomElement(Admin::factory(1)->create()->pluck('id')->toArray()), // 80% chance to be approved by an admin, otherwise null
+            'approved' => null, // Don't create extra admins by default
             'deleted_admin_name' => null,
         ];
     }

@@ -40,7 +40,7 @@
             </x-collapsible-card>
         @endforeach
         <div class="mt-6">
-            {{ $questions->links() }}
+            <x-pagination :paginator="$questions" />
         </div>
     </div>
 

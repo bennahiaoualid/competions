@@ -91,6 +91,7 @@
                             {{__('links.competition.competitions')}}
                         </a>
                     </li>
+                    
                     @if(\Illuminate\Support\Facades\Auth::guard('web')->check() && ! \Illuminate\Support\Facades\Auth::user()->guest)
                         <li>
                             <a href="{{route('user.competitions')}}" class="{{request()->routeIs('user.competitions*') ? $active_class : $inactive_classes}}">
@@ -103,7 +104,7 @@
                             {{__('links.global_user.global_questions')}}
                         </a>
                     </li>
-                    @if(\Illuminate\Support\Facades\Auth::guard('web')->check() && ! \Illuminate\Support\Facades\Auth::user()->guest)
+                    @if(\Illuminate\Support\Facades\Auth::guard('web')->check())
                         <li>
                             <a href="{{route('user.global_questions.responses')}}" class="{{request()->routeIs('user.global_questions.responses') ? $active_class : $inactive_classes}}">
                                 {{__('links.global_user.global_responses')}}

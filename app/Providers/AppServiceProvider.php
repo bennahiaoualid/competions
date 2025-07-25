@@ -29,6 +29,7 @@ use App\Repository\GuestUsers\UserGuestRepository;
 use App\Repository\User\UserCompetitionRepository;
 use App\Services\GuestUsers\GlobalQuestionService;
 use App\Repository\Competition\CompetitionRepository;
+use App\Services\CashManagment\GuestUserCacheService;
 use App\Interface\Competition\AuditRepositoryInterface;
 use App\Interface\Competition\LevelRepositoryInterface;
 use App\Repository\GuestUsers\GlobalQuestionRepository;
@@ -37,8 +38,8 @@ use App\Interface\Competition\QuestionRepositoryInterface;
 use App\Interface\GuestUsers\UserGuestRepositoryInterface;
 use App\Interface\Monitoring\JobTrackingStrategyInterface;
 use App\Interface\User\UserCompetitionRepositoryInterface;
-use App\Repository\Monitoring\InMemoryJobTrackingStrategy;
 use App\Repository\Monitoring\DatabaseJobTrackingStrategy;
+use App\Repository\Monitoring\InMemoryJobTrackingStrategy;
 use App\Interface\Competition\CompetitionRepositoryInterface;
 use App\Interface\GuestUsers\GlobalQuestionRepositoryInterface;
 
@@ -127,7 +128,11 @@ class AppServiceProvider extends ServiceProvider
         // user global questions
         $this->app->bind(UserGuestRepositoryInterface::class, UserGuestRepository::class);
         $this->app->bind(UserGuestService::class, function ($app) {
-            return new UserGuestService($app->make(UserGuestRepositoryInterface::class));
+            return new UserGuestService(
+                $app->make(UserGuestRepositoryInterface::class),
+                $app->make(FlasherInterface::class),
+                $app->make(TransactionManagerInterface::class),
+            );
         });
 
         // transaction manager
