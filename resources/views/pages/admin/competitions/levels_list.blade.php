@@ -4,7 +4,7 @@
         <thead>
         <tr>
             <th class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-center">
-               {{__('competition.level.name')}}
+                {{__('competition.level.name')}}
             </th>
             <th class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-center">
                 {{__('competition.info.start_date')}}
@@ -30,26 +30,30 @@
                 {{Carbon\Carbon::parse($level->start_date)->timezone(session('timezone'))}}
             </td>
             <td class="border-t-0 px-6 align-center border-l-0 border-r-0 text-xs whitespace-nowrap p-4" >
-                <x-status-widget :status="$level->getStatus()"
-                                 :text="__('competition.info.status.'.$level->getStatus())" />
+                <x-status-widget :status="$level->status"
+                                :text="__('competition.info.status.'.$level->status)" />
             </td>
             <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-center">
                 {{$level->questions_number}}
             </td>
             <td class="flex gep-4 justify-center">
                 <x-button :islink="true" color_type="info" size="sm" title="permissions"
-                          :outline="true" href='{{route("admin.competitions.level.edit", ["id" => base64_encode($level->id)])}}' target="_blank">
+                        :outline="true" href='{{route("admin.competitions.level.edit", ["id" => base64_encode($level->id)])}}' target="_blank">
                     <x-slot:icon>
                         <i class="fa-regular fa-pen-to-square"></i>
                     </x-slot:icon>
                 </x-button>
                 @if($competition->canEdit())
-                <x-button :islink="true" color_type="danger" size="sm" title="delete"
-                          :outline="true" href='{{route("admin.competitions.level.delete", ["id" => base64_encode($level->id)])}}'>
-                    <x-slot:icon>
-                        <i class="fa-solid fa-trash fa-fw"></i>
-                    </x-slot:icon>
-                </x-button>
+                    <form action="{{route("admin.competitions.level.delete", ["level" => $level])}}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <x-button :islink="false" color_type="danger" size="sm" title="delete"
+                            :outline="true" type="submit">
+                        <x-slot:icon>
+                            <i class="fa-solid fa-trash fa-fw"></i>
+                        </x-slot:icon>
+                        </x-button>
+                    </form>
                 @endif
             </td>
         </tr>

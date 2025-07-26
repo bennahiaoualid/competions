@@ -11,7 +11,7 @@ class StoreResponseRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth('web')->check();
+        return true;
     }
 
     /**
@@ -29,8 +29,8 @@ class StoreResponseRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'choice_id' => 'integer|exists:choices,id',
-            'question_id' => 'integer|exists:global_questions,id'
+            'choice_id' => 'required|integer|exists:choices,id',
+            'question_id' => 'required|integer|exists:global_questions,id'
         ];
     }
 }

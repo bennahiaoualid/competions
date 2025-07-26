@@ -37,7 +37,7 @@ class StoreLevelRequest extends FormRequest
             'start_date' => 'required|date_format:Y-m-d H:i|after_or_equal:now',
             'duration' => 'required|integer|min:1',
             'questions_number' => 'required|integer|min:1',
-            'admin_id' => 'exists:admins,id',
+            'admin_id' => 'required|integer|exists:admins,id',
         ];
     }
 

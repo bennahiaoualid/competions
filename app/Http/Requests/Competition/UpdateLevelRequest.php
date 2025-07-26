@@ -14,7 +14,7 @@ class UpdateLevelRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->level->canEdit();
     }
 
     /**
@@ -32,7 +32,7 @@ class UpdateLevelRequest extends FormRequest
     public function rules(): array
     {
         // Fetch the original competition from the database
-        $level = Level::find($this->id);
+        $level = $this->level;
 
         $rules = [
             'name' => 'required|string|min:3|max:40',

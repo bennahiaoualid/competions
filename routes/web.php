@@ -53,14 +53,16 @@ Route::group(
         Route::patch('/profile', [UserProfileController::class, 'update'])->name('profile.update');
         Route::delete('/profile', [UserProfileController::class, 'destroy'])->name('profile.destroy');
 
-        Route::get( '/competitions/{user}', [\App\Http\Controllers\User\UserCompetitionController::class, "all"])->name('competitions');
-        Route::post( '/competitions/{user}', [\App\Http\Controllers\User\UserCompetitionController::class, "all"])->name('competitions');
-
         Route::middleware('auth_competitor')->group(function (){
-            Route::get('/competition/response/{id}', [\App\Http\Controllers\User\UserCompetitionController::class, 'levelStart'])->name('competitions.level.response');
-            Route::post('/competition/response/store', [\App\Http\Controllers\User\UserCompetitionController::class, 'storeResponse'])->name('competitions.level.response.store');
-            Route::get('/competition/user/responses/{id}', [\App\Http\Controllers\User\UserCompetitionController::class, 'userResponses'])->name('competitions.response');
-
+            Route::get( '/user/competitions', [\App\Http\Controllers\User\UserCompetitionController::class, "getUserCompetitions"])->name('competitions');
+            Route::post( '/user/competitions', [\App\Http\Controllers\User\UserCompetitionController::class, "getUserCompetitions"])->name('competitions.filtred');
+            Route::get('/competition/{level}/response', [\App\Http\Controllers\User\UserCompetitionController::class, 'beginUserLevelAttempt'])->name('competitions.level.response');
+            Route::post('/competition/{question}/response/store', [\App\Http\Controllers\User\UserCompetitionController::class, 'storeResponse'])->name('competitions.level.response.store');
+            Route::get('/competition/user/{level}/responses', [\App\Http\Controllers\User\UserCompetitionController::class, 'userResponses'])->name('competitions.response');
+            Route::post('/record-tab-switch', function () {
+                session(['tab_switched' => true]);
+                return response()->json(['ok' => true]);
+            });
         });
         // global questions
         Route::get('/questions/response/', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'getRandomQuestion'])->name('global_questions.response');
@@ -70,25 +72,23 @@ Route::group(
 
     });
 
-    Route::get( '/competitions', [\App\Http\Controllers\User\UserCompetitionController::class, "all"])->name('competitions');
-    Route::Post( '/competitions/{user?}', [\App\Http\Controllers\User\UserCompetitionController::class, "all"])->name('competitions');
+    Route::get( '/competitions', [\App\Http\Controllers\User\UserCompetitionController::class, "getAllPublicCompetitions"])->name('competitions');
+    Route::Post( '/competitions', [\App\Http\Controllers\User\UserCompetitionController::class, "getAllPublicCompetitions"])->name('competitions.filtred');
 
 
-    Route::get('/competition/{id}', [\App\Http\Controllers\User\UserCompetitionController::class, 'competitionDetail'])->name('competitions.detail');
-    Route::get('/competition/{id}/competitors-order', [\App\Http\Controllers\User\UserCompetitionController::class, 'competitorsCompetitionOrder'])->name('competitions.order');
-    Route::get('/competition/level/{id}', [\App\Http\Controllers\User\UserCompetitionController::class, 'levelDetail'])->name('competitions.level');
-    Route::get('/competition/level/{id}/competitors-order', [\App\Http\Controllers\User\UserCompetitionController::class, 'competitorsLevelOrder'])->name('competitions.level.order');
+    Route::get('/competition/{competition}', [\App\Http\Controllers\User\UserCompetitionController::class, 'competitionDetail'])->name('competitions.detail');
+    Route::get('/competition/{competition}/competitors-order', [\App\Http\Controllers\User\UserCompetitionController::class, 'competitorsCompetitionOrder'])->name('competitions.order');
+    Route::get('/competition/level/{level}', [\App\Http\Controllers\User\UserCompetitionController::class, 'levelDetail'])->name('competitions.level');
+    Route::get('/competition/level/{level}/competitors-order', [\App\Http\Controllers\User\UserCompetitionController::class, 'competitorsLevelOrder'])->name('competitions.level.order');
 
     // global questions
-    Route::get('/questions/',[\App\Http\Controllers\GuestUsers\UserGuestController::class, 'index'])->name('global_questions.index');
+    Route::get('/questions',[\App\Http\Controllers\GuestUsers\UserGuestController::class, 'index'])->name('global_questions.index');
     Route::get('/global-order', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'globalUsersOrder'])->name('global_questions.global_order');
 
+    // Include notification routes inside localization middleware
+    require __DIR__.'/notification.php';
 
     require __DIR__.'/auth.php';
-
 });
-
-
-
 
 require base_path('/routes/admin.php');

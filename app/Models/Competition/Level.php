@@ -11,9 +11,47 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * 
+ *
+ * @property int $id
+ * @property string $name
+ * @property string|null $description
+ * @property int $competition_id
+ * @property int $admin_id
+ * @property int $questions_number
+ * @property \Illuminate\Support\Carbon $start_date
+ * @property int $duration
+ * @property string $status inactive,active,finished
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Admin $admin
+ * @property-read \App\Models\Competition\Competition $competition
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Competition\Question> $questions
+ * @property-read int|null $questions_count
+ * @method static \Database\Factories\Competition\LevelFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Level newModelQuery()
+ * @method static Builder<static>|Level newQuery()
+ * @method static Builder<static>|Level query()
+ * @method static Builder<static>|Level whereAdminId($value)
+ * @method static Builder<static>|Level whereCompetitionId($value)
+ * @method static Builder<static>|Level whereCreatedAt($value)
+ * @method static Builder<static>|Level whereDescription($value)
+ * @method static Builder<static>|Level whereDuration($value)
+ * @method static Builder<static>|Level whereId($value)
+ * @method static Builder<static>|Level whereName($value)
+ * @method static Builder<static>|Level whereQuestionsNumber($value)
+ * @method static Builder<static>|Level whereStartDate($value)
+ * @method static Builder<static>|Level whereStatus($value)
+ * @method static Builder<static>|Level whereUpdatedAt($value)
+ * @mixin \Eloquent
+ */
 class Level extends Model
 {
     use HasFactory;
+    const STATUS_PENDING = 'pending';
+    const STATUS_ACTIVE = 'active';
+    const STATUS_FINISHED = 'finished';
 
     /**
      * The attributes that are mass assignable.
@@ -41,6 +79,7 @@ class Level extends Model
         return [
             'start_date' => 'datetime',
             'duration' => 'integer',
+            'questions_number' => 'integer',
         ];
     }
 
@@ -70,25 +109,11 @@ class Level extends Model
     }
 
     /**
-     * get status
-     */
-    public function getStatus() : string{
-        switch ($this->status){
-            case 1 : $st =  'active';
-                break;
-            case 0 : $st = 'inactive';
-                break;
-            case 2 : $st = 'finished';
-        }
-        return $st;
-    }
-
-    /**
      * return true if the level is active and still not pass the duration
      */
     public function isStillActive() : bool{
         $endTime = $this->start_date->copy()->addMinutes($this->duration);
-        return  ($this->status == 1 && $endTime->greaterThan(now()));
+        return  ($this->status == self::STATUS_ACTIVE && $endTime->greaterThan(now()));
     }
 
     /**
@@ -116,39 +141,6 @@ class Level extends Model
     }
 
     /**
-     * check if the timing of the new level is conflict with the previews level in the same competition
-     * @return boolean
-     */
-    public static function hasTimeConflict($competitionId, $newStartDate, $newDuration , $exclude_id = null):bool
-    {
-        $newStartDate = Carbon::parse($newStartDate);
-        $newDuration = intval($newDuration);
-        $newEndDate = $newStartDate->copy()->addMinutes($newDuration);
-
-        $existingLevels = self::where('competition_id', $competitionId)->get();
-
-        foreach ($existingLevels as $level) {
-            if($exclude_id != null && $level->id == $exclude_id) {
-                continue;
-            }
-                $levelStartDate = $level->start_date;
-                $levelEndDate = $level->start_date->copy()->addMinutes($level->duration);
-                // Check if the new level overlaps with the existing level
-                if (
-                    ($newStartDate->between($levelStartDate, $levelEndDate)) ||
-                    ($newEndDate->between($levelStartDate, $levelEndDate)) ||
-                    ($levelStartDate->between($newStartDate, $newEndDate)) ||
-                    ($levelEndDate->between($newStartDate, $newEndDate))
-                ) {
-                    return true; // Conflict found
-                }
-
-        }
-
-        return false; // No conflict
-    }
-
-    /**
      * methode check if all earliest level are already finished .
      * @return bool
      */
@@ -162,7 +154,7 @@ class Level extends Model
     }
 
     /**
-     * methode check if if the previous finished level already being audition .
+     * methode check if  the previous finished level already being audited .
      * @return bool
      */
     public function isThePreviousAudit(): bool

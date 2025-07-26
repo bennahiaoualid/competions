@@ -16,22 +16,34 @@ return [
             'saved' => 'data have been saved',
             'updated' => 'data have been updated',
             'deleted' => 'data have been deleted',
+            'restored' => 'data have been restored',
             'activated' => 'activation done',
             'finish' => 'finish operation done',
             'response_audited' => 'response number :number score updated',
             'approved' => 'approved',
+            'response_audited' => 'response number :number has been audited',
+            'hard_deleted' => 'entity has been permanently deleted',
         ],
         'fail' =>[
             'saved' => 'something went wrong while saving',
             'updated' => 'something went wrong while updating',
             'deleted' => 'something went wrong while deleting',
+            'restored' => 'something went wrong while restoring',
             'activated' => 'activation failed',
             'something_went_wrong' => 'something went wrong',
             'finish' => 'finish operation failed',
             'approved' => 'approve fail',
+            'hard_deleted' => 'something went wrong while permanently deleting',
+        ],
+        'info' => [
+            'saved' => 'save operation is in progress',
+            'updated' => 'update operation is in progress',
+            'deleted' => 'delete operation is in progress',
+            'restored' => 'restore operation is in progress',
         ],
         '404' => [
             'user' => 'user not found',
+            'competition' => 'competition not found',
         ],
         'not_allow' => [
             'user_delete' => 'you have no permission to delete a user who doesnt created by you',
@@ -43,6 +55,7 @@ return [
             "competition_max_levels" => 'competition has maximum levels number',
             'active_level_update' => 'you cant update a level that already activated',
             'question_update' => 'you have no permission to update or create a question for level you are not responsible on it',
+            'question_update_max_number' => 'you cant add more than :number questions',
             'active_level_question_update' => 'you cant update or create a question for level already activated',
             'competition_activate_less_auditor' => 'competition cant activate, should at least 1 auditor',
             'competition_activate_less_competitors' => 'competition cant activate, should at least has 3 competitors',
@@ -59,7 +72,10 @@ return [
             'audit_score_greater_then_max' => 'you cant update response number :number because the giving score greater then question max score',
             'remove_auditor_only_one' => 'you cant delete the only auditor in a competition',
             'global_question_choices' => 'choices number should be at between 2 or 5 choices',
+            'not_authorized' => 'you are not authorized to proceed this action',
         ],
+        'invalid_deletion_type' => 'Invalid deletion type. This operation is not allowed for this entity type.',
+        'insufficient_permissions' => 'You do not have sufficient permissions to perform this action.',
         'contact' => 'contact administrator',
     ],
     'alert'=>[
@@ -79,11 +95,16 @@ return [
             'leave_without_response'=>'closing the browser or leaving the page mark your response as empty',
             'you_cant_change_audited_responses' => 'you cant change the giving scores after saving',
             'response_final_score_calc' => 'final score = score - (response duration / duration * (score / 2))',
+            'response_penalty_calc' => 'the score will by decreased by percentage of the penalty',
             'delete_competition' => 'This process will remove competition and its information including levels competitors auditors and results, you cant undo ',
-            'correct_choice' => 'the first choice will be chose as the correct one'
+            'correct_choice' => 'the first choice will be chose as the correct one',
+            'hard_delete_warning' => 'This action will permanently delete the entity and all its associated data. This operation cannot be undone.',
+            'restore_confirmation' => 'This action will restore the entity and make it active again. Are you sure you want to proceed?',
+            'hard_delete_admin_alternative' => 'this admin will replace the deleted admin in all records such as users, admins, competitions, levels, questions, responses, results, etc.',
         ]
     ],
     'global' => [
+        'id' => 'ID',
         'no' => 'N°',
         'minute'=>'minute',
         'minutes'=>'minutes',
@@ -108,6 +129,9 @@ return [
         'text_dir' => 'text direction',
         'ltr' => 'left to right',
         'rtl' => 'right to left',
+        'action' => 'action',
+        'reason' => 'reason',
+        'choose' => 'choose'
     ],
     'mail' => [
         'welcome' => 'Welcome dear :user',
@@ -120,6 +144,13 @@ return [
         'new_auditor' => 'you have been added as an auditor in new Competition :competition',
         'finish_level' =>  'a competition that you are an auditor on it :competition has been finish the level :level you can start checking responses',
 
-    ]
-
+    ],
+    'permissions' => [
+        'assigned_successfully' => 'Permissions have been assigned successfully',
+        'revoked_successfully' => 'Permissions have been revoked successfully',
+        'assignment_failed' => 'Failed to assign permissions. Please try again.',
+        'revocation_failed' => 'Failed to revoke permissions. Please try again.',
+        'unauthorized' => 'You are not authorized to perform this action.',
+        'no_permissions_selected' => 'No permissions were selected.',
+    ],
 ];

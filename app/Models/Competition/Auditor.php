@@ -8,6 +8,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+/**
+ * 
+ *
+ * @property-read Admin|null $admin
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Competition\Competition> $auditCompetition
+ * @property-read int|null $audit_competition_count
+ * @property-read \App\Models\Competition\Competition|null $competition
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Auditor newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Auditor newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Auditor query()
+ * @mixin \Eloquent
+ */
 class Auditor extends Model
 {
     /**

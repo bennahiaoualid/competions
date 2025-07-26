@@ -5,13 +5,13 @@
         'info' => 'bg-cyan-500',
         'warning' => 'bg-yellow-500',
     ];
-     $typeClasses_dark = [
+    $typeClasses_dark = [
         'success' => 'bg-green-600',
         'danger' => 'bg-red-600',
         'info' => 'bg-cyan-600',
         'warning' => 'bg-yellow-600',
     ];
-      $typeClasses_icon = [
+    $typeClasses_icon = [
         'success' => 'text-green-600',
         'danger' => 'text-red-600',
         'info' => 'text-cyan-600',

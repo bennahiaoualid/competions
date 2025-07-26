@@ -10,8 +10,8 @@ class CollapsibleCard extends Component
     public $type;
     public $headerClass;
     public $contentClass;
-
-    public function __construct($title, $type = 'primary')
+    public $isopen;
+    public function __construct($title, $type = 'primary', $isopen = true)
     {
         $this->title = $title;
         $this->type = $type;
@@ -19,6 +19,7 @@ class CollapsibleCard extends Component
         // Assign Tailwind CSS classes based on type
         $this->headerClass = $this->getHeaderClass($type);
         $this->contentClass = $this->getContentClass($type);
+        $this->isopen = $isopen;
     }
 
     protected function getHeaderClass($type)

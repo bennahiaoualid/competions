@@ -31,15 +31,15 @@
                 {{-- user links drop down--}}
                 @auth("web")
                     <div class="relative flex items-center md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse"
-                         x-data="{ open: false, open_menu: false }" @click.outside="open = false" @close.stop="open = false">
+                        x-data="{ open: false, open_menu: false }" @click.outside="open = false" @close.stop="open = false">
                         <button type="button" class="flex text-sm bg-gray-800 rounded-full md:me-0 focus:ring-4 focus:ring-gray-300 " id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown" data-dropdown-placement="bottom"
                                 @click="open = ! open">
                             <span class="sr-only">Open user menu</span>
-                            <img class="w-8 h-8 rounded-full" src="/docs/images/people/profile-picture-3.jpg" alt="user photo">
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name ?? 'User') }}" alt="User Avatar" class="h-8 w-8 rounded-full">
                         </button>
                         <!-- Dropdown menu -->
                         <div class="z-50 absolute end-4 top-[100%] my-4 text-base list-none bg-white divide-y divide-gray-100 rounded-lg shadow" id="user-dropdown"
-                             x-show="open">
+                            x-show="open">
                             <div class="px-4 py-3">
                                 <span class="block text-sm text-gray-900 ">{{\Illuminate\Support\Facades\Auth::user()->name}}</span>
                                 <span class="block text-sm  text-gray-500 truncate ">{{\Illuminate\Support\Facades\Auth::user()->email}}</span>
@@ -91,9 +91,10 @@
                             {{__('links.competition.competitions')}}
                         </a>
                     </li>
+                    
                     @if(\Illuminate\Support\Facades\Auth::guard('web')->check() && ! \Illuminate\Support\Facades\Auth::user()->guest)
                         <li>
-                            <a href="{{route('user.competitions',['user'=>base64_encode(Auth::user()->anonymized_identifier)])}}" class="{{request()->routeIs('user.competitions') ? $active_class : $inactive_classes}}">
+                            <a href="{{route('user.competitions')}}" class="{{request()->routeIs('user.competitions*') ? $active_class : $inactive_classes}}">
                                 {{__('competition.info.user_auth')}}
                             </a>
                         </li>
@@ -103,7 +104,7 @@
                             {{__('links.global_user.global_questions')}}
                         </a>
                     </li>
-                    @if(\Illuminate\Support\Facades\Auth::guard('web')->check() && ! \Illuminate\Support\Facades\Auth::user()->guest)
+                    @if(\Illuminate\Support\Facades\Auth::guard('web')->check())
                         <li>
                             <a href="{{route('user.global_questions.responses')}}" class="{{request()->routeIs('user.global_questions.responses') ? $active_class : $inactive_classes}}">
                                 {{__('links.global_user.global_responses')}}

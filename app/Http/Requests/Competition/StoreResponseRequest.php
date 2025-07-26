@@ -11,7 +11,7 @@ class StoreResponseRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth('web')->check();
+        return true;
     }
 
     /**
@@ -30,7 +30,7 @@ class StoreResponseRequest extends FormRequest
     {
         return [
             'response_text' => 'nullable|string|min:3',
-            'question_id' => 'integer|exists:questions,id'
+            'keystrokes' => 'nullable|integer',
         ];
     }
 }

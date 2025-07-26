@@ -4,9 +4,10 @@ namespace App\Interface\GuestUsers;
 
 interface UserGuestRepositoryInterface
 {
-    public function welcome();
-    public function getRandomQuestion();
-    public function globalUsersOrder();
-    public function getGlobalUserResponse();
-
+    public function findChoice($choiceId);
+    public function createResponse(array $data);
+    public function updateResponse($responseId, array $data);
+    public function getLatestPendingResponse($questionId, $userId);
+    public function getUserRespondedQuestionsPaginated($userId);
+    public function findQuestion($questionId);
 }

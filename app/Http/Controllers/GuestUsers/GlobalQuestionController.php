@@ -24,7 +24,7 @@ class GlobalQuestionController extends Controller
      * @return View
      */
     function all() : View{
-        return $this->questionService->all();
+        return view("pages.admin.guest_users.global_question_list");
     }
 
     /**
@@ -34,7 +34,7 @@ class GlobalQuestionController extends Controller
      */
     function store(StoreQuestionRequest $request): RedirectResponse
     {
-        $this->questionService->create($request->all());
+        $this->questionService->create($request->validated());
         return Redirect::back();
     }
 
@@ -45,7 +45,7 @@ class GlobalQuestionController extends Controller
      */
     function approve(Request $request): RedirectResponse
     {
-        $question = GlobalQuestion::findorfail(base64_decode($request->id));
+        $question = GlobalQuestion::findorfail($request->id);
         $this->questionService->approve($question);
         return Redirect::back();
     }
@@ -57,7 +57,7 @@ class GlobalQuestionController extends Controller
      */
     function delete(Request $request): RedirectResponse
     {
-        $question = GlobalQuestion::findorfail(base64_decode($request->id));
+        $question = GlobalQuestion::findorfail($request->id);
         $this->questionService->delete($question);
         return Redirect::back();
     }

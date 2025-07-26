@@ -15,12 +15,15 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('description')->nullable();
-            $table->foreignId('admin_id')->constrained('admins');
+            $table->foreignId('admin_id')->nullable()->constrained('admins')->nullOnDelete();
             $table->dateTime('start_date');
-            $table->integer('age_start');
+            $table->integer('age_start')->index();
             $table->integer('age_end');
             $table->integer('levels_number');
-            $table->enum('status', [0,1,2])->default(0)->comment('inactive,active,finished');
+            $table->enum('status', ['pending','active','finished'])->default('pending')->index()->comment('pending,active,finished');
+            $table->enum('participants_sync_status', ['pending', 'in_progress', 'completed', 'failed'])->default('pending');
+            $table->boolean('is_suspended')->default(false)->index();
+            $table->timestamp('last_synced_at')->nullable();
             $table->timestamps();
         });
     }

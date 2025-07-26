@@ -3,14 +3,21 @@
 namespace App\Interface\Competition;
 
 use App\Models\Competition\Level;
+use Illuminate\Support\Collection;
 
 interface LevelRepositoryInterface
 {
-    function create(array $data);
-    function edit($id);
-    function update(Level $level , array $data);
-    function delete(Level $level);
-    function activateLevel($level_id);
-    function finishLevel($level_id);
+    public function create(array $data): Level;
 
+    public function update(Level $level, array $data): bool;
+
+    public function delete(Level $level): bool;
+
+    public function hasTimeConflict(int $competitionId, string $startDate, int $duration, ?int $excludeLevelId = null): bool;
+
+    public function insertMissingResponsesForLevel(Level $level, int $batchSize = 500): void;
+    
+    public function assignAuditorsToUsersInPivot(Level $level, Collection $users, Collection $auditors): void;
+
+    public function isAdminAllowedToBeLevelManager($adminId):bool;
 }

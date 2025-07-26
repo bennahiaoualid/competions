@@ -3,6 +3,8 @@
     'show' => false,
     'maxWidth' => '2xl',
     'id' => '',
+    'title_size' => 'text-2xl',
+    'inputValue' => ''
 ])
 
 @php
@@ -12,6 +14,7 @@
         'lg' => 'sm:max-w-lg',
         'xl' => 'sm:max-w-xl',
         '2xl' => 'sm:max-w-2xl',
+        'full' => 'sm:max-w-6xl',
     ][$maxWidth];
 @endphp
 
@@ -20,7 +23,8 @@
         show: @js($show),
         modalName: @js($name),
         modalId: @js($id), // Modal ID
-        inputValue: '',
+        inputValue: @js($inputValue),
+        payload:  {},
         focusables() {
             let selector = 'a, button, input:not([type=\'hidden\']), textarea, select, details, [tabindex]:not([tabindex=\'-1\'])';
             return [...$el.querySelectorAll(selector)]
@@ -42,7 +46,13 @@
         }
     })"
     {{--x-on:open-modal.window="modalName === $event.detail.detail ? show = true : null"--}}
-    x-on:open-modal.window="modalName === $event.detail.detail ? (show = true, inputValue = $event.detail.value) : null"
+    x-on:open-modal.window="
+        if (modalName === $event.detail.detail) {
+            show = true;
+            inputValue = $event.detail.value;
+            payload = $event.detail.input_detail;
+        }
+    "
     x-on:close-modal.window="$event.detail == '{{ $name }}' ? show = false : null"
     x-on:close.stop="show = false"
     x-on:keydown.escape.window="show = false"
@@ -68,7 +78,7 @@
 
     <div
         x-show="show"
-        class="mb-6 py-8 px-5 md:px-10 bg-white rounded border border-gray-400 overflow-hidden shadow-xl transform transition-all sm:w-full {{ $maxWidth }} mx-auto"
+        {{ $attributes->merge(['class' => 'mb-6 py-8 px-5 md:px-10 bg-white rounded border border-gray-400 overflow-hidden shadow-xl transform transition-all sm:w-full '. $maxWidth .' mx-auto']) }}
         x-transition:enter="ease-out duration-300"
         x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
         x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
@@ -76,7 +86,7 @@
         x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
         x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
     >
-        <h1 class="text-gray-800 text-2xl capitalize font-bold tracking-normal leading-tight mb-4">
+        <h1 class="text-gray-800 {{ $title_size }} capitalize font-bold tracking-normal leading-tight mb-4 text-center">
             {{ $modalhead }}
         </h1>
         <div class="p-2 ">

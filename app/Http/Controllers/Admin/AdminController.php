@@ -3,22 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\AuditUserResponsesScoreRequest;
 use App\Http\Requests\Admin\StoreAdminRequest;
 use App\Http\Requests\Admin\UpdateAdminRequest;
-use App\Http\Requests\Competition\FilterCompetitionRequest;
 use App\Models\Admin\Admin;
 use App\Services\Admin\AdminService;
 use App\Traits\CrudOperationNotificationAlert;
 use App\Traits\RoleManipulation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
-use Spatie\Permission\Models\Permission;
+use App\Contracts\FlasherInterface;
 
 
 class AdminController extends Controller
@@ -26,16 +21,25 @@ class AdminController extends Controller
     use CrudOperationNotificationAlert;
     use RoleManipulation;
     public function __construct(
-        protected AdminService $adminService
+        protected AdminService $adminService,
+        protected FlasherInterface $flasher
     ) {
     }
 
+    /**
+     * Display Admin Dashboard
+     */
     function index() : View{
-        return $this->adminService->index();
+        $data = $this->adminService->index();
+        return view("pages.admin.dashboard",$data);
     }
 
-    function getAdminList() : View{
-        return $this->adminService->all();
+    /**
+     * Display Admins List View
+     */
+    function getAdminListView() : View{
+        $data = $this->adminService->adminList();
+        return view("pages.admin.admins.list",$data);
     }
 
     function showActivity() : View{
@@ -47,21 +51,19 @@ class AdminController extends Controller
      *
      * @param StoreAdminRequest $request The incoming request containing admin data.
      */
-    function store(StoreAdminRequest $request) {
-        $result = $this->adminService->create($request->validated());
-
-        $notifications = $this->generateNotifications($result != false,"saved");
-
-        // Flash each message to the session
-        foreach ($notifications as $notification) {
-            session()->flash('messages', session('messages', collect())->push($notification));
-        }
-
-        return redirect()->route('admin.list');
+    function store(StoreAdminRequest $request) : RedirectResponse {
+        $this->adminService->create($request->validated());
+        // Notification handled in service
+        return redirect()->back();
     }
 
+
+    /**
+     * Display Admin Edit View
+     */
     function edit(Request $request){
-        return $this->adminService->edit($request->admin);
+        $data = $this->adminService->edit($request->admin);
+        return view("pages.admin.admins.edit-admin",$data);
     }
 
     /**
@@ -70,20 +72,7 @@ class AdminController extends Controller
      * @param UpdateAdminRequest $request The incoming request containing admin data.
      */
     function update(UpdateAdminRequest $request) : RedirectResponse {
-        $admin = Admin::find($request->id);
-        if ($admin){
-            $result = $this->adminService->update($admin,$request->validated());
-
-            $notifications = $this->generateNotifications($result,"updated");
-
-            // Flash each message to the session
-            foreach ($notifications as $notification) {
-                session()->flash('messages', session('messages', collect())->push($notification));
-            }
-        }
-        else{
-            $notifications = $this->generateCustomNotifications(__('messages.404.user'),"error");
-        }
+        $this->adminService->update($request->admin,$request->validated());
         return Redirect::back();
     }
 
@@ -93,32 +82,17 @@ class AdminController extends Controller
      * @return RedirectResponse
      */
     function delete(Request $request) : RedirectResponse {
-        $admin = Admin::findorfail($request->id);
-        $result = $this->adminService->delete($admin);
-        $notifications = $this->generateNotifications($result,"deleted");
-        foreach ($notifications as $notification) {
-            session()->flash('messages', session('messages', collect())->push($notification));
-        }
-        return Redirect::back();
-    }
-    function auditCompetitions(FilterCompetitionRequest $request) {
-        $data = $request->validated();
-        $data['get'] = $request->isMethod('get');
-        return $this->adminService->auditCompetitions($data);
-    }
+        
+        $request->validateWithBag('deleteAdmin',
+            [
+            'reason' => 'required|string|min:3|max:100'
+        ], [], [
+            'reason' => __('messages.global.reason')
+        ]);
+        
 
-    function auditUsers($level_id) {
-        return $this->adminService->auditUsers($level_id);
-    }
+        $this->adminService->delete($request->admin,$request->reason);
 
-    function auditUserResponses($level_id,$user_id) {
-        return $this->adminService->auditUserResponses($level_id, $user_id);
-    }
-    public function submitAudit(AuditUserResponsesScoreRequest $request){
-        $responses = $request->input('scores', []);
-        $user_id = Crypt::decrypt($request->input('user_id'));
-        $level_id = Crypt::decrypt($request->input('level_id'));
-        $this->adminService->submitAudit($responses, $user_id, $level_id);
         return Redirect::back();
     }
 

@@ -7,7 +7,7 @@
                 {{__('messages.global.order')}}
             </th>
             <th class="px-6 bg-slate-300 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-center">
-               {{__('competition.info.competitor')}}
+                {{__('competition.info.competitor')}}
             </th>
             <th class="px-6 bg-slate-300 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-center">
                 {{__('competition.response.score')}}
@@ -15,7 +15,7 @@
             @if(!$audit_finish)
                 <th>
                     <span class="px-2 py-0.5 bg-primary rounded-md text-white text-nowrap">
-                         {{__('competition.result.temp')}}
+                        {{__('competition.result.temp')}}
                     </span>
                 </th>
             @endif
@@ -44,8 +44,10 @@
         </tr>
         @endforeach
         </tbody>
-
     </table>
+    @if($users instanceof \Illuminate\Pagination\LengthAwarePaginator)
+        <x-pagination :paginator="$users" />
+    @endif
 </div>
 @else
     <div class="text-center">

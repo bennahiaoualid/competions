@@ -1,0 +1,69 @@
+<?php
+
+namespace App\Http\Controllers\Competition;
+
+use App\Models\User;
+use Illuminate\View\View;
+use App\Models\Competition\Level;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Redirect;
+use App\Services\Competition\AuditService;
+use App\Traits\CrudOperationNotificationAlert;
+use App\Http\Requests\Admin\AuditUserResponsesScoreRequest;
+use App\Http\Requests\Competition\FilterCompetitionRequest;
+
+class AuditController extends Controller
+{
+    use CrudOperationNotificationAlert;
+
+    public function __construct(
+        protected AuditService $auditService
+    ) {
+    }
+
+    /**
+     * Display competitions for audit with filtering
+     */
+    public function auditCompetitions(FilterCompetitionRequest $request): View
+    {
+        $competitions = $this->auditService->auditCompetitions($request->validated());
+        return view("pages.admin.admins.auditor.audited_competitions", compact('competitions'));
+    }
+
+    /**
+     * Display users for a specific level audit
+     */
+    public function auditUsers(Level $level): View
+    {
+        $data = $this->auditService->auditUsersList($level);
+        return view("pages.admin.admins.auditor.audited_users", $data);
+
+    }
+
+    /**
+     * Display user responses for audit
+     * 
+     */
+    public function auditUserResponses(Level $level, string $userId): View
+    {
+        
+        $data =  $this->auditService->auditUserResponses($level, $userId);
+        return view("pages.admin.admins.auditor.audited_user_responses_submit", $data);
+
+    }
+
+    /**
+     * Submit audit scores for user responses
+     */
+    public function submitAudit(AuditUserResponsesScoreRequest $request, Level $level, User $user): RedirectResponse
+    {
+        $result = $this->auditService->submitAudit(
+            $request->validated(),
+            $level,
+            $user
+        );
+
+        return Redirect::back();
+    }
+} 

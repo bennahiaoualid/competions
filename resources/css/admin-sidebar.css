@@ -1,0 +1,27 @@
+/* Admin Sidebar collapsed state styles */
+#sidebar.collapsed {
+    width: 4rem !important;
+}
+
+#sidebar.collapsed .sidebar-text,
+#sidebar.collapsed .sidebar-badge,
+#sidebar.collapsed .collapse-link-icon {
+    display: none;
+}
+
+#sidebar.collapsed hr {
+    display: none;
+}
+
+#sidebar.collapsed .me-3 {
+    margin-right: 0 !important;
+}
+
+/* Ensure icons stay centered when collapsed */
+#sidebar.collapsed nav ul li a {
+    justify-content: center;
+}
+
+#sidebar.collapsed nav ul li a i {
+    margin: 0 !important;
+} 

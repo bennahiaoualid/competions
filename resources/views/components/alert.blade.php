@@ -1,27 +1,13 @@
 @props([
     "type" => 'info',
     "outline" => false,
-    "size" => 'md',
     "closable" => false,
     "title" => '',
 ])
 
 @php
     $base_classes = "rounded-md p-4 mb-4 flex items-start";
-
-    // Size classes
-    switch ($size) {
-        case 'sm':
-            $size_classes = "text-sm";
-            break;
-        case 'lg':
-            $size_classes = "text-lg";
-            break;
-        case 'md':
-        default:
-            $size_classes = "text-base";
-            break;
-    }
+    $size_classes = "text-sm md:text-base";
 
     // Color classes based on type
     $color_classes = match($type) {
@@ -62,7 +48,7 @@
     </div>
     <div class="flex-1">
         @if($title)
-            <h4 class="font-bold">{{ $title }}</h4>
+            <h4 class="mb-2 font-bold capitalize text-sm md:text-base lg:text-lg">{{ $title }}</h4>
         @endif
         {{ $slot }}
     </div>

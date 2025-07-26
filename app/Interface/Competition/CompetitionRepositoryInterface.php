@@ -3,23 +3,11 @@
 namespace App\Interface\Competition;
 
 use App\Models\Competition\Competition;
-
+use App\Models\Admin\Admin;
 interface CompetitionRepositoryInterface
 {
-    function all();
-    function create(array $data);
-    function edit($id);
-    function update(Competition $competition , array $data);
-    function getCompetitionUsers($competition_id);
-    function removeCompetitionUser($competition_id, $user_id);
-    function addCompetitionUsers($competition_id, array $user_ids);
-    function getCompetitionAuditors($competition_id);
-    function addCompetitionAuditors($competition_id, array $auditor_ids);
-    function removeCompetitionAuditor($competition_id, $auditor_id);
-    function activateCompetition($competition_id);
-    function delete(Competition $competition);
-
-
-
-
+    function findById(int|string $id, bool $withLevels = false): ?Competition;
+    function update(Competition $competition , array $data): array;
+    function addUsersToCompetition(Competition $competition, array $user_ids): bool;
+    function addAuditorsToCompetition(Competition $competition, array $auditor_ids): bool;
 }

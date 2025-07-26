@@ -7,6 +7,32 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * 
+ *
+ * @property int $id
+ * @property string $question_text
+ * @property int $max_score
+ * @property int $duration
+ * @property int $level_id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Competition\Level $level
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Competition\Response> $responses
+ * @property-read int|null $responses_count
+ * @method static \Database\Factories\Competition\QuestionFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Question newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Question newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Question query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Question whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Question whereDuration($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Question whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Question whereLevelId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Question whereMaxScore($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Question whereQuestionText($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Question whereUpdatedAt($value)
+ * @mixin \Eloquent
+ */
 class Question extends Model
 {
     use HasFactory;

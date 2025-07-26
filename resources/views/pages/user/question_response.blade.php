@@ -53,10 +53,10 @@
             <!-- Your content for the second column -->
             <x-collapsible-card :title="__('competition.response.response')" type="info">
 
-                <form id="response_form" method="post" action="{{ route('user.competitions.level.response.store') }}" class="space-y-2">
+                <form id="response_form" method="post" action="{{ route('user.competitions.level.response.store',['question' => $question]) }}" class="space-y-2">
                     @csrf
                     @method('post')
-                    <input type="hidden" name="question_id" value="{{$question->id}}">
+                    <input type="hidden" name="keystrokes" id="keystrokes">
                     <div>
                         <x-input-label for="response_text" :value=" ucwords(__('competition.response.response_text'))" />
                         <x-text-area id="response_text" name="response_text"  class="mt-1 block w-full">
@@ -76,6 +76,14 @@
 
 @section('custom_js')
     <script>
+
+        // disable copy past
+        document.addEventListener('copy', e => e.preventDefault());
+        document.addEventListener('paste', e => e.preventDefault());
+        document.addEventListener('cut', e => e.preventDefault());
+        document.addEventListener('contextmenu', e => e.preventDefault());
+
+
         let isSubmitted = false;
 
         // Warn the user when they attempt to close the tab or browser
@@ -85,9 +93,26 @@
                 e.returnValue = "";
             }
         });
-        // Listen for form submission to prevent the warning on valid submission
-        document.getElementById('response_form').addEventListener('submit', function() {
-            isSubmitted = true; // Mark form as submitted
+
+        // lisners
+        let keystrokes = 0;
+
+        document.getElementById('response_text').addEventListener('keydown', () => keystrokes++);
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                sessionStorage.setItem('tab_switched', '1');
+            }
+        });
+
+        document.getElementById('response_form').addEventListener('submit', () => {
+            isSubmitted = true;
+            document.getElementById('keystrokes').value = keystrokes;
+
+            if (sessionStorage.getItem('tab_switched') === '1') {
+                fetch("/record-tab-switch", { method: 'POST', headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'} });
+            }
+            sessionStorage.removeItem('tab_switched');
         });
     </script>
 @endsection

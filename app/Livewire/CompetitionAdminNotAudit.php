@@ -54,7 +54,7 @@ final class CompetitionAdminNotAudit extends PowerGridComponent
             ->withCount('competitionsAudit') // Eager load the count of competitionsAudit
             ->whereDoesntHave('competitionsAudit', function ($q) {
                 $q->where('Competitions.id', $this->competition->id);
-            });
+            })->availableAsAuditor();
     }
 
     public function fields(): PowerGridFields
@@ -66,7 +66,7 @@ final class CompetitionAdminNotAudit extends PowerGridComponent
                     '<a target="_blank"
                     class="underline text-blue-600 hover:text-blue-800"
                     href="%s">%s</a>',
-                    route("admin.users.edit",["id" => e($admin->id)]),
+                    route("admin.edit",["id" => e($admin->id)]),
                     e($admin->name)
                 );
             })

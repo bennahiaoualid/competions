@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Competition;
 
 use App\Traits\TimeManipulation;
-use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 

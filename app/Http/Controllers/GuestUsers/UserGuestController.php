@@ -2,42 +2,65 @@
 
 namespace App\Http\Controllers\GuestUsers;
 
+use Illuminate\Contracts\View\View;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
+use App\Services\GuestUsers\UserGuestService;
 use App\Http\Requests\GuestUsers\StoreResponseRequest;
-use App\Repository\GuestUsers\UserGuestRepository;
 
-
+// The controller delegates all business logic to the service layer.
 class UserGuestController extends Controller
 {
-
     public function __construct(
-        protected UserGuestRepository $userGuestRepository
+        protected UserGuestService $userGuestService
     ) {
     }
 
-    public function index(): \Illuminate\Contracts\View\View
+    public function index(): View
     {
-        return $this->userGuestRepository->welcome();
+        return view('pages.user.guest_users.prepare');
     }
 
-    public function getRandomQuestion(): \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+    public function getRandomQuestion():  View|RedirectResponse
     {
-        return $this->userGuestRepository->getRandomQuestion();
+        $result =  $this->userGuestService->getRandomQuestion();
+
+        if($result['status'] === 'empty_question'){
+            return view('pages.user.guest_users.no_question');
+        }elseif($result['status'] === 'error'){
+            return redirect()->back();
+        }else{
+            $question = $result['question'];
+            return view('pages.user.guest_users.question_response', compact('question'));
+        }
     }
 
-    function storeResponse(StoreResponseRequest $request): \Illuminate\Contracts\View\View|\Illuminate\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse
+    function storeResponse(StoreResponseRequest $request): View|RedirectResponse
     {
-        return $this->userGuestRepository->storeResponse($request->validated());
+
+        $result =  $this->userGuestService->storeResponse($request->validated());
+        if($result['status'] === 'success'){
+            $data_result = $result['data_result'];
+            return view('pages.user.guest_users.response_score', compact('data_result'));
+        }else{
+            return redirect()->route('global_questions.index');
+        }
     }
 
-    function globalUsersOrder() : \Illuminate\Contracts\View\View
+    function globalUsersOrder() : View
     {
-        return $this->userGuestRepository->globalUsersOrder();
+        $users_data = $this->userGuestService->globalUsersOrder();
+        return view('pages.user.guest_users.global_order', $users_data);
     }
 
-    function getGlobalUserResponse()
+    function getGlobalUserResponse() : View|RedirectResponse
     {
-        return $this->userGuestRepository->getGlobalUserResponse();
+        $result = $this->userGuestService->getGlobalUserResponse();
+        if($result['status'] === 'success'){
+            $questions = $result['questions'];
+            return view('pages.user.guest_users.user_global_responses', compact('questions'));
+        }else{
+            return redirect()->back();
+        }
     }
-
 }

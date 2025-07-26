@@ -23,7 +23,7 @@
             @endphp
 
             <a class="{{"block w-fit mx-auto mt-2 px-4  rounded-full capitalize text-white py-0.5 ". $color}}"
-               href="{{ $users->url($user_page) }}">
+                href="{{ $users->url($user_page) }}">
                 {{__('messages.global.your_order') . ' : '. $user_rank . ' ' . __('messages.global.check') }}
             </a>
         @endif
@@ -82,7 +82,7 @@
                                 {{number_format($user->total_score,2)}}
                             </td>
                             <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-center">
-                                {{$user->total_time}}
+                                {{$user->total_duration}}
                             </td>
                         </tr>
                     @endforeach
@@ -103,7 +103,7 @@
 
     </div>
     <div class="mt-2">
-        {{$users->links()}}
+        <x-pagination :paginator="$users" />
     </div>
 
 @endsection

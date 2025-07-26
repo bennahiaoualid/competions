@@ -2,25 +2,84 @@
 
 namespace App\Models;
 
-use App\Models\Admin\Admin;
-use App\Models\Competition\Competition;
-use App\Models\Competition\Level;
-use App\Models\Competition\Response;
-use App\Models\GuestUsers\GlobalResponse;
 use Carbon\Carbon;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use App\Models\Admin\Admin;
 use Illuminate\Support\Str;
+use App\Models\Competition\Level;
 use Spatie\Activitylog\LogOptions;
+use App\Models\Competition\Response;
+use App\Models\Competition\Competition;
+use Illuminate\Notifications\Notifiable;
+use App\Models\GuestUsers\GlobalResponse;
+use Illuminate\Database\Eloquent\Builder;
+use App\Models\Monitoring\DeletionRequest;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+/**
+ * 
+ *
+ * @property int $id
+ * @property string $name
+ * @property string $email
+ * @property bool $guest
+ * @property int|null $admin_id
+ * @property string|null $birthdate
+ * @property string|null $gender
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property string $password
+ * @property string $anonymized_identifier
+ * @property string|null $remember_token
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Competition> $Competitions
+ * @property-read int|null $competitions_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activities
+ * @property-read int|null $activities_count
+ * @property-read Admin|null $admin
+ * @property-read int $age
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, GlobalResponse> $globalResponses
+ * @property-read int|null $global_responses_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Level> $levelAdminUser
+ * @property-read int|null $level_admin_user_count
+ * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
+ * @property-read int|null $notifications_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Response> $responses
+ * @property-read int|null $responses_count
+ * @method static Builder<static>|User eligibleForCompetition(int $ageMin, int $ageMax, ?int $competitionId = null)
+ * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
+ * @method static Builder<static>|User newModelQuery()
+ * @method static Builder<static>|User newQuery()
+ * @method static Builder<static>|User onlyTrashed()
+ * @method static Builder<static>|User query()
+ * @method static Builder<static>|User whereAdminId($value)
+ * @method static Builder<static>|User whereAnonymizedIdentifier($value)
+ * @method static Builder<static>|User whereBirthdate($value)
+ * @method static Builder<static>|User whereCreatedAt($value)
+ * @method static Builder<static>|User whereDeletedAt($value)
+ * @method static Builder<static>|User whereEmail($value)
+ * @method static Builder<static>|User whereEmailVerifiedAt($value)
+ * @method static Builder<static>|User whereGender($value)
+ * @method static Builder<static>|User whereGuest($value)
+ * @method static Builder<static>|User whereId($value)
+ * @method static Builder<static>|User whereName($value)
+ * @method static Builder<static>|User wherePassword($value)
+ * @method static Builder<static>|User whereRememberToken($value)
+ * @method static Builder<static>|User whereUpdatedAt($value)
+ * @method static Builder<static>|User withTrashed()
+ * @method static Builder<static>|User withoutTrashed()
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Competition> $competitions
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, DeletionRequest> $deletionRequests
+ * @property-read int|null $deletion_requests_count
+ * @mixin \Eloquent
+ */
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable , LogsActivity, SoftDeletes;
@@ -57,13 +116,6 @@ class User extends Authenticatable implements MustVerifyEmail
         static::creating(function ($user) {
             $user->anonymized_identifier = Str::uuid();
         });
-
-        static::updating(function ($user) {
-            if (!$user->anonymized_identifier) {
-                $user->anonymized_identifier = Str::uuid();
-            }
-        });
-
 
     }
 
@@ -103,7 +155,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * The roles that belong to the user.
      */
-    public function Competitions(): BelongsToMany
+    public function competitions(): BelongsToMany
     {
         return $this->belongsToMany(Competition::class);
     }
@@ -116,20 +168,37 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsTo(Admin::class);
     }
 
+    /**
+     * The levels that this user has access to.
+     */
     public function levelAdminUser(): BelongsToMany
     {
         return $this->belongsToMany(Level::class, 'level_admin_user', 'user_id', 'level_id')
             ->withPivot('admin_id');
     }
 
+    /**
+     * The responses that this user has made.
+     */
     public function responses(): HasMany
     {
         return $this->hasMany(Response::class);
     }
 
+    /**
+     * The global responses that this user has made.
+     */
     public function globalResponses(): HasMany
     {
         return $this->hasMany(GlobalResponse::class, 'user_id');
+    }
+
+    /**
+     * The deletion requests that this user has requested to be deleted.
+     */
+    public function deletionRequests()
+    {
+        return $this->morphMany(DeletionRequest::class, 'deletable');
     }
 
 
@@ -142,7 +211,7 @@ class User extends Authenticatable implements MustVerifyEmail
      * @param int|null $competitionId
      * @return Builder
      */
-    public function scopeEligibleForCompetition(Builder $query, int $ageMin, int $ageMax, int $competitionId = null) : Builder
+    public function scopeEligibleForCompetition(Builder $query, int $ageMin, int $ageMax, ?int $competitionId = null) : Builder
     {
         $currentDate = now()->toDateString();
 

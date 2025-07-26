@@ -35,12 +35,12 @@ class FilterCompetitionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => 'nullable|string|min:3|max:40',
-            'start_date_from' => 'nullable|date_format:Y-m-d',
-            'start_date_to' => 'nullable|date_format:Y-m-d',
-            'age_start' => 'nullable|integer|min:6',
-            'age_end' => 'nullable|integer|min:6',
-            'status' => 'nullable|in:0,1,2',
+            'title' => 'sometimes|string|min:3|max:40',
+            'start_date_from' => 'sometimes|date_format:Y-m-d',
+            'start_date_to' => 'sometimes|date_format:Y-m-d',
+            'age_start' => 'sometimes|integer|min:6',
+            'age_end' => 'sometimes|integer|min:6',
+            'status' => 'sometimes|in:pending,active,finished',
         ];
     }
 
@@ -54,21 +54,18 @@ class FilterCompetitionRequest extends FormRequest
                 }
             }
 
+            if ($this->start_date_to) {
+                $this->merge([
+                    'start_date_to' => $this->convertDateToUtc($this->start_date_to,"Y-m-d"),
+                ]);
+            }
+            if ($this->start_date_from) {
+                $this->merge([
+                    'start_date_from' => $this->convertDateToUtc($this->start_date_from, "Y-m-d"),
+                ]);
+            }
+
         });
     }
 
-    protected function prepareForValidation()
-    {
-        // Convert the start_date to UTC before validation
-        if ($this->start_date_to) {
-            $this->merge([
-                'start_date_to' => $this->convertDateToUtc($this->start_date_to,"Y-m-d"),
-            ]);
-        }
-        if ($this->start_date_from) {
-            $this->merge([
-                'start_date_from' => $this->convertDateToUtc($this->start_date_from, "Y-m-d"),
-            ]);
-        }
-    }
 }

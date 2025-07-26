@@ -44,13 +44,16 @@ final class CompetitionTable extends PowerGridComponent
         return PowerGrid::fields()
             ->add('title')
             ->add('created_by', function ($competition) {
-                return sprintf(
-                    '<a target="_blank"
-                    class="underline text-blue-600 hover:text-blue-800"
-                    href="%s">%s</a>',
-                    route("admin.edit",["id" => e($competition->admin->id)]),
-                    e($competition->admin->name)
-                );
+                if($competition->admin){
+                    return sprintf(
+                        '<a target="_blank"
+                        class="underline text-blue-600 hover:text-blue-800"
+                        href="%s">%s</a>',
+                        route("admin.edit",["id" => e($competition->admin->id)]),
+                        e($competition->admin->name)
+                    );
+                }
+                
             })
             ->add('start_date', function ($competition) {
                 return e(Carbon::parse($competition->start_date)->timezone(session('timezone')));
@@ -65,8 +68,8 @@ final class CompetitionTable extends PowerGridComponent
             ->add('levels_number')
             ->add('status', function ($competition) {
                 return Blade::render(
-                    '<x-status-widget status="'. $competition->getStatus().
-                    '" text="'.__('competition.info.status.'.$competition->getStatus()).'" />'
+                    '<x-status-widget status="'. $competition->status.
+                    '" text="'.__('competition.info.status.'.$competition->status).'" />'
                 );
             });
 

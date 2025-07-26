@@ -2,83 +2,104 @@
 
 namespace App\Http\Controllers\Competition;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Competition\StoreLevelRequest;
-use App\Http\Requests\Competition\UpdateLevelRequest;
+use Illuminate\View\View;
 use App\Models\Competition\Level;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
+use App\Models\Competition\Competition;
+use Illuminate\Support\Facades\Redirect;
 use App\Services\Competition\LevelService;
 use App\Traits\CrudOperationNotificationAlert;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\View\View;
+use App\Http\Requests\Competition\StoreLevelRequest;
+use App\Http\Requests\Competition\UpdateLevelRequest;
+use App\Interface\Competition\LevelRepositoryInterface;
 
 class LevelController extends Controller
 {
     use CrudOperationNotificationAlert;
+
     public function __construct(
-        protected LevelService $levelService
+        protected LevelService $levelService,
+        protected LevelRepositoryInterface $levelRepository
     ) {
     }
 
     /**
-     * Handles the updating of a competition request and returns a response with notifications.
+     * Handles the storage of a level request and returns a response.
      *
-     * @param StoreLevelRequest $request The incoming request containing admin data.
+     * @param StoreLevelRequest $request The incoming request containing level data.
+     * @param Competition $competition The competition instance resolved by route model binding.
+     * @return RedirectResponse
      */
-    function store(StoreLevelRequest $request) : RedirectResponse {
-        $this->levelService->create($request->all());
+    public function store(StoreLevelRequest $request, Competition $competition): RedirectResponse
+    {
+        $this->levelService->create($request->validated(), $competition);
         return Redirect::back();
     }
 
     /**
-     * navigate to view that display the level information.
+     * Navigate to view that displays the level information.
+     * @param string $encodedId The encoded ID of the level to edit.
+     * @return View|RedirectResponse
      */
-    function edit($id) : view{
-        return $this->levelService->edit($id);
+    public function edit(string $encodedId): View|RedirectResponse
+    {
+        $result = $this->levelService->getEditData($encodedId);
+        
+        if ($result['status'] === 'success') {
+            return view("pages.admin.competitions.edit.level_edit", [
+                'level' => $result['level'],
+                'admins' => $result['admins']
+            ]);
+        }
+        
+        return Redirect::back();
     }
 
     /**
-     * Handles the updating of a level request and returns a response with notifications.
+     * Handles the updating of a level request and returns a response.
      *
-     * @param UpdateLevelRequest $request The incoming request containing admin data.
+     * @param UpdateLevelRequest $request The incoming request containing level data.
+     * @param Level $level The level instance resolved by route model binding.
+     * @return RedirectResponse
      */
-    function update(UpdateLevelRequest $request) : RedirectResponse {
-        $level = Level::findorfail($request->id);
+    public function update(UpdateLevelRequest $request, Level $level): RedirectResponse
+    {
         $this->levelService->update($level, $request->validated());
         return Redirect::back();
     }
 
     /**
-     * Handles the deleting of a level request and returns a response with notifications.
+     * Handles the deleting of a level request and returns a response.
      *
-     * @param string $level_id The incoming request containing admin data.
+     * @param Level $level The level instance resolved by route model binding.
+     * @return RedirectResponse
      */
-    function delete(string $level_id) : RedirectResponse {
-        $level = Level::findorfail(base64_decode($level_id));
+    public function delete(Level $level): RedirectResponse
+    {
         $this->levelService->delete($level);
-
         return Redirect::back();
     }
 
     /**
-     * @param Request $request The incoming request containing level_id.
+     * Activates a level and returns a response.
+     * @param Level $level The level instance resolved by route model binding.
+     * @return RedirectResponse
      */
-    function activateLevel(Request $request): RedirectResponse
+    public function activateLevel(Level $level): RedirectResponse
     {
-        $this->levelService->activateLevel($request->level_id);
+        $this->levelService->activateLevel($level);
         return Redirect::back();
     }
 
     /**
-     * @param Request $request The incoming request containing level_id.
+     * Finishes a level and returns a response.
+     * @param Level $level The level instance resolved by route model binding.
+     * @return RedirectResponse
      */
-    function finishLevel(Request $request): RedirectResponse
+    public function finishLevel(Level $level): RedirectResponse
     {
-        $this->levelService->finishLevel($request->level_id);
+        $this->levelService->finishLevel($level);
         return Redirect::back();
     }
-
-
-
 }
