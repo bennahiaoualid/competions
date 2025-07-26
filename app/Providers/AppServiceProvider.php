@@ -120,9 +120,11 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // global questions
-        $this->app->bind(GlobalQuestionRepositoryInterface::class, GlobalQuestionRepository::class);
         $this->app->bind(GlobalQuestionService::class, function ($app) {
-            return new GlobalQuestionService($app->make(GlobalQuestionRepositoryInterface::class));
+            return new GlobalQuestionService(
+                $app->make(FlasherInterface::class),
+                $app->make(TransactionManagerInterface::class)
+            );
         });
 
         // user global questions

@@ -136,28 +136,19 @@ final class GlobalQuestionsTable extends PowerGridComponent
             Button::add('approve')
                 ->slot('<i class="fa-solid fa-check text-lg"></i>')
                 ->class('inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 px-2 py-0.5 text-xs bg-transparent text-success border-success hover:bg-success hover:text-white focus:bg-success focus:text-white active:bg-success active:text-white focus:ring-success')
-                ->route('admin.global_question.approve', ['id' =>base64_encode( $row->id)])
-            ->can(Auth::user()->hasRole(['super_admin','owner'], 'admin')),
+                ->dispatch('open-modal', ['detail' => 'approve', 'value' => $row->id])
+                ->can(
+                    $row->canDelete() && $row->approved == null
+                ),
             Button::add('delete_competitions')
                 ->slot(' <i class="fa-solid fa-unlock text-base"></i>')
                 ->class('inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 px-2 py-0.5 text-xs
             bg-transparent text-danger border-danger hover:bg-danger hover:text-white focus:bg-danger focus:text-white active:bg-danger active:text-white focus:ring-danger')
                 ->can($row->canDelete())
-                ->dispatch('open-modal', ['detail' => 'delete', 'value' => base64_encode( $row->id)]),
+                ->dispatch('open-modal', ['detail' => 'delete', 'value' => $row->id]),
 
         ];
     }
-
-
-    public function actionRules(): array
-    {
-        return [
-            Rule::button('approve')
-                ->when(fn($question) => $question->approved != null)
-                ->hide(),
-        ];
-    }
-
 
     public function template(): ?string
     {

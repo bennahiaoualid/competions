@@ -110,32 +110,61 @@
     </x-modal>
 
     <x-modal name="delete" title="My Modal" :show="false">
-            <x-slot:modalhead>
-                {{__("form.global_question.delete")}}
-            </x-slot>
-            <form id="delete-form" method="post" action="{{route("admin.global_question.delete")}}" class="space-y-2">
-                @csrf
-                @method('post')
+        <x-slot:modalhead>
+            {{__("form.global_question.delete")}}
+        </x-slot>
+        <form id="delete-form" method="post" action="{{route("admin.global_question.delete")}}" class="space-y-2">
+            @csrf
+            @method('DELETE')
 
-                <div>
-                    <input type="hidden" name="id" x-model="inputValue"/>
-                    <x-alert
-                        type="warning"
-                        outline="true"
-                        size="sm"
-                        :title="__('messages.alert.type.warning')"
-                    >
-                        {{__('form.actions.confirm_delete')}}
-                    </x-alert>
-                </div>
+            <div>
+                <input type="hidden" name="id" x-model="inputValue"/>
+                <x-alert
+                    type="warning"
+                    outline="true"
+                    size="sm"
+                    :title="__('messages.alert.type.warning')"
+                >
+                    {{__('form.actions.confirm_delete')}}
+                </x-alert>
+            </div>
 
-            </form>
-            <x-slot:modalfooter>
-                <div class="flex justify-end">
-                    <x-button form="delete-form" color_type="danger" >{{ __('form.actions.delete') }}</x-button>
-                </div>
-            </x-slot>
-        </x-modal>
+        </form>
+        <x-slot:modalfooter>
+            <div class="flex justify-end">
+                <x-button form="delete-form" color_type="danger" >{{ __('form.actions.delete') }}</x-button>
+            </div>
+        </x-slot>
+    </x-modal>
+
+    <x-modal name="approve" title="My Modal" :show="false">
+        <x-slot:modalhead>
+            {{__("form.global_question.approve")}}
+        </x-slot>
+        <form id="approve-form" method="post" action="{{route("admin.global_question.approve")}}" class="space-y-2">
+            @csrf
+            @method('PUT')
+
+            <div>
+                <input type="hidden" name="id" x-model="inputValue"/>
+                <x-alert
+                    type="info"
+                    outline="true"
+                    size="sm"
+                    :title="__('messages.alert.type.info')"
+                >
+                    {{__('form.actions.confirm_approve')}}
+                </x-alert>
+            </div>
+
+        </form>
+        <x-slot:modalfooter>
+            <div class="flex justify-end">
+                <x-button form="approve-form" color_type="success" >{{ __('form.actions.save') }}</x-button>
+            </div>
+        </x-slot>
+    </x-modal>
+
 
     <div class="overflow-x-auto max-w-[90vw] pt-2">
         <livewire:global-questions-table/>

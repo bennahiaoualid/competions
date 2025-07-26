@@ -29,7 +29,8 @@ return [
     ],
     'global_question' => [
         'add' => "add new global question",
-        'delete' => "delete global question"
+        'delete' => "delete global question",
+        'approve' => "approve global question"
     ],
     'job' => [
         'remove' => "remove jobs",
@@ -59,6 +60,7 @@ return [
         "restore" => "Restore",
         "actions" => "Actions",
         "confirm_delete" => "Are you sure to continue deleting this record",
+        'confirm_approve' => "Are you sure to continue approving this question",
         "confirm_competitor_add" => "Are you sure to add this competitors",
         'confirm_auditor_add' => 'Are you sure to add this auditors?',
         'confirm_job_remove' => 'Are you sure to remove this jobs?',

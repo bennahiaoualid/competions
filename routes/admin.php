@@ -4,8 +4,9 @@ use Livewire\Livewire;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Competition\AuditController;
 use App\Http\Controllers\Monitoring\MonitoringController;
-use App\Http\Controllers\Monitoring\DeletionRecordsController;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
+use App\Http\Controllers\GuestUsers\GlobalQuestionController;
+use App\Http\Controllers\Monitoring\DeletionRecordsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -113,11 +114,11 @@ Route::group(
             Route::post('/competitions/auditing/level/{level}/{user}/store', [AuditController::class, "submitAudit"])->name("auditor.users.responses.audit_score");
 
             // guest users == global questions
-            Route::get('/global-questions', [\App\Http\Controllers\GuestUsers\GlobalQuestionController::class, "all"])->name("global_questions");
-            Route::post('/global-questions/store', [\App\Http\Controllers\GuestUsers\GlobalQuestionController::class, "store"])->name("global_questions.store");
-            Route::post('/global-question/delete', [\App\Http\Controllers\GuestUsers\GlobalQuestionController::class, "delete"])->name("global_question.delete");
+            Route::get('/global-questions', [GlobalQuestionController::class, "all"])->name("global_questions");
+            Route::post('/global-questions/store', [GlobalQuestionController::class, "store"])->name("global_questions.store");
+            Route::delete('/global-question/delete', [GlobalQuestionController::class, "delete"])->name("global_question.delete");
             // global question ==> approve
-            Route::middleware('role:owner|super_admin')->get('/global-question/{id}/approve', [\App\Http\Controllers\GuestUsers\GlobalQuestionController::class, "approve"])->name("global_question.approve");
+            Route::middleware('role:owner|super_admin')->put('/global-question/approve', [GlobalQuestionController::class, "approve"])->name("global_question.approve");
 
             Route::get('/profile', [\App\Http\Controllers\Admin\AdminProfileController::class, 'edit'])->name('profile.edit');
            // Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

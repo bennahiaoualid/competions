@@ -54,6 +54,7 @@ class GlobalQuestion extends Model
         'question_text',
         'score',
         'duration',
+        'text_direction',
         'admin_id',
         'approved',
         'deleted_admin_name'

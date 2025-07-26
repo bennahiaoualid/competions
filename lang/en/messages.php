@@ -72,6 +72,7 @@ return [
             'audit_score_greater_then_max' => 'you cant update response number :number because the giving score greater then question max score',
             'remove_auditor_only_one' => 'you cant delete the only auditor in a competition',
             'global_question_choices' => 'choices number should be at between 2 or 5 choices',
+            'not_authorized' => 'you are not authorized to proceed this action',
         ],
         'invalid_deletion_type' => 'Invalid deletion type. This operation is not allowed for this entity type.',
         'insufficient_permissions' => 'You do not have sufficient permissions to perform this action.',
