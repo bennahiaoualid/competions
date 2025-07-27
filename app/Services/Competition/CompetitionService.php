@@ -14,6 +14,7 @@ use App\Traits\RegisterLogs; // For logging errors
 use App\Jobs\Competetion\SyncCompetitionParticipants;
 use App\Helpers\UserNotifyEmail; // For sending emails
 use App\Interface\Competition\CompetitionRepositoryInterface;
+use App\Services\Notification\CompetitionNotificationService;
 use App\Traits\CrudOperationNotificationAlert; // For notifications
 use App\Models\User; // For Auth::user() type hinting if specific methods are used
 
@@ -31,7 +32,8 @@ class CompetitionService
         protected CompetitionRepositoryInterface $competitionRepository,
         protected TransactionManagerInterface $transactionManager,
         protected FlasherInterface $flasher,
-        protected JobTrackingService $jobTrackingService
+        protected JobTrackingService $jobTrackingService,
+        protected CompetitionNotificationService $notificationService
     ) {
     }
 
@@ -64,6 +66,10 @@ class CompetitionService
             $result = $this->transactionManager->run(function () use ($data) {
                 $competition = Competition::create(array_merge($data, ['admin_id' => Auth::id()]));
                 SyncCompetitionParticipants::dispatch($competition)->afterCommit();
+                
+                // Send notification to eligible users
+                $this->notificationService->competitionCreated($competition);
+                
                 return true;
             });
             $this->flasher->crudSuccess('saved');
@@ -94,6 +100,8 @@ class CompetitionService
                     SyncCompetitionParticipants::dispatch($competition, isUpdate: true)->afterCommit();
                 } else {
                     UserNotifyEmail::usersUpdateCompetition($competition);
+                    // Send notification to competition users
+                    $this->notificationService->competitionUpdated($competition);
                 }
                 return true;
             });
@@ -286,6 +294,10 @@ class CompetitionService
                 $competition->start_date = now();
                 $competition->update(['status' => Competition::STATUS_ACTIVE]);
                 UserNotifyEmail::usersActivateCompetition($competition);
+                
+                // Send notification to competition users
+                $this->notificationService->competitionActivated($competition);
+                
                 return true;
             });
 

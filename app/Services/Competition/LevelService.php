@@ -14,6 +14,7 @@ use App\Jobs\Competition\FinishLevelJob;
 use App\Contracts\TransactionManagerInterface;
 use Illuminate\Support\Arr; // For Arr::except
 use App\Interface\Competition\LevelRepositoryInterface;
+use App\Services\Notification\CompetitionNotificationService;
 
 class LevelService
 {
@@ -22,7 +23,8 @@ class LevelService
     public function __construct(
         protected LevelRepositoryInterface $levelRepository,
         protected TransactionManagerInterface $transactionManager,
-        protected FlasherInterface $flasher
+        protected FlasherInterface $flasher,
+        protected CompetitionNotificationService $notificationService
     ) {
     }
 
@@ -55,6 +57,9 @@ class LevelService
 
             $level = $this->levelRepository->create(array_merge($data, ['competition_id' => $competition->id]));
             UserNotifyEmail::adminLevel($level);
+
+            // Send notification to competition users
+            $this->notificationService->levelCreated($competition, $level);
 
             $this->flasher->crudSuccess('saved');
             return true;
@@ -130,6 +135,9 @@ class LevelService
             if ($updated && $startDateChanged) {
                 UserNotifyEmail::usersUpdateLevel($competition, $level);
             }
+
+            // Send notification to competition users
+            $this->notificationService->levelUpdated($competition, $level);
 
             $this->flasher->crudSuccess('updated');
             return true;
@@ -222,6 +230,9 @@ class LevelService
             
             if ($updated) {
                 UserNotifyEmail::usersActivateLevel($competition, $level);
+                
+                // Send notification to competition users
+                $this->notificationService->levelActivated($competition, $level);
             }
 
             $this->flasher->crudSuccess('activated');
@@ -245,7 +256,12 @@ class LevelService
             $this->flasher->error(__('messages.validation.not_allow.level_finish_still_active'));
             return false;
         }
+        
         FinishLevelJob::dispatchSync($level);
+        
+        // Send notification to competition users
+        $this->notificationService->levelFinished($level->competition, $level);
+        
         return true;
     }
 }

@@ -15,7 +15,13 @@
         </head>
         <body>
             <div class="text-center space-y-4">
-                <h1 class="bg-primary py-2 uppercase text-center text-white">{{__('messages.mail.welcome',['user'=>$data['user']])}}</h1>
+                <h1 class="bg-primary py-2 uppercase text-center text-white">
+                    @if(isset($data['user']) && !empty($data['user']))
+                        {{__('messages.mail.welcome',['user'=>$data['user']])}}
+                    @else
+                        {{__('messages.mail.welcome_generic')}}
+                    @endif
+                </h1>
                 <p class="capitalize">
                     @if($data['object'] == 'competition')
                         {{__('messages.mail.'.$data['type'],['competition'=>$data['competition']])}}

@@ -97,7 +97,7 @@ return [
             'response_final_score_calc' => 'final score = score - (response duration / duration * (score / 2))',
             'response_penalty_calc' => 'the score will by decreased by percentage of the penalty',
             'delete_competition' => 'This process will remove competition and its information including levels competitors auditors and results, you cant undo ',
-            'correct_choice' => 'the first choice will be chose as the correct one',
+            'correct_choice' => 'the first choice will be chosen as the correct answer for this question',
             'hard_delete_warning' => 'This action will permanently delete the entity and all its associated data. This operation cannot be undone.',
             'restore_confirmation' => 'This action will restore the entity and make it active again. Are you sure you want to proceed?',
             'hard_delete_admin_alternative' => 'this admin will replace the deleted admin in all records such as users, admins, competitions, levels, questions, responses, results, etc.',
@@ -135,6 +135,7 @@ return [
     ],
     'mail' => [
         'welcome' => 'Welcome dear :user',
+        'welcome_generic' => 'Welcome dear participant',
         'new_competition' => 'you have been added to new Competition :competition as competitor',
         'update_competition' => 'a competition that you a competitor on it :competition has been updated',
         'admin_level' => 'you have been appointed as the administrator of level :level of competition :competition , you can now select questions',

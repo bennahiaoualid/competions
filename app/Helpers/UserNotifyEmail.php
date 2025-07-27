@@ -3,19 +3,18 @@
 namespace App\Helpers;
 
 
-use App\Mail\UserNotification;
 use App\Models\Admin\Admin;
-use App\Models\Competition\Competition;
-use App\Models\Competition\Level;
-use Illuminate\Support\Facades\Mail;
 use App\Jobs\SendBulkEmailJob;
+use App\Mail\UserNotification;
+use App\Models\Competition\Level;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use App\Models\Competition\Competition;
 
 class UserNotifyEmail
 {
     public static function usersNewCompetition(Competition $competition): void
     {
-        // Eager load users if not already loaded (best done when $competition is fetched)
-        // $competition->loadMissing('users');
 
         $competitionData = [
             'subject' => 'notify',
@@ -31,10 +30,14 @@ class UserNotifyEmail
                 return [$user->email => $user->name];
             })->all();
 
-            // Instead of Mail::to()->queue() for each user,
-            // dispatch a single job for the chunk.
-            // This job would then iterate and send or use BCC.
-            SendBulkEmailJob::dispatch($userEmailsWithNames, $competitionData, 'ar')->onQueue('emails');
+            Log::info('Sending bulk email job', [
+                'userEmailsWithNames' => $userEmailsWithNames,
+                'commonEmailData' => $competitionData,
+                'locale' => 'ar',
+                'usePersonalization' => false
+            ]);
+            // Use BCC for bulk user notifications (more efficient)
+            SendBulkEmailJob::dispatch($userEmailsWithNames, $competitionData, 'ar', false)->onQueue('emails');
         });
     }
 
@@ -55,7 +58,14 @@ class UserNotifyEmail
             $userEmailsWithNames = $usersChunk->mapWithKeys(function ($user) {
                 return [$user->email => $user->name];
             })->all();
-            SendBulkEmailJob::dispatch($userEmailsWithNames, $commonData, 'ar')->onQueue('emails');
+            Log::info('Sending bulk email job', [
+                'userEmailsWithNames' => $userEmailsWithNames,
+                'commonEmailData' => $commonData,
+                'locale' => 'ar',
+                'usePersonalization' => false
+            ]);
+            // Use BCC for bulk user notifications (more efficient)
+            SendBulkEmailJob::dispatch($userEmailsWithNames, $commonData, 'ar', false)->onQueue('emails');
         });
     }
 
@@ -76,7 +86,8 @@ class UserNotifyEmail
             $userEmailsWithNames = $usersChunk->mapWithKeys(function ($user) {
                 return [$user->email => $user->name];
             })->all();
-            SendBulkEmailJob::dispatch($userEmailsWithNames, $commonData, 'ar')->onQueue('emails');
+            // Use BCC for bulk user notifications (more efficient)
+            SendBulkEmailJob::dispatch($userEmailsWithNames, $commonData, 'ar', false)->onQueue('emails');
         });
     }
 
@@ -91,6 +102,7 @@ class UserNotifyEmail
             'object'=> 'level',
             'link' => route('admin.competitions.level.edit',['id'=>base64_encode($level->id)])
         ];
+        // Use personalized email for individual admin notifications
         Mail::to($level->admin->email)->queue(new UserNotification($data,'ar'));
     }
 
@@ -113,7 +125,8 @@ class UserNotifyEmail
                 return [$user->email => $user->name];
             })->all();
 
-            SendBulkEmailJob::dispatch($userEmailsWithNames, $commonData, 'ar')->onQueue('emails');
+            // Use BCC for bulk user notifications (more efficient)
+            SendBulkEmailJob::dispatch($userEmailsWithNames, $commonData, 'ar', false)->onQueue('emails');
         });
     }
 
@@ -128,7 +141,7 @@ class UserNotifyEmail
             'level' => $level->name,
             'type' => 'activate_level',
             'object' => 'level',
-            'link' => route('competitions.level', ['id' => base64_encode($level->id)])
+            'link' => route('competitions.level', ['level' => $level])
         ];
 
         $competition->users->chunk(100)->each(function ($usersChunk) use ($commonData) {
@@ -136,14 +149,13 @@ class UserNotifyEmail
                 return [$user->email => $user->name];
             })->all();
     
-            SendBulkEmailJob::dispatch($userEmailsWithNames, $commonData, 'ar')->onQueue('emails');
+            // Use BCC for bulk user notifications (more efficient)
+            SendBulkEmailJob::dispatch($userEmailsWithNames, $commonData, 'ar', false)->onQueue('emails');
         });
     }
 
     public static function auditorsfinishLevel(Competition $competition, Level $level): void
     {
-        // Eager load auditors if not already loaded
-        // $competition->loadMissing('auditors');
 
         $commonData = [
             'subject' => 'notify',
@@ -158,7 +170,8 @@ class UserNotifyEmail
             $auditorEmailsWithNames = $auditorsChunk->mapWithKeys(function ($auditor) {
                 return [$auditor->email => $auditor->name];
             })->all();
-            SendBulkEmailJob::dispatch($auditorEmailsWithNames, $commonData, 'ar')->onQueue('emails');
+            // Use BCC for bulk auditor notifications (more efficient)
+            SendBulkEmailJob::dispatch($auditorEmailsWithNames, $commonData, 'ar', false)->onQueue('emails');
         });
     }
 
@@ -179,7 +192,8 @@ class UserNotifyEmail
             $auditorEmailsWithNames = $auditorsChunk->mapWithKeys(function ($auditor) {
                 return [$auditor->email => $auditor->name]; // Assumes Admin model has email and name
             })->all();
-            SendBulkEmailJob::dispatch($auditorEmailsWithNames, $commonData, 'ar')->onQueue('emails');
+            // Use BCC for bulk auditor notifications (more efficient)
+            SendBulkEmailJob::dispatch($auditorEmailsWithNames, $commonData, 'ar', false)->onQueue('emails');
         });
     }
 }
