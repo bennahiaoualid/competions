@@ -2,35 +2,20 @@
 
 use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\User\UserProfileController;
-use App\Mail\UserNotification;
-use App\Models\Competition\Competition;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
-Route::get('/test',function (){
-    dd(Auth::check());
-      /*  $data = [
-            'subject' => 'notify',
-            'user' => "ddd",
-            'competition' => "dd",
-            'type' => 'new_competition',
-            'object'=> 'competition',
-        ];
-        Mail::to('oualidbennahia@gmail.com')->send(new UserNotification($data,'ar'));*/
-    /*$competition = Competition::find(12);
-    foreach ($competition->users as $user) {
-        $data = [
-            'subject' => 'notify',
-            'user' => $user->name,
-            'competition' => $competition->title,
-            'type' => 'new_competition',
-            'object'=> 'competition',
-            'link' => route('competitions.detail',['id'=>base64_encode($competition->id)])
-        ];
-        //Mail::to($user->email)->send(new UserNotification($data,'ar'));
-        Mail::to($user->email)->queue(new UserNotification($data,'en'));
-    }*/
+Route::get('/test-email', function () {
+    try {
+        Mail::raw('Test email from Laravel', function ($message) {
+            $message->to('oualidbennahia@gmail.com')
+                   ->subject('Test Email');
+        });
+        
+        return 'Email sent successfully!';
+    } catch (Exception $e) {
+        return 'Error: ' . $e->getMessage();
+    }
 });
 
 

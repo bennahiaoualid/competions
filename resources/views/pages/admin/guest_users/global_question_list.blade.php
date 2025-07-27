@@ -69,12 +69,13 @@
             </div>
 
             <div>
-                <x-input-label for="choices_number" :value=" ucwords(__('competition.global.choices'))" />
+                <x-input-label class="mb-2" for="choices_number" :value=" ucwords(__('competition.global.choices'))" />
                 <div>
                     <x-alert
                         type="info"
                         outline="true"
                         size="sm"
+                        :closable="true"
                         :title="__('messages.alert.type.info')"
                     >
                         {{__('messages.alert.content.correct_choice')}}
@@ -177,7 +178,7 @@
        const choicesContainer = document.getElementById('choices_container');
        generateChoicesBtn.addEventListener('click',()=>{
             let choices_int = parseInt(choicesNumber.value);
-            if (1 < choices_int < 6 ){
+            if ( choices_int >= 2 && choices_int <= 5 ){
                 choicesContainer.innerHTML = '';
                 choicesContainer.insertAdjacentHTML('afterbegin',`
                     <x-input-label :value=" ucwords(__('competition.global.choice'))" />
@@ -185,11 +186,14 @@
                 let choicesView = document.createElement('div');
                 let choice_ele = "";
                 for (let i = 0; i <= choices_int-1; i++) {
-                    let selected = i === 0;
+                    let bgColor = i === 0 ? 'bg-success' : 'bg-danger';
                     choice_ele += `
-                        <div class="">
-                            <x-text-area name="choice[]"  class="mt-1 block w-full" min="3" rows="1"></x-text-area>
-                            <x-input-error :messages="$errors->createQuestion->get('choice.${i}')" class="mt-2" />
+                        <div class="flex gap-2 items-center">
+                            <span class="block w-3 h-3 ${bgColor} rounded-full"></span>
+                            <div class="flex-1">
+                                <x-text-area name="choice[]"  class="mt-1 block w-full" min="3" rows="1"></x-text-area>
+                                <x-input-error :messages="$errors->createQuestion->get('choice.${i}')" class="mt-2" />
+                            </div>
                         </div>
                     `;
                 }

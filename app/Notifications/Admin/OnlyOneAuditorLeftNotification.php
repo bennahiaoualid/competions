@@ -6,8 +6,6 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
-use Illuminate\Notifications\Messages\DatabaseMessage;
-use App\Helpers\UrlGenerator;
 
 class OnlyOneAuditorLeftNotification extends Notification implements ShouldQueue
 {

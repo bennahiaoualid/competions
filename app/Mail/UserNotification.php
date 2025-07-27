@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
@@ -31,8 +30,13 @@ class UserNotification extends Mailable
      */
     public function envelope(): Envelope
     {
+        // Extract domain from APP_URL environment variable (Laravel standard)
+        $appUrl = env('APP_URL', 'http://localhost');
+        $domain = parse_url($appUrl, PHP_URL_HOST) ?: 'localhost';
+        $fromEmail = 'notify@' . $domain;
+
         return new Envelope(
-            from: new Address('notify@the-creativity.com', 'administrator'),
+            from: new Address("support@knowledg-community.space", 'administrator'),
             subject: $this->data['subject'],
         );
     }
@@ -44,7 +48,7 @@ class UserNotification extends Mailable
     {
         App::setLocale($this->locale_);
         return new Content(
-            view: 'mails.user_notify_mail',
+            view: 'mails.user_notify_mail_competition_peoccess',
             with: [
                 'data' => $this->data,
             ],

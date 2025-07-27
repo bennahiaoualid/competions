@@ -7,7 +7,9 @@
 @endif
 
 <head>
-    <meta name="user-id" content="{{ Auth::guard('admin')->check() ? Auth::guard('admin')->id() : Auth::id() }}">
+    @if(Auth::guard('admin')->check())
+        <meta name="user-id" content="{{ Auth::guard('admin')->id() }}">
+    @endif
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="keywords" content="Competition Management System" />

@@ -7,6 +7,33 @@
             </a>
 
             <div class="flex items-center gap-4 md:order-2">
+                {{-- Notification Dropdown --}}
+                <x-dropdown alignment="right" width="80">
+                    <x-slot name="trigger">
+                        <button class="flex items-center text-gray-600 hover:text-gray-800 focus:outline-none focus:shadow-outline p-2 rounded-md transition-colors duration-200 relative">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            <span id="notification-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold" style="display: none;">0</span>
+                        </button>
+                    </x-slot>
+                    
+                    <div id="notification-list" class="max-h-96 overflow-y-auto">
+                        <div class="p-4 text-center text-gray-500">
+                            <svg class="mx-auto h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            <p class="mt-2 text-sm">No notifications yet</p>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-gray-200 p-2">
+                        <x-dropdown-item href="/admin/notifications" class="text-center text-sm">
+                            View all notifications
+                        </x-dropdown-item>
+                    </div>
+                </x-dropdown>
+
                 {{-- language select dropdown --}}
                 <div class="hidden md:block">
                     <x-dropdown alignment="right" >
