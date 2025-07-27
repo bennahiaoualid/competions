@@ -35,6 +35,7 @@
                 :deleteRoute="route('notifications.destroy')"
                 :notificationId="$notification['id']"
                 :createdAt="$notification['created_at']"
+                :icon="$notification['icon'] ?? null"
             />
         @endforeach
     </div>

@@ -59,4 +59,8 @@ return [
     'title' => 'Notification',
     'data' => 'Detail',
     'created_at' => 'Created At',
+    'detail_modal' => [
+        'title' => 'Notification Details',
+    ],
+    'view_all_notifications' => 'View All Notifications',
 ]; 

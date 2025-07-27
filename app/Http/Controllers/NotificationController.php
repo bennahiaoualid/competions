@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use App\Contracts\FlasherInterface;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\NotificationTranslator;
+use App\Helpers\NotificationIconHelper;
 use Illuminate\Notifications\DatabaseNotification;
 
 class NotificationController extends Controller
@@ -45,7 +46,7 @@ class NotificationController extends Controller
 
         $notifications = $this->transformNotifications($notifications);
 
-        return view('pages.admin.notifications.notificatios_list',compact('notifications'));
+        return view('pages.notifications.notificatios_list',compact('notifications'));
     }
 
     /**
@@ -82,6 +83,9 @@ class NotificationController extends Controller
         return $notifications->map(function ($notification) {
             $data = $notification->data;
             
+            // Get icon for this notification
+            $icon = NotificationIconHelper::getIconForNotification($data);
+            
             // If notification has translation key, translate it server-side
             if (isset($data['translation_key'])) {
                 $translationKey = $data['translation_key'];
@@ -105,6 +109,7 @@ class NotificationController extends Controller
                     'title' => $translatedTitle,
                     'message' => $translatedMessage,
                     'notification_priority_type' => $data['notification_priority_type'] ?? 'info',
+                    'icon' => $icon,
                     'link' => $data['link'] ?? null,
                     'link_text' => $linkText,
                     'read_at' => $notification->read_at,
@@ -123,6 +128,7 @@ class NotificationController extends Controller
                 'title' => $data['title'] ?? 'Notification',
                 'message' => $data['message'] ?? '',
                 'notification_priority_type' => $data['notification_priority_type'] ?? 'info',
+                'icon' => $icon,
                 'link' => $data['link'] ?? null,
                 'link_text' => $linkText,
                 'read_at' => $notification->read_at,

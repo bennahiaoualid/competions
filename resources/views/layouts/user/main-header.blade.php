@@ -8,7 +8,7 @@
 
             <div class="flex items-center gap-4 md:order-2">
                 {{-- Notification Dropdown --}}
-                <x-dropdown alignment="right" width="80">
+                <x-dropdown alignment="right" width="min-w-96">
                     <x-slot name="trigger">
                         <button class="flex items-center text-gray-600 hover:text-gray-800 focus:outline-none focus:shadow-outline p-2 rounded-md transition-colors duration-200 relative">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -28,15 +28,15 @@
                     </div>
                     
                     <div class="border-t border-gray-200 p-2">
-                        <x-dropdown-item href="/admin/notifications" class="text-center text-sm">
-                            View all notifications
+                        <x-dropdown-item href="{{ route('notifications.index') }}" class="text-center text-sm">
+                            {{ __('notifications.view_all_notifications') }}
                         </x-dropdown-item>
                     </div>
                 </x-dropdown>
 
                 {{-- language select dropdown --}}
                 <div class="hidden md:block">
-                    <x-dropdown alignment="right" >
+                    <x-dropdown alignment="right" width="min-w-72">
                         <x-slot name="trigger">
                             <button class="w-fit py-1 px-4  text-gray-600 rounded-md border  font-semibold focus:outline-none focus:shadow-outline text-sm overflow-hidden">
                                 <i class="fa-solid fa-globe"></i> {{ LaravelLocalization::getCurrentLocaleNative() }}
@@ -57,16 +57,15 @@
 
                 {{-- user links drop down--}}
                 @auth("web")
-                    <div class="relative flex items-center md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse"
-                        x-data="{ open: false, open_menu: false }" @click.outside="open = false" @close.stop="open = false">
-                        <button type="button" class="flex text-sm bg-gray-800 rounded-full md:me-0 focus:ring-4 focus:ring-gray-300 " id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown" data-dropdown-placement="bottom"
-                                @click="open = ! open">
-                            <span class="sr-only">Open user menu</span>
-                            <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name ?? 'User') }}" alt="User Avatar" class="h-8 w-8 rounded-full">
-                        </button>
-                        <!-- Dropdown menu -->
-                        <div class="z-50 absolute end-4 top-[100%] my-4 text-base list-none bg-white divide-y divide-gray-100 rounded-lg shadow" id="user-dropdown"
-                            x-show="open">
+                    <x-dropdown alignment="right" width="min-w-96">
+                        <x-slot name="trigger">
+                            <button type="button" class="flex text-sm bg-gray-800 rounded-full md:me-0 focus:ring-4 focus:ring-gray-300 " id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown" data-dropdown-placement="bottom">
+                                <span class="sr-only">Open user menu</span>
+                                <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name ?? 'User') }}" alt="User Avatar" class="h-8 w-8 rounded-full">
+                            </button> 
+                        </x-slot>
+                        
+                        <div>
                             <div class="px-4 py-3">
                                 <span class="block text-sm text-gray-900 ">{{\Illuminate\Support\Facades\Auth::user()->name}}</span>
                                 <span class="block text-sm  text-gray-500 truncate ">{{\Illuminate\Support\Facades\Auth::user()->email}}</span>
@@ -88,7 +87,7 @@
                                 </li>
                             </ul>
                         </div>
-                    </div>
+                    </x-dropdown>
                 @else
                     <a class="py-1 px-2 border border-gray-300 hidden md:block" href="{{route('login')}}">{{__('form.actions.login')}}</a>
                 @endauth
@@ -150,7 +149,7 @@
                     @endguest
                     <li class="md:hidden  mt-4">
                         {{-- language select dropdown --}}
-                        <x-dropdown alignment="right">
+                        <x-dropdown alignment="right" >
                             <x-slot name="trigger">
                                 <button class="w-full py-1 px-4  text-gray-600 rounded-md border  font-semibold focus:outline-none focus:shadow-outline text-sm overflow-hidden">
                                     <i class="fa-solid fa-globe"></i> {{ LaravelLocalization::getCurrentLocaleNative() }}

@@ -59,4 +59,8 @@ return [
     'title' => 'الاشعار',
     'data' => 'التفاصيل',
     'created_at' => 'تاريخ الإنشاء',
+    'detail_modal' => [
+        'title' => 'تفاصيل الإشعار',
+    ],
+    'view_all_notifications' => 'عرض جميع الاشعارات',
 ]; 

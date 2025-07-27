@@ -35,8 +35,8 @@
             </div>
             
             <div class="border-t border-gray-200 p-2">
-                <x-dropdown-item href="/admin/notifications" class="text-center text-sm">
-                    View all notifications
+                <x-dropdown-item href="{{ route('notifications.index') }}" class="text-center text-sm">
+                    {{ __('notifications.view_all_notifications') }}
                 </x-dropdown-item>
             </div>
         </x-dropdown>

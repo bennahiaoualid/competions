@@ -100,9 +100,9 @@ class CompetitionService
                     SyncCompetitionParticipants::dispatch($competition, isUpdate: true)->afterCommit();
                 } else {
                     UserNotifyEmail::usersUpdateCompetition($competition);
-                    // Send notification to competition users
-                    $this->notificationService->competitionUpdated($competition);
                 }
+                // Send notification to competition users
+                $this->notificationService->competitionUpdated($competition);
                 return true;
             });
 

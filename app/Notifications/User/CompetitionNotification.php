@@ -18,7 +18,7 @@ class CompetitionNotification extends Notification implements ShouldQueue
     public $eventType;
     public $additionalData;
 
-    public function __construct($eventType, Competition $competition, Level $level = null, array $additionalData = [])
+    public function __construct($eventType, Competition $competition, ?Level $level = null, array $additionalData = [])
     {
         $this->eventType = $eventType;
         $this->competition = $competition;
@@ -161,13 +161,10 @@ class CompetitionNotification extends Notification implements ShouldQueue
             case 'level_finished':
             case 'level_created':
             case 'level_updated':
-                return route('competition.level.detail', [
-                    'competition' => base64_encode($this->competition->id),
-                    'level' => base64_encode($this->level->id)
-                ]);
+                return route('competitions.level', $this->level);
                 
             default:
-                return route('competition.detail', base64_encode($this->competition->id));
+                return route('competitions.detail', $this->competition);
         }
     }
 } 
