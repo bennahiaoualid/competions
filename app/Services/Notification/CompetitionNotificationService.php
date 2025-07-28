@@ -23,7 +23,6 @@ class CompetitionNotificationService
         }
 
         $notification = new CompetitionNotification($eventType, $competition, $level, $additionalData);
-        
         // Send to all users in the competition
         $users->each(function (User $user) use ($notification) {
             $user->notify($notification);
@@ -70,7 +69,6 @@ class CompetitionNotificationService
      */
     public function competitionUpdated(Competition $competition): void
     {
-        Log::info('from CompetitionNotificationService: competitionUpdated');
         $this->notifyCompetitionUsers($competition, 'updated');
     }
 

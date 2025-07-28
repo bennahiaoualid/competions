@@ -37,7 +37,7 @@ use App\Interface\User\UserCompetitionRepositoryInterface;
 use App\Repository\Monitoring\DatabaseJobTrackingStrategy;
 use App\Repository\Monitoring\InMemoryJobTrackingStrategy;
 use App\Interface\Competition\CompetitionRepositoryInterface;
-use App\Services\Notification\CompetitionNotificationService;
+use App\Services\Notification\OptimizedCompetitionNotificationService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -74,7 +74,7 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(TransactionManagerInterface::class),
                 $app->make(FlasherInterface::class),
                 $app->make(JobTrackingService::class),
-                $app->make(CompetitionNotificationService::class)
+                $app->make(OptimizedCompetitionNotificationService::class)
             );
         });
 
@@ -85,7 +85,7 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(LevelRepositoryInterface::class),
                 $app->make(TransactionManagerInterface::class),
                 $app->make(FlasherInterface::class),
-                $app->make(CompetitionNotificationService::class)
+                $app->make(OptimizedCompetitionNotificationService::class)
             );
         });
 

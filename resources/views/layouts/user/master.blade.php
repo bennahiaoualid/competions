@@ -39,7 +39,7 @@
             $userId = auth()->id();
             $broadcastingConfig = [
                 'broadcastingChannel' => [
-                    'channel' => "App.Models.User." . $userId,
+                    'channel' => "notification.user." . $userId,
                     'cluster' => config('broadcasting.connections.pusher.options.cluster')
                 ],
                 'userId' => $userId,

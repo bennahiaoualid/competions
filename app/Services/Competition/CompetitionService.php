@@ -14,7 +14,7 @@ use App\Traits\RegisterLogs; // For logging errors
 use App\Jobs\Competetion\SyncCompetitionParticipants;
 use App\Helpers\UserNotifyEmail; // For sending emails
 use App\Interface\Competition\CompetitionRepositoryInterface;
-use App\Services\Notification\CompetitionNotificationService;
+use App\Services\Notification\OptimizedCompetitionNotificationService;
 use App\Traits\CrudOperationNotificationAlert; // For notifications
 use App\Models\User; // For Auth::user() type hinting if specific methods are used
 
@@ -33,7 +33,7 @@ class CompetitionService
         protected TransactionManagerInterface $transactionManager,
         protected FlasherInterface $flasher,
         protected JobTrackingService $jobTrackingService,
-        protected CompetitionNotificationService $notificationService
+        protected OptimizedCompetitionNotificationService $notificationService
     ) {
     }
 
@@ -97,9 +97,9 @@ class CompetitionService
                 $resync = $result['resyncCompetitionParticipants'];
                 
                 if($resync){
-                    SyncCompetitionParticipants::dispatch($competition, isUpdate: true)->afterCommit();
+                    //SyncCompetitionParticipants::dispatch($competition, isUpdate: true)->afterCommit();
                 } else {
-                    UserNotifyEmail::usersUpdateCompetition($competition);
+                    //UserNotifyEmail::usersUpdateCompetition($competition);
                 }
                 // Send notification to competition users
                 $this->notificationService->competitionUpdated($competition);

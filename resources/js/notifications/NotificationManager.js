@@ -122,9 +122,13 @@ class NotificationManager {
 
         
         // Listen to both channels to handle both admin and user notifications
-        Echo.private(channel)
+        /*Echo.private(channel)
             .notification((notification) => {
                 this.handleNewNotification(notification);
+            });*/
+            window.Echo.private(channel)
+            .listen('.notification.received', (e) => {
+                this.handleNewNotification(e);
             });
             
     }

@@ -6,13 +6,18 @@ use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-abstract class BaseNotificationEvent implements ShouldBroadcast
+class CompetitionNotificationEvent implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
+
+    /**
+     * The user ID to broadcast to.
+     */
+    public int $userId;
 
     /**
      * The notification data.
@@ -22,8 +27,9 @@ abstract class BaseNotificationEvent implements ShouldBroadcast
     /**
      * Create a new event instance.
      */
-    public function __construct(array $notificationData)
+    public function __construct(int $userId, array $notificationData)
     {
+        $this->userId = $userId;
         $this->notificationData = $notificationData;
     }
 
@@ -33,7 +39,7 @@ abstract class BaseNotificationEvent implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('notifications.' . $this->notificationData['user_id']),
+            new PrivateChannel('notification.user.' . $this->userId),
         ];
     }
 

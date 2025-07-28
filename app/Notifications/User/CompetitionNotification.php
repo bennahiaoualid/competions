@@ -113,7 +113,7 @@ class CompetitionNotification extends Notification implements ShouldQueue
             case 'level_activated':
                 return array_merge($baseData, [
                     'level_name' => $this->level->name,
-                    'start_time' => $this->level->start_date->format('Y-m-d H:i:s'),
+                    'start_time' => $this->level->start_date->format('Y-m-d H:i'),
                     'duration' => $this->level->duration . ' minutes',
                 ]);
                 

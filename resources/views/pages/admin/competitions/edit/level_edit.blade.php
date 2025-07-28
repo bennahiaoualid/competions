@@ -100,7 +100,7 @@
                     @php
                         $options = [] ;
                         foreach ($admins as $admin) {
-                            $options[] = ['value' => $admin->id, 'text' => $admin->name, 'selected' => false];
+                            $options[] = ['value' => $admin->id, 'text' => $admin->name];
                         }
                     @endphp
                     
@@ -108,7 +108,7 @@
                         name="admin_id"
                         :options="$options"
                         :placeholder="__('messages.global.choose')"
-                        :value="old('admin_id')"
+                        :value="$level->admin_id"
                         :disabled="false"
                     />
                     <x-input-error :messages="$errors->updateLevel->get('admin_id')" class="mt-2" />

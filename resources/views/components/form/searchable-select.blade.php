@@ -5,6 +5,7 @@
     search: '',
     selected: @js($value),
     options: @js($options),
+    dropdownPosition: 'bottom',
     get filteredOptions() {
         if (!this.search) return this.options;
         return this.options.filter(o => o.text.toLowerCase().includes(this.search.toLowerCase()));
@@ -15,6 +16,24 @@
         this.search = option.text;
         $refs.input.value = option.value;
         $dispatch('input', option.value);
+    },
+    checkPosition() {
+        if (!this.open) return;
+        
+        const rect = $refs.container.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const dropdownHeight = 240; // max-h-60 = 240px
+        
+        // Check space below
+        const spaceBelow = viewportHeight - rect.bottom;
+        // Check space above
+        const spaceAbove = rect.top;
+        
+        if (spaceBelow >= dropdownHeight || spaceBelow > spaceAbove) {
+            this.dropdownPosition = 'bottom';
+        } else {
+            this.dropdownPosition = 'top';
+        }
     },
     init() {
         if (this.selected) {
@@ -31,11 +50,12 @@
         {{ $disabled ? 'disabled' : '' }}
     >
     <input
+        x-ref="container"
         type="text"
         x-model="search"
-        @focus="open = true"
-        @click="open = true"
-        @keydown.arrow-down.prevent="open = true; $refs.listbox.focus()"
+        @focus="open = true; $nextTick(() => checkPosition())"
+        @click="open = true; $nextTick(() => checkPosition())"
+        @keydown.arrow-down.prevent="open = true; $nextTick(() => { checkPosition(); $refs.listbox.focus(); })"
         :placeholder="'{{ $placeholder ?? 'Select...' }}'"
         class="text-gray-600 focus:outline-none focus:border focus:border-indigo-700 font-normal w-full h-10 flex items-center text-sm border-gray-300 rounded border px-3"
         autocomplete="off"
@@ -44,7 +64,11 @@
     <div
         x-show="open"
         @click.away="open = false"
-        class="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 max-h-60 overflow-auto shadow-lg"
+        :class="{
+            'absolute z-10 w-full bg-white border border-gray-300 rounded shadow-lg max-h-60 overflow-auto': true,
+            'mt-1': dropdownPosition === 'bottom',
+            'mb-1 bottom-full': dropdownPosition === 'top'
+        }"
     >
         <ul tabindex="-1" x-ref="listbox">
             <template x-if="filteredOptions.length === 0">

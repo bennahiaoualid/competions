@@ -16,7 +16,7 @@
                 {{__('competition.question.list')}}
                 <span> : {{$level->name}}</span>
             </h1>
-            @can($level->canEditQuestion())
+            @if($level->canEditQuestion())
                 <div x-data>
                     <x-button
                         name="add_questions"
@@ -27,7 +27,7 @@
                         {{__("form.actions.add")}}
                     </x-button>
                 </div>
-            @endcan
+            @endif
         </div>
         
         <div class="mt-4">

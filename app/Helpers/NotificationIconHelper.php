@@ -14,7 +14,7 @@ class NotificationIconHelper
     {
         // First, check if there's a specific type field
         if (isset($notificationData['type'])) {
-            return self::getIconByType($notificationData['type']);
+            return self::getIconByType($notificationData['type'], $notificationData['event_type'] ?? null);
         }
 
         // Check for entity type in data
@@ -35,10 +35,16 @@ class NotificationIconHelper
      * Get icon based on notification type
      *
      * @param string $type
+     * @param string|null $eventType
      * @return string
      */
-    private static function getIconByType(string $type): string
+    private static function getIconByType(string $type, ?string $eventType = null): string
     {
+        // For competition events, check the specific event type for more precise icons
+        if ($type === 'competition_event' && $eventType) {
+            return self::getIconByCompetitionEventType($eventType);
+        }
+
         return match($type) {
             'competition_event' => 'fas fa-trophy',
             'auditor_required' => 'fas fa-user-shield',
@@ -46,6 +52,26 @@ class NotificationIconHelper
             'job_completed' => 'fas fa-check-circle',
             'job_failed' => 'fas fa-exclamation-triangle',
             default => 'fas fa-bell'
+        };
+    }
+
+    /**
+     * Get icon based on competition event type
+     *
+     * @param string $eventType
+     * @return string
+     */
+    private static function getIconByCompetitionEventType(string $eventType): string
+    {
+        return match($eventType) {
+            'level_created' => 'fas fa-flag',
+            'level_updated' => 'fas fa-flag',
+            'level_activated' => 'fas fa-play',
+            'level_finished' => 'fas fa-check-circle',
+            'created' => 'fas fa-trophy',
+            'updated' => 'fas fa-edit',
+            'activated' => 'fas fa-play',
+            default => 'fas fa-trophy'
         };
     }
 

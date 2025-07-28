@@ -14,7 +14,7 @@ use App\Jobs\Competition\FinishLevelJob;
 use App\Contracts\TransactionManagerInterface;
 use Illuminate\Support\Arr; // For Arr::except
 use App\Interface\Competition\LevelRepositoryInterface;
-use App\Services\Notification\CompetitionNotificationService;
+use App\Services\Notification\OptimizedCompetitionNotificationService;
 
 class LevelService
 {
@@ -24,7 +24,7 @@ class LevelService
         protected LevelRepositoryInterface $levelRepository,
         protected TransactionManagerInterface $transactionManager,
         protected FlasherInterface $flasher,
-        protected CompetitionNotificationService $notificationService
+        protected OptimizedCompetitionNotificationService $notificationService
     ) {
     }
 
