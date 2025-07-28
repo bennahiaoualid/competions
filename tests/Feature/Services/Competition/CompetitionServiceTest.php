@@ -24,6 +24,7 @@ class CompetitionServiceTest extends TestCase
     protected $transactionManager;
     protected $flasher;
     protected $jobTrackingService;
+    protected $notificationService;
     protected $mainAdmin;
     protected $userNotify;
 
@@ -34,11 +35,13 @@ class CompetitionServiceTest extends TestCase
         $this->transactionManager = Mockery::mock(\App\Contracts\TransactionManagerInterface::class);
         $this->flasher = Mockery::mock(\App\Contracts\FlasherInterface::class);
         $this->jobTrackingService = Mockery::mock(\App\Services\Monitoring\JobTrackingService::class);
+        $this->notificationService = Mockery::mock(\App\Services\Notification\OptimizedCompetitionNotificationService::class);
         $this->service = new CompetitionService(
             $this->competitionRepository,
             $this->transactionManager,
             $this->flasher,
-            $this->jobTrackingService
+            $this->jobTrackingService,
+            $this->notificationService
         );
         $this->userNotify = Mockery::mock('alias:'.UserNotifyEmail::class);
 
@@ -66,7 +69,7 @@ class CompetitionServiceTest extends TestCase
         $data = Competition::factory()->make(['admin_id' => $this->mainAdmin->id])->toArray();
         $this->transactionManager->shouldReceive('run')->andReturnUsing(fn($cb) => $cb());
         $this->flasher->shouldReceive('crudSuccess')->with('saved')->once();
-
+        $this->notificationService->shouldReceive('competitionCreated')->once();
         $result = $this->service->createCompetition($data);
 
         $this->assertTrue($result);
@@ -92,7 +95,7 @@ class CompetitionServiceTest extends TestCase
         $data = ['title' => 'Updated Title'];
         $this->transactionManager->shouldReceive('run')->andReturnUsing(fn($cb) => $cb());
         $this->flasher->shouldReceive('crudSuccess')->with('updated')->once();
-
+        $this->notificationService->shouldReceive('competitionUpdated')->once();
         $this->competitionRepository
         ->shouldReceive('update')
         ->with($competition,$data)
@@ -113,7 +116,7 @@ class CompetitionServiceTest extends TestCase
         $data = ['title' => 'Updated Title'];
         $this->transactionManager->shouldReceive('run')->andReturnUsing(fn($cb) => $cb());
         $this->flasher->shouldReceive('crudSuccess')->with('updated')->once();
-
+        $this->notificationService->shouldReceive('competitionUpdated')->once();
         $this->competitionRepository
             ->shouldReceive('update')
             ->with($competition,$data)
@@ -350,6 +353,7 @@ class CompetitionServiceTest extends TestCase
         $competition = \Mockery::mock($competition)->makePartial();
         $competition->shouldReceive('isAllLevelAfterNow')->andReturn(true);
         $this->transactionManager->shouldReceive('run')->andReturnUsing(fn($cb) => $cb());
+        $this->notificationService->shouldReceive('competitionActivated')->once();
         $this->flasher->shouldReceive('crudSuccess')->with('activated')->once();
         $this->userNotify->shouldReceive('usersActivateCompetition')->once();
         

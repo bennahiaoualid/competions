@@ -5,7 +5,8 @@
     'deleteRoute' => null,
     'notificationId' => null,
     'detailsUrl' => null,
-    'createdAt' => null
+    'createdAt' => null,
+    'icon' => null
 ])
 
 @php
@@ -42,7 +43,7 @@
 
 <div class="bg-white rounded shadow-sm p-4 flex justify-between items-start {{ $style['border'] }}">
     <div class="flex gap-3">
-        <i class="{{ $style['icon'] }} {{ $style['color'] }} text-xl mt-1"></i>
+        <i class="{{ $icon ?? $style['icon'] }} {{ $style['color'] }} text-xl mt-1"></i>
         <div>
             <h3 class="font-semibold {{ $style['color'] }}">{{ $title }}</h3>
             <p class="text-gray-700 text-sm mt-1">{{ $message }}</p>

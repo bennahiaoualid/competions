@@ -14,6 +14,8 @@ use Illuminate\Foundation\Testing\WithFaker;
 use App\Jobs\Competition\SafeDeleteAuditorJob;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Jobs\Competetion\SyncCompetitionParticipants;
+use App\Jobs\Notifications\BatchBroadcastNotificationJob;
+use App\Jobs\Notifications\BatchCompetitionNotificationJob;
 
 class CompetitionTest extends TestCase
 {
@@ -47,6 +49,12 @@ class CompetitionTest extends TestCase
         // Give the admin the 'add competition' permission
         $this->admin->givePermissionTo('add competition');
         
+        // Create eligible users (age 18-25) before creating competition
+        $eligibleUsers = User::factory()->count(3)->create([
+            'birthdate' => $this->faker->dateTimeBetween('2000-01-01', '2007-01-01')->format('Y-m-d'),
+            'email_verified_at' => now(), // Ensure they are verified
+        ]);
+        
         $competitionData = $this->createCompetitionData();
 
         $response = $this->post(route('admin.competitions.store'), $competitionData);
@@ -61,6 +69,7 @@ class CompetitionTest extends TestCase
             'levels_number' => $competitionData['levels_number'],
         ]);
         Bus::assertDispatched(SyncCompetitionParticipants::class);
+        Bus::assertDispatched(BatchCompetitionNotificationJob::class);
     }
 
     public function test_create_fails_with_invalid_data()
@@ -99,7 +108,12 @@ class CompetitionTest extends TestCase
         Bus::fake();
         
         $competition = Competition::factory()->create(['admin_id' => $this->admin->id]);
-        
+        // Create eligible users (age 18-25) before creating competition
+        $eligibleUsers = User::factory()->count(3)->create([
+            'birthdate' => $this->faker->dateTimeBetween('2000-01-01', '2007-01-01')->format('Y-m-d'),
+            'email_verified_at' => now(), // Ensure they are verified
+        ]);
+        $competition->users()->attach($eligibleUsers->pluck('id')->toArray());
         $updateData = [
             'start_date' => now()->addDays(7)->format('Y-m-d H:i'),
             'age_start' => 18,
@@ -115,6 +129,7 @@ class CompetitionTest extends TestCase
             'age_end' => $updateData['age_end'],
         ]);
         Bus::assertDispatched(SyncCompetitionParticipants::class);
+        Bus::assertDispatched(BatchCompetitionNotificationJob::class);
     }
 
     public function test_update_fails_with_invalid_data()
@@ -384,11 +399,19 @@ class CompetitionTest extends TestCase
 
     public function test_admin_can_successfully_activate_competition()
     {
+        Bus::fake();
         $competition = Competition::factory()->create([
             'admin_id' => $this->admin->id,
             'start_date' => now()->subDay(),
             'levels_number' => 2
         ]);
+
+        // Create eligible users (age 18-25) before creating competition
+        $eligibleUsers = User::factory()->count(3)->create([
+            'birthdate' => $this->faker->dateTimeBetween('2000-01-01', '2007-01-01')->format('Y-m-d'),
+            'email_verified_at' => now(), // Ensure they are verified
+        ]);
+        $competition->users()->attach($eligibleUsers->pluck('id')->toArray());
 
         // Create required levels
         Level::factory()->create([
@@ -399,10 +422,6 @@ class CompetitionTest extends TestCase
             'competition_id' => $competition->id,
             'start_date' => now()->addDays(2)
         ]);
-
-        // Add required users
-        $users = User::factory()->count(3)->create();
-        $competition->users()->attach($users->pluck('id'));
 
         // Add required auditor
         $auditor = Admin::factory()->create();
@@ -419,6 +438,8 @@ class CompetitionTest extends TestCase
             'id' => $competition->id,
             'status' => Competition::STATUS_ACTIVE
         ]);
+        Bus::assertDispatched(BatchCompetitionNotificationJob::class);
+        Bus::assertDispatched(BatchBroadcastNotificationJob::class);
     }
 
     public function test_activate_fails_when_start_date_is_in_future()

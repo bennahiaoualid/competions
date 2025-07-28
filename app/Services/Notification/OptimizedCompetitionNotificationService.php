@@ -2,12 +2,12 @@
 
 namespace App\Services\Notification;
 
-use App\Models\Competition\Competition;
-use App\Models\Competition\Level;
 use App\Models\User;
-use App\Jobs\Notifications\BatchCompetitionNotificationJob;
-use App\Jobs\Notifications\BatchBroadcastNotificationJob;
+use App\Models\Competition\Level;
 use Illuminate\Support\Collection;
+use App\Models\Competition\Competition;
+use App\Jobs\Notifications\BatchBroadcastNotificationJob;
+use App\Jobs\Notifications\BatchCompetitionNotificationJob;
 
 class OptimizedCompetitionNotificationService
 {
@@ -46,7 +46,6 @@ class OptimizedCompetitionNotificationService
         
         // Prepare notification data once
         $notificationData = $this->prepareNotificationData($competition, $eventType, $level, $additionalData);
-
         // Dispatch single batch job for database notifications
         BatchCompetitionNotificationJob::dispatch($userIds, $notificationData);
         
@@ -83,7 +82,6 @@ class OptimizedCompetitionNotificationService
     protected function shouldBroadcast(string $eventType): bool
     {
         return in_array($eventType, [
-            'updated',
             'activated',
             'level_activated',
             'level_finished'
@@ -152,7 +150,7 @@ class OptimizedCompetitionNotificationService
      */
     protected function getEligibleUsersForCompetition(Competition $competition): Collection
     {
-        return User::eligibleForCompetition($competition->age_start, $competition->age_end, $competition->id)->get();
+        return User::eligibleForCompetition($competition->age_start, $competition->age_end)->get();
     }
 
     /**

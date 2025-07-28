@@ -66,7 +66,6 @@ class CompetitionService
             $result = $this->transactionManager->run(function () use ($data) {
                 $competition = Competition::create(array_merge($data, ['admin_id' => Auth::id()]));
                 SyncCompetitionParticipants::dispatch($competition)->afterCommit();
-                
                 // Send notification to eligible users
                 $this->notificationService->competitionCreated($competition);
                 
@@ -97,9 +96,9 @@ class CompetitionService
                 $resync = $result['resyncCompetitionParticipants'];
                 
                 if($resync){
-                    //SyncCompetitionParticipants::dispatch($competition, isUpdate: true)->afterCommit();
+                    SyncCompetitionParticipants::dispatch($competition, isUpdate: true)->afterCommit();
                 } else {
-                    //UserNotifyEmail::usersUpdateCompetition($competition);
+                    UserNotifyEmail::usersUpdateCompetition($competition);
                 }
                 // Send notification to competition users
                 $this->notificationService->competitionUpdated($competition);

@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Controllers\Competition;
 
-use Carbon\Carbon;
 use Tests\TestCase;
 use App\Models\User;
 use App\Models\Admin\Admin;
@@ -14,6 +13,8 @@ use App\Models\Competition\Competition;
 use App\Jobs\Competition\FinishLevelJob;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Jobs\Notifications\BatchBroadcastNotificationJob;
+use App\Jobs\Notifications\BatchCompetitionNotificationJob;
 
 class LevelControllerTest extends TestCase
 {
@@ -37,10 +38,19 @@ class LevelControllerTest extends TestCase
         // Create a competition
         $this->competition = Competition::factory()->create([
             'admin_id' => $this->admin->id,
+            'age_start' => 18,
+            'age_end' => 25,
             'status' => 'pending', // Not activated
             'start_date' => now()->addDays(7),
             'levels_number' => 3
         ]);
+
+        // Create eligible users (age 18-25) before creating competition
+        $eligibleUsers = User::factory()->count(3)->create([
+            'birthdate' => $this->faker->dateTimeBetween('2000-01-01', '2007-01-01')->format('Y-m-d'),
+            'email_verified_at' => now(), // Ensure they are verified
+        ]);
+        $this->competition->users()->attach($eligibleUsers->pluck('id')->toArray());
 
         // Create a level
         $this->level = Level::factory()->create([
@@ -53,6 +63,8 @@ class LevelControllerTest extends TestCase
         
         // Authenticate as admin for tests that require authentication
         $this->actingAs($this->admin, 'admin');
+
+        Bus::fake();
     }
 
     
@@ -77,6 +89,7 @@ class LevelControllerTest extends TestCase
             'questions_number' => $levelData['questions_number'],
             'competition_id' =>$this->competition->id
         ]);
+        Bus::assertDispatched(BatchCompetitionNotificationJob::class);
     }
 
     
@@ -211,6 +224,7 @@ class LevelControllerTest extends TestCase
             'description' => $updateData['description'],
             'duration' => $updateData['duration']
         ]);
+        Bus::assertDispatched(BatchCompetitionNotificationJob::class);
     }
 
     public function test_can_not_update_level_unauthorized_admin()
@@ -353,6 +367,8 @@ class LevelControllerTest extends TestCase
             'id' => $this->level->id,
             'status' => 'active'
         ]);
+        Bus::assertDispatched(BatchCompetitionNotificationJob::class);
+        Bus::assertDispatched(BatchBroadcastNotificationJob::class);
     }
 
     
@@ -388,7 +404,6 @@ class LevelControllerTest extends TestCase
     public function test_can_finish_level_successfully()
     {
         // Setup required conditions
-        Bus::fake();
         $this->level->update([
             'status' => 'active',
             'start_date' => now()->subHours(2),
@@ -401,6 +416,8 @@ class LevelControllerTest extends TestCase
         Bus::assertDispatched(FinishLevelJob::class, function ($job) {
             return $job->getLevel()->id === $this->level->id;
         });
+        Bus::assertDispatched(BatchCompetitionNotificationJob::class);
+        Bus::assertDispatched(BatchBroadcastNotificationJob::class);
     }
 
     

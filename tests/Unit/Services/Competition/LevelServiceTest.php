@@ -7,16 +7,17 @@ use Mockery;
 use Carbon\Carbon;
 use Tests\TestCase;
 use App\Models\Admin\Admin;
+use App\Helpers\UserNotifyEmail;
 use App\Models\Competition\Level;
 use Illuminate\Support\Collection;
 use App\Contracts\FlasherInterface;
 use Illuminate\Support\Facades\Auth;
-use App\Helpers\UserNotifyEmail;
 use App\Models\Competition\Competition;
 use App\Jobs\Competition\FinishLevelJob;
 use App\Services\Competition\LevelService;
 use App\Contracts\TransactionManagerInterface;
 use App\Interface\Competition\LevelRepositoryInterface;
+use App\Services\Notification\OptimizedCompetitionNotificationService;
 
 class LevelServiceTest extends TestCase
 {
@@ -28,6 +29,8 @@ class LevelServiceTest extends TestCase
     protected $transactionManager;
     /** @var FlasherInterface&\Mockery\MockInterface */
     protected $flasher;
+    /** @var OptimizedCompetitionNotificationService&\Mockery\MockInterface */
+    protected $notificationService;
     /** @var Level|\Mockery\MockInterface */
     protected $level_partial;
     /** @var Competition|\Mockery\MockInterface */
@@ -44,11 +47,12 @@ class LevelServiceTest extends TestCase
         $this->levelRepository = Mockery::mock(LevelRepositoryInterface::class);
         $this->transactionManager = Mockery::mock(TransactionManagerInterface::class);
         $this->flasher = Mockery::mock(FlasherInterface::class);
-        
+        $this->notificationService = Mockery::mock(OptimizedCompetitionNotificationService::class);
         $this->levelService = new LevelService(
             $this->levelRepository,
             $this->transactionManager,
-            $this->flasher
+            $this->flasher,
+            $this->notificationService
         );
 
         $this->level_partial = Mockery::mock(Level::class)->makePartial();
@@ -130,6 +134,11 @@ class LevelServiceTest extends TestCase
         $this->userNotifyEmail
             ->shouldReceive('adminLevel')
             ->with($level)
+            ->once();
+
+        $this->notificationService
+            ->shouldReceive('levelCreated')
+            ->with($competition, $level)
             ->once();
             
         $this->flasher
@@ -276,6 +285,11 @@ class LevelServiceTest extends TestCase
             ->with($level, Mockery::any())
             ->once()
             ->andReturn(true);
+
+        $this->notificationService
+            ->shouldReceive('levelUpdated')
+            ->with($competition, $level)
+            ->once();
             
         $this->flasher
             ->shouldReceive('crudSuccess')
@@ -332,7 +346,12 @@ class LevelServiceTest extends TestCase
             ->shouldReceive('usersUpdateLevel')
             ->with($competition, $level)
             ->once();
-            
+
+        $this->notificationService
+            ->shouldReceive('levelUpdated')
+            ->with($competition, $level)
+            ->once();
+
         $this->flasher
             ->shouldReceive('crudSuccess')
             ->with('updated')
@@ -360,7 +379,8 @@ class LevelServiceTest extends TestCase
             ->shouldReceive('isAdminAllowedToBeLevelManager')
             ->with($data['admin_id'],)
             ->once()
-            ->andReturn(true);          
+            ->andReturn(true);   
+
         $this->flasher
             ->shouldReceive('error')
             ->with(__('messages.validation.not_allow.active_level_update'))
@@ -652,6 +672,11 @@ class LevelServiceTest extends TestCase
             
         $this->userNotifyEmail
             ->shouldReceive('usersActivateLevel')
+            ->with($competition, $level)
+            ->once();
+            
+        $this->notificationService
+            ->shouldReceive('levelActivated')
             ->with($competition, $level)
             ->once();
             
@@ -947,6 +972,11 @@ class LevelServiceTest extends TestCase
         $level->shouldReceive('fresh')->with('competition.users', 'competition.auditors')->andReturn($level);
 
         $competition->shouldReceive('canEdit')->andReturn(true);
+
+        $this->notificationService
+            ->shouldReceive('levelFinished')
+            ->with($competition, $level)
+            ->once();
 
         // Act
         $result = $this->levelService->finishLevel($level);

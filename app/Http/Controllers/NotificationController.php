@@ -46,7 +46,14 @@ class NotificationController extends Controller
 
         $notifications = $this->transformNotifications($notifications);
 
-        return view('pages.notifications.notificatios_list',compact('notifications'));
+        if($notifiable instanceof Admin) {
+            $type = 'admin';
+        }else{
+            $type = 'user';
+        }
+
+        return view('pages.notifications.notificatios_list',compact('notifications','type'));
+
     }
 
     /**
@@ -80,53 +87,55 @@ class NotificationController extends Controller
      */
     protected function transformNotifications($notifications)
     {
+        // If it's a paginated collection, transform the data while preserving pagination
+        if (method_exists($notifications, 'getCollection')) {
+            $transformedData = $notifications->getCollection()->map(function ($notification) {
+                return $this->transformSingleNotification($notification);
+            });
+            
+            // Set the transformed collection back to the paginator
+            $notifications->setCollection($transformedData);
+            return $notifications;
+        }
+        
+        // For regular collections, just map and return
         return $notifications->map(function ($notification) {
-            $data = $notification->data;
+            return $this->transformSingleNotification($notification);
+        });
+    }
+
+    /**
+     * Transform a single notification
+     */
+    protected function transformSingleNotification($notification)
+    {
+        $data = $notification->data;
+        
+        // Get icon for this notification
+        $icon = NotificationIconHelper::getIconForNotification($data);
+        
+        // If notification has translation key, translate it server-side
+        if (isset($data['translation_key'])) {
+            $translationKey = $data['translation_key'];
+            $translationData = $data['translation_data'] ?? [];
             
-            // Get icon for this notification
-            $icon = NotificationIconHelper::getIconForNotification($data);
+            $titleKey = $translationKey . '.title';
+            $messageKey = $translationKey . '.message';
             
-            // If notification has translation key, translate it server-side
-            if (isset($data['translation_key'])) {
-                $translationKey = $data['translation_key'];
-                $translationData = $data['translation_data'] ?? [];
-                
-                $titleKey = $translationKey . '.title';
-                $messageKey = $translationKey . '.message';
-                
-                $translatedTitle = __($titleKey, $translationData);
-                $translatedMessage = __($messageKey, $translationData);
-                
-                // Get translated link text if link exists
-                $linkText = null;
-                if (!empty($data['link'])) {
-                    $linkText = __('notifications.link_text.detail');
-                }
-                
-                // Return only essential data with new fields
-                return [
-                    'id' => $notification->id,
-                    'title' => $translatedTitle,
-                    'message' => $translatedMessage,
-                    'notification_priority_type' => $data['notification_priority_type'] ?? 'info',
-                    'icon' => $icon,
-                    'link' => $data['link'] ?? null,
-                    'link_text' => $linkText,
-                    'read_at' => $notification->read_at,
-                    'created_at' => DateTimeHelper::toLocalString($notification->created_at),
-                ];
-            }
+            $translatedTitle = __($titleKey, $translationData);
+            $translatedMessage = __($messageKey, $translationData);
             
-            // Fallback for notifications without translation keys
+            // Get translated link text if link exists
             $linkText = null;
             if (!empty($data['link'])) {
                 $linkText = __('notifications.link_text.detail');
             }
             
+            // Return only essential data with new fields
             return [
                 'id' => $notification->id,
-                'title' => $data['title'] ?? 'Notification',
-                'message' => $data['message'] ?? '',
+                'title' => $translatedTitle,
+                'message' => $translatedMessage,
                 'notification_priority_type' => $data['notification_priority_type'] ?? 'info',
                 'icon' => $icon,
                 'link' => $data['link'] ?? null,
@@ -134,7 +143,25 @@ class NotificationController extends Controller
                 'read_at' => $notification->read_at,
                 'created_at' => DateTimeHelper::toLocalString($notification->created_at),
             ];
-        });
+        }
+        
+        // Fallback for notifications without translation keys
+        $linkText = null;
+        if (!empty($data['link'])) {
+            $linkText = __('notifications.link_text.detail');
+        }
+        
+        return [
+            'id' => $notification->id,
+            'title' => $data['title'] ?? 'Notification',
+            'message' => $data['message'] ?? '',
+            'notification_priority_type' => $data['notification_priority_type'] ?? 'info',
+            'icon' => $icon,
+            'link' => $data['link'] ?? null,
+            'link_text' => $linkText,
+            'read_at' => $notification->read_at,
+            'created_at' => DateTimeHelper::toLocalString($notification->created_at),
+        ];
     }
 
     /**

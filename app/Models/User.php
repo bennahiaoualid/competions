@@ -213,10 +213,13 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function scopeEligibleForCompetition(Builder $query, int $ageMin, int $ageMax, ?int $competitionId = null) : Builder
     {
-        $currentDate = now()->toDateString();
+        $currentDate = now();
+        $minBirthdate = $currentDate->copy()->subYears($ageMax)->startOfDay();
+        $maxBirthdate = $currentDate->copy()->subYears($ageMin)->endOfDay();
 
-        $query =  $query->whereRaw("TIMESTAMPDIFF(YEAR, birthdate, ?) BETWEEN ? AND ?", [$currentDate, $ageMin, $ageMax])
-            ->where("email_verified_at","!=",null);
+        $query = $query->whereBetween('birthdate', [$minBirthdate, $maxBirthdate])
+            ->where("email_verified_at", "!=", null);
+            
         if ($competitionId) {
             $query->whereDoesntHave('competitions', function ($query) use ($competitionId) {
                 $query->where('competition_id', $competitionId);
