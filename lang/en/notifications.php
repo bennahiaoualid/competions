@@ -31,6 +31,10 @@ return [
             'title' => 'Competition Started',
             'message' => 'The competition ":competition_title" has started! Get ready to participate.',
         ],
+        'user_added' => [
+            'title' => 'Added to Competition',
+            'message' => 'You have been added to the competition ":competition_title". Welcome!',
+        ],
         'level_created' => [
             'title' => 'New Level Added',
             'message' => 'A new level ":level_name" has been added to competition ":competition_title".',
@@ -46,6 +50,14 @@ return [
         'level_finished' => [
             'title' => 'Level Completed',
             'message' => 'Level ":level_name" in competition ":competition_title" has been completed.',
+        ],
+        'auditor_requested' => [
+            'title' => 'Auditor Request',
+            'message' => 'You have been requested to be an auditor for ":competition_title"',
+        ],
+        'level_manager_requested' => [
+            'title' => 'Level Manager Request',
+            'message' => 'You have been requested to be a level manager for ":level_name" in ":competition_title"',
         ],
     ],
     // Link text translations
@@ -63,4 +75,23 @@ return [
         'title' => 'Notification Details',
     ],
     'view_all_notifications' => 'View All Notifications',
+    // Approval notifications
+    'approval' => [
+        'level_manager_requested' => [
+            'title' => 'Level Manager Request',
+            'message' => 'You have been requested to be a level manager for ":level_name" in ":competition_title"',
+        ],
+        'auditor_requested' => [
+            'title' => 'Auditor Request',
+            'message' => 'You have been requested to be an auditor for ":competition_title"',
+        ],
+        'approved' => [
+            'title' => 'Request Approved',
+            'message' => ':admin_name approved your :approval_type request for ":competition_title"',
+        ],
+        'rejected' => [
+            'title' => 'Request Rejected',
+            'message' => ':admin_name rejected your :approval_type request for ":competition_title"',
+        ],
+    ],
 ]; 

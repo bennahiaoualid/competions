@@ -74,7 +74,8 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(TransactionManagerInterface::class),
                 $app->make(FlasherInterface::class),
                 $app->make(JobTrackingService::class),
-                $app->make(OptimizedCompetitionNotificationService::class)
+                $app->make(OptimizedCompetitionNotificationService::class),
+                $app->make(\App\Services\Admin\AdminApprovalService::class)
             );
         });
 
@@ -85,7 +86,8 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(LevelRepositoryInterface::class),
                 $app->make(TransactionManagerInterface::class),
                 $app->make(FlasherInterface::class),
-                $app->make(OptimizedCompetitionNotificationService::class)
+                $app->make(OptimizedCompetitionNotificationService::class),
+                $app->make(\App\Services\Admin\AdminApprovalService::class)
             );
         });
 
@@ -98,6 +100,9 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // user competition
+
+        // approval services
+        $this->app->bind(\App\Contracts\Approval\ApprovalFactoryInterface::class, \App\Factories\Approval\ApprovalHandlerFactory::class);
         $this->app->bind(UserCompetitionRepositoryInterface::class, UserCompetitionRepository::class);
         $this->app->bind(UserCompetitionService::class, function ($app) {
             return new UserCompetitionService(

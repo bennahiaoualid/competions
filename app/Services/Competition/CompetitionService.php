@@ -15,6 +15,8 @@ use App\Jobs\Competetion\SyncCompetitionParticipants;
 use App\Helpers\UserNotifyEmail; // For sending emails
 use App\Interface\Competition\CompetitionRepositoryInterface;
 use App\Services\Notification\OptimizedCompetitionNotificationService;
+use App\Services\Admin\AdminApprovalService;
+use App\Enums\AdminApprovalTypeEnum;
 use App\Traits\CrudOperationNotificationAlert; // For notifications
 use App\Models\User; // For Auth::user() type hinting if specific methods are used
 
@@ -33,7 +35,8 @@ class CompetitionService
         protected TransactionManagerInterface $transactionManager,
         protected FlasherInterface $flasher,
         protected JobTrackingService $jobTrackingService,
-        protected OptimizedCompetitionNotificationService $notificationService
+        protected OptimizedCompetitionNotificationService $notificationService,
+        protected AdminApprovalService $approvalService
     ) {
     }
 
@@ -157,6 +160,13 @@ class CompetitionService
         try {
             $result = $this->transactionManager->run(function () use ($competition, $user_ids) {
                 $this->competitionRepository->addUsersToCompetition($competition, $user_ids);
+                
+                // Get the newly added users for notifications
+                $newUsers = User::whereIn('id', $user_ids)->get();
+                
+                // Send notification to newly added users
+                $this->notificationService->notifyUsers($newUsers, $competition, 'user_added');
+                
                 return true;
             });
 
@@ -198,31 +208,54 @@ class CompetitionService
     }
 
     /**
-     * Handles the adding of a auditors to a competition request and returns a response with notifications.
-     *
+     * Request auditor assignment (creates approval instead of direct assignment)
      * @param Competition $competition The competition object.
-     * @param array $auditor_ids The IDs of the auditors to add.
+     * @param array $auditorIds The IDs of the auditors to add.
      * @return bool True if the auditors were added successfully, false otherwise.
      */
-    public function addCompetitionAuditors(Competition $competition, array $auditor_ids): bool
+    public function requestAuditorAssignment(Competition $competition, array $auditorIds): bool
     {
         try {
             if (!$competition->canEdit()) {
                 $this->flasher->error(__('messages.validation.not_allow.competition_update'));
                 return false;
             }
-            
-            $result = $this->transactionManager->run(function () use ($competition, $auditor_ids) {
-                $this->competitionRepository->addAuditorsToCompetition($competition, $auditor_ids);
-                UserNotifyEmail::auditorNewCompetition($competition, $auditor_ids);
+            $result = $this->transactionManager->run(function () use ($competition, $auditorIds) {
+                $adminApprovalRequests = $this->approvalService->insertBulkApprovalRequests(
+                    adminIds: $auditorIds,
+                    entityType: Competition::class,
+                    entityId: $competition->id,
+                    type: AdminApprovalTypeEnum::AUDITOR
+                );
+                
+                // Notify all admins about auditor request
+                if ($adminApprovalRequests->isNotEmpty()) {
+                    $this->notificationService->auditorRequestedBulk($competition, $adminApprovalRequests);
+                }
+                
                 return true;
             });
 
             $this->flasher->crudSuccess('saved');
             return $result;
         } catch (Exception $exception) {
-            $this->registerLogs('Error adding auditors to competition: ', $exception);
+            $this->registerLogs('Error requesting auditor assignment: ', $exception);
             $this->flasher->crudFailure('saved');
+            return false;
+        }
+    }
+
+    /**
+     * Assign auditor to a competition
+     */
+    public function assignAuditor(Competition $competition, int $adminId): bool
+    {
+        try {
+            $competition->auditors()->attach($adminId);
+            UserNotifyEmail::auditorNewCompetition($competition, [$adminId]);
+            return true;
+        } catch (Exception $exception) {
+            $this->registerLogs('Competition Service Error assigning auditor: ', $exception);
             return false;
         }
     }
@@ -308,6 +341,7 @@ class CompetitionService
             return false;
         }
     }
+
 
     /** helper methods */
     protected function createDeleteJob(Admin $admin, Competition $competition): SafeDeleteAuditorJob

@@ -2,14 +2,15 @@
 
 namespace App\Jobs\Notifications;
 
+use Carbon\Carbon;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
 
 class BatchCompetitionNotificationJob implements ShouldQueue
 {
@@ -17,15 +18,17 @@ class BatchCompetitionNotificationJob implements ShouldQueue
 
     protected array $userIds;
     protected array $notificationData;
+    protected string $notifiableType = User::class;
 
     public $timeout = 300; // 5 minutes
     public $tries = 3;
     public $backoff = 60;
 
-    public function __construct(array $userIds, array $notificationData)
+    public function __construct(array $userIds, array $notificationData, string $notifiableType = User::class)
     {
-        $this->userIds = $userIds;
+        $this->userIds = $userIds;  
         $this->notificationData = $notificationData;
+        $this->notifiableType = $notifiableType;
         $this->onQueue('notifications'); // Dedicated queue
     }
 
@@ -43,7 +46,7 @@ class BatchCompetitionNotificationJob implements ShouldQueue
                 $notifications[] = [
                     'id' => \Str::uuid(),
                     'type' => 'App\\Notifications\\User\\CompetitionNotification',
-                    'notifiable_type' => 'App\\Models\\User',
+                    'notifiable_type' => $this->notifiableType,
                     'notifiable_id' => $userId,
                     'data' => json_encode($this->notificationData),
                     'read_at' => null,
@@ -80,5 +83,35 @@ class BatchCompetitionNotificationJob implements ShouldQueue
             'error' => $exception->getMessage(),
             'eventType' => $this->notificationData['event_type'] ?? 'unknown'
         ]);
+    }
+
+    /**
+     * Get the user IDs for testing.
+     *
+     * @return array
+     */
+    public function getUserIdsForTest(): array
+    {
+        return $this->userIds;
+    }
+
+    /**
+     * Get the notifiable type for testing.
+     *
+     * @return string
+     */
+    public function getNotifiableTypeForTest(): string
+    {
+        return $this->notifiableType;
+    }
+
+    /**
+     * Get the notification data for testing.
+     *
+     * @return array
+     */
+    public function getNotificationDataForTest(): array
+    {
+        return $this->notificationData;
     }
 } 

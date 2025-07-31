@@ -2,12 +2,13 @@
 
 namespace App\Jobs\Notifications;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
 use App\Events\Notifications\CompetitionNotificationEvent;
 
 class BatchBroadcastNotificationJob implements ShouldQueue
@@ -16,15 +17,17 @@ class BatchBroadcastNotificationJob implements ShouldQueue
 
     protected array $userIds;
     protected array $notificationData;
+    protected string $notifiableType = User::class;
 
     public $timeout = 300; // 5 minutes
     public $tries = 3;
     public $backoff = 60;
 
-    public function __construct(array $userIds, array $notificationData)
+    public function __construct(array $userIds, array $notificationData, string $notifiableType = User::class)
     {
         $this->userIds = $userIds;
-        $this->notificationData = $notificationData;
+        $this->notificationData = $notificationData;    
+        $this->notifiableType = $notifiableType;
         $this->onQueue('notifications'); 
     }
 
@@ -52,7 +55,7 @@ class BatchBroadcastNotificationJob implements ShouldQueue
 
             // Broadcast to each user individually (Laravel Echo compatible)
             foreach ($this->userIds as $userId) {
-                broadcast(new CompetitionNotificationEvent($userId, $broadcastData));
+                broadcast(new CompetitionNotificationEvent($userId, $broadcastData, $this->notifiableType));
             }
 
             $duration = microtime(true) - $startTime;

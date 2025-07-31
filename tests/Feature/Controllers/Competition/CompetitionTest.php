@@ -208,6 +208,7 @@ class CompetitionTest extends TestCase
 
     public function test_admin_can_successfully_add_users_to_competition()
     {
+        Bus::fake();
         $competition = Competition::factory()->create(['admin_id' => $this->admin->id]);
         $users = User::factory()->count(3)->create();
         $userIds = $users->pluck('id')->toArray();
@@ -223,6 +224,7 @@ class CompetitionTest extends TestCase
                 'user_id' => $userId
             ]);
         }
+        Bus::assertDispatched(BatchCompetitionNotificationJob::class);
     }
 
     public function test_add_users_fails_with_unauthorized_admin()

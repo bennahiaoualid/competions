@@ -154,7 +154,7 @@ class CompetitionController extends Controller
      */
     function addCompetitionAuditors(Request $request, Competition $competition) : RedirectResponse {
         if ($request->auditor_ids) {
-            $this->competitionService->addCompetitionAuditors($competition, explode(",", $request->auditor_ids));
+            $this->competitionService->requestAuditorAssignment($competition, explode(",", $request->auditor_ids));
         }
         return Redirect::back();
     }

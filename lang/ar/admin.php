@@ -37,5 +37,43 @@ return [
         'update' => 'تحديث',
     ],
     'availability_updated' => 'تم تحديث التوفر بنجاح.',
+    'admin_approval' => [
+        'title' => 'طلبات موافقة المسؤول',
+        'fields' => [
+            'admin' => 'المسؤول',
+                            'entity' => 'نوع الكيان',
+            'type' => 'النوع',
+            'status' => 'الحالة',
+            'created_at' => 'تاريخ الإنشاء',
+            'actions' => 'الإجراءات',
+        ],
+        'types' => [
+            'auditor' => 'مدقق',
+            'level_manager' => 'مدير مستوى',
+        ],
+        'status' => [
+            'pending' => 'قيد الانتظار',
+            'approved' => 'تمت الموافقة',
+            'rejected' => 'مرفوض',
+        ],
+        'descriptions' => [
+            'auditor' => 'تعيين المسؤول كمدقق للمسابقة',
+            'level_manager' => 'تعيين المسؤول كمدير مستوى لمستوى المسابقة',
+        ],
+        'actions' => [
+                    'approve' => 'موافقة',
+                    'reject' => 'رفض',
+                    'view_details' => 'عرض التفاصيل',
+                    'view' => 'عرض التفاصيل',
+                ],
+        'messages' => [
+            'approved' => 'تمت الموافقة على الطلب بنجاح.',
+            'rejected' => 'تم رفض الطلب بنجاح.',
+            'no_pending' => 'لا توجد طلبات موافقة معلقة.',
+            'approve_confirmation' => 'هل أنت متأكد من أنك تريد الموافقة على هذا الطلب؟',
+            'reject_confirmation' => 'هل أنت متأكد من أنك تريد رفض هذا الطلب؟',
+            'delete_confirmation' => 'هل أنت متأكد من أنك تريد حذف طلب الموافقة هذا؟',
+        ],
+    ],
 
 ];

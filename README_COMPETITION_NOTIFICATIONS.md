@@ -40,6 +40,10 @@ This system provides real-time notifications for competition-related events. It 
    - Sent to all competition participants
    - Priority: `success`
 
+4. **User Added to Competition** (`user_added`)
+   - Sent to newly added users
+   - Priority: `info`
+
 ### Level Events
 1. **Level Created** (`level_created`)
    - Sent to all competition participants
@@ -72,6 +76,27 @@ public function createCompetition(array $data): bool
             
             // Send notification to eligible users
             $this->notificationService->competitionCreated($competition);
+            
+            return true;
+        });
+        return $result;
+    } catch (Exception $exception) {
+        // Handle error
+    }
+}
+
+// In CompetitionService - Adding users
+public function addCompetitionUsers(Competition $competition, array $user_ids): bool
+{
+    try {
+        $result = $this->transactionManager->run(function () use ($competition, $user_ids) {
+            $this->competitionRepository->addUsersToCompetition($competition, $user_ids);
+            
+            // Get the newly added users for notifications
+            $newUsers = User::whereIn('id', $user_ids)->get();
+            
+            // Send notification to newly added users
+            $this->notificationService->notifyUsers($newUsers, $competition, 'user_added');
             
             return true;
         });

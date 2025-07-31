@@ -8,6 +8,7 @@ use App\Models\Admin\Admin;
 use Database\Seeders\RoleSeeder;
 use App\Models\Competition\Level;
 use Illuminate\Support\Facades\Bus;
+use App\Enums\AdminApprovalTypeEnum;
 use App\Models\Competition\Question;
 use App\Models\Competition\Competition;
 use App\Jobs\Competition\FinishLevelJob;
@@ -58,7 +59,8 @@ class LevelControllerTest extends TestCase
             'status' => 'pending', // Not activated
             'start_date' => now()->addDays(8),
             'duration' => 60, // 60 minutes
-            'questions_number' => 5
+            'questions_number' => 5,
+            'admin_id' => $this->admin->id
         ]);
         
         // Authenticate as admin for tests that require authentication
@@ -89,7 +91,17 @@ class LevelControllerTest extends TestCase
             'questions_number' => $levelData['questions_number'],
             'competition_id' =>$this->competition->id
         ]);
-        Bus::assertDispatched(BatchCompetitionNotificationJob::class);
+        $this->assertDatabaseHas('admin_approvals', [
+            'admin_id' => $this->admin->id,
+            'entity_type' => Level::class,
+            'type' => AdminApprovalTypeEnum::LEVEL_MANAGER->value
+        ]);
+        Bus::assertDispatchedTimes(BatchCompetitionNotificationJob::class, 2);
+        Bus::assertDispatched(BatchCompetitionNotificationJob::class, function ($job) {
+            return 
+                $job->getNotifiableTypeForTest() === User::class &&
+                $job->getUserIdsForTest() === $this->competition->users()->pluck('users.id')->toArray();
+        });
     }
 
     
@@ -182,6 +194,14 @@ class LevelControllerTest extends TestCase
             'name' => $levelData['name'],
             'competition_id' => $competition->id
         ]);
+        $this->assertDatabaseMissing('admin_approvals', [
+            'admin_id' => $this->admin->id,
+            'entity_type' => Level::class,
+            'entity_id' => $this->level->id,
+            'type' => AdminApprovalTypeEnum::LEVEL_MANAGER->value
+        ]);
+
+        Bus::assertNothingDispatched();
     }
 
     public function test_can_not_store_level_admin_not_available_as_manager()
@@ -203,9 +223,11 @@ class LevelControllerTest extends TestCase
             'name' => $levelData['name'],
             'competition_id' => $this->competition->id
         ]);
+
+        Bus::assertNothingDispatched();
     }
     
-    public function test_can_update_level_successfully()
+    public function test_can_update_level_successfully_without_admin_change()
     {
         $updateData = [
             'name' => 'Updated Level',
@@ -224,7 +246,54 @@ class LevelControllerTest extends TestCase
             'description' => $updateData['description'],
             'duration' => $updateData['duration']
         ]);
-        Bus::assertDispatched(BatchCompetitionNotificationJob::class);
+        $this->assertDatabaseMissing('admin_approvals', [
+            'admin_id' => $this->admin->id,
+            'entity_type' => Level::class,
+            'entity_id' => $this->level->id,
+            'type' => AdminApprovalTypeEnum::LEVEL_MANAGER->value
+        ]);
+        Bus::assertDispatchedTimes(BatchCompetitionNotificationJob::class, 1);
+        Bus::assertDispatched(BatchCompetitionNotificationJob::class, function ($job) {
+            return 
+                $job->getNotifiableTypeForTest() === User::class &&
+                $job->getUserIdsForTest() === $this->competition->users()->pluck('users.id')->toArray();
+        });
+    }
+
+    public function test_can_update_level_successfully_with_admin_change()
+    {
+        $admin = Admin::factory()->create();
+        $admin->availability()->update(['level_manager' => true]);
+
+        $updateData = [
+            'name' => 'Updated Level',
+            'description' => 'Updated Description',
+            'start_date' => now()->addDays(10)->format('Y-m-d H:i'),
+            'duration' => 90,
+            'admin_id' => $admin->id
+        ];
+
+        $response = $this->patch(route('admin.competitions.level.update', $this->level), $updateData);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('levels', [
+            'id' => $this->level->id,
+            'name' => $updateData['name'],
+            'description' => $updateData['description'],
+            'duration' => $updateData['duration']
+        ]);
+        $this->assertDatabaseHas('admin_approvals', [
+            'admin_id' => $admin->id,
+            'entity_type' => Level::class,
+            'entity_id' => $this->level->id,
+            'type' => AdminApprovalTypeEnum::LEVEL_MANAGER->value
+        ]);
+        Bus::assertDispatchedTimes(BatchCompetitionNotificationJob::class, 2);
+        Bus::assertDispatched(BatchCompetitionNotificationJob::class, function ($job) {
+            return 
+                $job->getNotifiableTypeForTest() === User::class &&
+                $job->getUserIdsForTest() === $this->competition->users()->pluck('users.id')->toArray();
+        });
     }
 
     public function test_can_not_update_level_unauthorized_admin()
@@ -284,6 +353,8 @@ class LevelControllerTest extends TestCase
             trans('messages.validation.not_allow.level_activate_time_conflict'),
             session()->get('messages')[0]['message']
         );
+
+        Bus::assertNothingDispatched();
     }
 
     public function test_can_not_update_level_admin_not_available_as_manager()
@@ -310,6 +381,8 @@ class LevelControllerTest extends TestCase
             'name' => $this->level->name,
             'competition_id' => $this->competition->id
         ]);
+
+        Bus::assertNothingDispatched();
     }
 
     public function test_can_delete_level_successfully()

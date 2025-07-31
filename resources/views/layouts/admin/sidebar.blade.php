@@ -116,6 +116,17 @@
                 </x-nav-link>
             </li>
 
+            {{-- Admin Approval Requests --}}
+            <li class="mb-2">
+                <x-nav-link href="{{route('admin.approvals.index')}}" :active="request()->routeIs('admin.approvals.*')" :sub="false">
+                    <x-slot:icon>
+                        <i class="fas fa-check-circle me-3"></i>
+                    </x-slot:icon>
+                    <span class="sidebar-text">{{__("admin.admin_approval.title")}}</span>
+                    <span class="block ms-2 py-0.5 px-2 rounded-md bg-warning text-white sidebar-badge" x-text="$store.adminApprovals.pendingCount || 0"></span>
+                </x-nav-link>
+            </li>
+
 
         </ul>
     </nav>

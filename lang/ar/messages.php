@@ -22,6 +22,7 @@ return [
             'approved' => 'تم الاعتماد',
             'response_audited' => 'الاجابة رقم :number تم تقييمها',
             'hard_deleted' => 'تم حذف الكيان بشكل نهائي',
+            'level_manager_requested' => 'تم ارسال طلب للمشرف :admin ليكون مدير هذا المستوى',
         ],
         'fail' =>[
             'saved' => 'حدث خطأ أثناء الحفظ',

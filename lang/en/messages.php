@@ -23,6 +23,7 @@ return [
             'approved' => 'approved',
             'response_audited' => 'response number :number has been audited',
             'hard_deleted' => 'entity has been permanently deleted',
+            'level_manager_requested' => 'Request was sent to :admin to be the level manager',
         ],
         'fail' =>[
             'saved' => 'something went wrong while saving',

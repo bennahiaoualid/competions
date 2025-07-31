@@ -4,6 +4,8 @@ namespace App\Services\Notification;
 
 use App\Models\User;
 use App\Models\Competition\Level;
+use App\Models\Admin\Admin;
+use App\Models\Admin\AdminApproval;
 use Illuminate\Support\Collection;
 use App\Models\Competition\Competition;
 use App\Jobs\Notifications\BatchBroadcastNotificationJob;
@@ -46,8 +48,10 @@ class OptimizedCompetitionNotificationService
         
         // Prepare notification data once
         $notificationData = $this->prepareNotificationData($competition, $eventType, $level, $additionalData);
+        
+        $notifiableType = $this->getNotifiableType($eventType);
         // Dispatch single batch job for database notifications
-        BatchCompetitionNotificationJob::dispatch($userIds, $notificationData);
+        BatchCompetitionNotificationJob::dispatch($userIds, $notificationData, $notifiableType);
         
         // Dispatch single batch job for broadcast notifications (if needed for real-time events)
         if ($this->shouldBroadcast($eventType)) {
@@ -86,6 +90,18 @@ class OptimizedCompetitionNotificationService
             'level_activated',
             'level_finished'
         ]);
+    }
+
+    /**
+     * Determine the type of notifiable
+     */
+    protected function getNotifiableType(string $eventType): string
+    {
+        return match($eventType) {
+            'auditor_requested' => Admin::class,
+            'level_manager_requested' => Admin::class,
+            default => User::class,
+        };
     }
 
     /**
@@ -166,6 +182,7 @@ class OptimizedCompetitionNotificationService
             case 'level_created':
             case 'level_updated':
             case 'level_finished':
+            case 'level_manager_requested':
                 return array_merge($baseData, [
                     'level_name' => $level->name,
                 ]);
@@ -192,7 +209,11 @@ class OptimizedCompetitionNotificationService
             case 'level_activated':
                 return 'success';
             case 'level_finished':
+            case 'user_added':
                 return 'info';
+            case 'auditor_requested':
+            case 'level_manager_requested':
+                return 'warning';
             default:
                 return 'info';
         }
@@ -209,8 +230,88 @@ class OptimizedCompetitionNotificationService
             case 'level_created':
             case 'level_updated':
                 return route('competitions.level', $level);
+            case 'auditor_requested':
+            case 'level_manager_requested':
+                return route('admin.approvals.index');
             default:
                 return route('competitions.detail', $competition);
         }
+    }
+
+    /**
+     * Notify admin about level manager request
+     */
+    public function levelManagerRequested(Level $level, Admin $admin): void
+    {
+        $this->notifyUsers(collect([$admin]), $level->competition, 'level_manager_requested', $level);
+    }
+
+    /**
+     * Notify multiple admins about auditor request
+     */
+    public function auditorRequestedBulk(Competition $competition, Collection $admins): void
+    {
+        $this->notifyUsers($admins, $competition, 'auditor_requested');
+    }
+
+    /**
+     * Notify competition creator about approval decision
+     */
+    public function approvalDecision(AdminApproval $approval, string $decision): void
+    {
+        $competition = $this->getCompetitionFromApproval($approval);
+        $admin = $competition->admin;
+        $approvedAdmin = $approval->admin;
+        
+        $notificationData = [
+            'translation_key' => "notifications.approval.{$decision}",
+            'translation_data' => [
+                'competition_title' => $competition->title,
+                'admin_name' => $approvedAdmin->name,
+                'approval_type' => $approval->type,
+            ],
+            'notification_priority_type' => $decision === 'approved' ? 'success' : 'warning',
+            'link' => $this->getApprovalLink($approval),
+            'competition_id' => $competition->id,
+            'event_type' => "approval_{$decision}",
+            'type' => 'approval_decision',
+            'recipient_type' => 'competition_creator',
+            'recipient_id' => $competition->admin_id,
+        ];
+
+        // Database notification only for approved, broadcast for rejected
+        BatchCompetitionNotificationJob::dispatch([$competition->admin_id], $notificationData, Admin::class);
+        
+        if ($decision === 'rejected') {
+            BatchBroadcastNotificationJob::dispatch([$competition->admin_id], $notificationData, Admin::class);
+        }
+    }
+
+    /**
+     * Get competition from approval entity
+     */
+    private function getCompetitionFromApproval(AdminApproval $approval): Competition
+    {
+        if ($approval->entity_type === Competition::class) {
+            return $approval->entity;
+        }
+        
+        if ($approval->entity_type === Level::class) {
+            return $approval->entity->competition;
+        }
+        
+        throw new \InvalidArgumentException('Invalid entity type for approval');
+    }
+
+    /**
+     * Get appropriate link for approval
+     */
+    private function getApprovalLink(AdminApproval $approval): string
+    {
+        return match($approval->entity_type) {
+            Competition::class => route('admin.competitions.edit', ['id' => base64_encode($approval->entity_id)]),
+            Level::class => route('admin.competitions.level.edit', ['id' => base64_encode($approval->entity_id)]),
+            default => route('admin.approvals.index'),
+        };
     }
 } 

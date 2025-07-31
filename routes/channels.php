@@ -7,7 +7,7 @@ Broadcast::channel('job.admin.{userId}', function ($admin, $userId) {
     return (int) $admin->id === (int) $userId;
 }, ['guards' => ['admin']]);
 
-Broadcast::channel('App.Models.Admin.Admin.{id}', function ($user, $id) {
+Broadcast::channel('notification.admin.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 },['guards' => ['admin']]);
 

@@ -9,6 +9,7 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use App\Models\User;
 
 class CompetitionNotificationEvent implements ShouldBroadcastNow
 {
@@ -25,9 +26,14 @@ class CompetitionNotificationEvent implements ShouldBroadcastNow
     public array $notificationData;
 
     /**
+     * The notifiable type.
+     */
+    public string $notifiableType;
+
+    /**
      * Create a new event instance.
      */
-    public function __construct(int $userId, array $notificationData)
+    public function __construct(int $userId, array $notificationData, string $notifiableType = User::class)
     {
         $this->userId = $userId;
         $this->notificationData = $notificationData;
@@ -38,9 +44,15 @@ class CompetitionNotificationEvent implements ShouldBroadcastNow
      */
     public function broadcastOn(): array
     {
-        return [
-            new PrivateChannel('notification.user.' . $this->userId),
-        ];
+        if($this->notifiableType === User::class){
+            return [
+                new PrivateChannel('notification.user.' . $this->userId),
+            ];
+        }else{
+            return [
+                new PrivateChannel('notification.admin.' . $this->userId),
+            ];
+        }
     }
 
     /**
