@@ -221,22 +221,42 @@ class CompetitionService
                 return false;
             }
             $result = $this->transactionManager->run(function () use ($competition, $auditorIds) {
-                $adminApprovalRequests = $this->approvalService->insertBulkApprovalRequests(
+                // Check if any of the auditors have an existing approval request
+                $approvalStatus = $this->approvalService->getApprovalStatusForMultipleAdmins(
                     adminIds: $auditorIds,
                     entityType: Competition::class,
                     entityId: $competition->id,
-                    type: AdminApprovalTypeEnum::AUDITOR
+                    type: AdminApprovalTypeEnum::AUDITOR->value
                 );
                 
-                // Notify all admins about auditor request
-                if ($adminApprovalRequests->isNotEmpty()) {
-                    $this->notificationService->auditorRequestedBulk($competition, $adminApprovalRequests);
+                if(count($approvalStatus['pending']) > 0){
+                    $this->flasher->error(__('messages.validation.error.auditor_assignment_requested_pending', ['admins' => implode(', ', array_column($approvalStatus['pending'], 'name'))]));
                 }
-                
-                return true;
+                if(count($approvalStatus['rejected']) > 0){
+                    $this->flasher->error(__('messages.validation.error.auditor_assignment_requested_rejected', ['admins' => implode(', ', array_column($approvalStatus['rejected'], 'name'))]));
+                }
+                if(count($approvalStatus['approved']) > 0){
+                    $this->flasher->error(__('messages.validation.error.auditor_assignment_requested_approved', ['admins' => implode(', ', array_column($approvalStatus['approved'], 'name'))]));
+                }
+
+                if(count($approvalStatus['new']) > 0){
+                    $adminIds = array_column($approvalStatus['new'], 'id');
+                    $adminApprovalRequests = $this->approvalService->insertBulkApprovalRequests(
+                        adminIds: $adminIds,
+                        entityType: Competition::class,
+                        entityId: $competition->id,
+                        type: AdminApprovalTypeEnum::AUDITOR
+                    );
+                    // Notify all admins about auditor request
+                    if ($adminApprovalRequests->isNotEmpty()) {
+                        $this->flasher->info(__('messages.validation.success.auditor_assignment_requested', ['admins' => implode(', ', $adminApprovalRequests->pluck('name')->toArray())]));
+                        $this->notificationService->auditorRequestedBulk($competition, $adminApprovalRequests);
+                    }
+                    return true;
+                }
+                return false;
             });
 
-            $this->flasher->crudSuccess('saved');
             return $result;
         } catch (Exception $exception) {
             $this->registerLogs('Error requesting auditor assignment: ', $exception);

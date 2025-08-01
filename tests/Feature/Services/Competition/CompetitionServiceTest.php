@@ -14,6 +14,7 @@ use App\Models\Competition\Competition;
 use App\Services\Competition\CompetitionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Jobs\Competetion\SyncCompetitionParticipants;
+use App\Jobs\Notifications\BatchCompetitionNotificationJob;
 
 class CompetitionServiceTest extends TestCase
 {
@@ -25,6 +26,7 @@ class CompetitionServiceTest extends TestCase
     protected $flasher;
     protected $jobTrackingService;
     protected $notificationService;
+    protected $approvalService;
     protected $mainAdmin;
     protected $userNotify;
 
@@ -36,12 +38,14 @@ class CompetitionServiceTest extends TestCase
         $this->flasher = Mockery::mock(\App\Contracts\FlasherInterface::class);
         $this->jobTrackingService = Mockery::mock(\App\Services\Monitoring\JobTrackingService::class);
         $this->notificationService = Mockery::mock(\App\Services\Notification\OptimizedCompetitionNotificationService::class);
+        $this->approvalService = Mockery::mock(\App\Services\Admin\AdminApprovalService::class);
         $this->service = new CompetitionService(
             $this->competitionRepository,
             $this->transactionManager,
             $this->flasher,
             $this->jobTrackingService,
-            $this->notificationService
+            $this->notificationService,
+            $this->approvalService
         );
         $this->userNotify = Mockery::mock('alias:'.UserNotifyEmail::class);
 
@@ -189,6 +193,7 @@ class CompetitionServiceTest extends TestCase
         $competition = Competition::factory()->create();
         $users = User::factory()->count(2)->create();
         $this->transactionManager->shouldReceive('run')->andReturnUsing(fn($cb) => $cb());
+        $this->notificationService->shouldReceive('notifyUsers')->once();
         $this->flasher->shouldReceive('crudSuccess')->with('saved')->once();
         $this->competitionRepository->shouldReceive('addUsersToCompetition')->once();
         
@@ -257,34 +262,48 @@ class CompetitionServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    public function test_add_competition_auditors_success()
+    public function test_request_auditor_assignment_success()
     {
         $competition = Competition::factory()->create();
         $auditors = Admin::factory()->count(2)->create();
         $competition = $competition->fresh();
         $this->transactionManager->shouldReceive('run')->andReturnUsing(fn($cb) => $cb());
-        $this->flasher->shouldReceive('crudSuccess')->with('saved')->once();
-        $this->competitionRepository->shouldReceive('addAuditorsToCompetition')->once();
-        $this->userNotify->shouldReceive('auditorNewCompetition')->once();
+
+        $approvalStatus = [
+            'new' => $auditors->map(function($admin){
+                return ['id' => $admin->id];
+            })->toArray(),
+            'pending' => [['name' => 'admin1']],
+            'rejected' => [['name' => 'admin2']],
+            'approved' => [['name' => 'admin3']],
+        ];
+        $this->approvalService->shouldReceive('getApprovalStatusForMultipleAdmins')->once()->andReturn($approvalStatus);
+        $this->approvalService->shouldReceive('insertBulkApprovalRequests')->once()->andReturn($auditors);
+        $this->flasher->shouldReceive('info')->once()->with(__('messages.validation.success.auditor_assignment_requested', ['admins' => implode(', ', $auditors->pluck('name')->toArray())]));
+        $this->flasher->shouldReceive('error')->once()->with(__('messages.validation.error.auditor_assignment_requested_pending', ['admins' => implode(', ', array_column($approvalStatus['pending'], 'name'))]));
+        $this->flasher->shouldReceive('error')->once()->with(__('messages.validation.error.auditor_assignment_requested_rejected', ['admins' => implode(', ', array_column($approvalStatus['rejected'], 'name'))]));
+        $this->flasher->shouldReceive('error')->once()->with(__('messages.validation.error.auditor_assignment_requested_approved', ['admins' => implode(', ', array_column($approvalStatus['approved'], 'name'))]));
+
+        $this->notificationService->shouldReceive('auditorRequestedBulk')->once();
         
-        $result = $this->service->addCompetitionAuditors($competition, $auditors->pluck('id')->toArray());
+        $result = $this->service->requestAuditorAssignment($competition, $auditors->pluck('id')->toArray());
         
         $this->assertTrue($result);
     }
 
-    public function test_add_competition_auditors_faild_unauthorized()
+    public function test_request_auditor_assignment_faild_unauthorized()
     {
         $auditors = Admin::factory()->count(2)->create();
         $competition = Competition::factory()->create(['admin_id' => $auditors->first()->id]);
         $competition = $competition->fresh();
         $this->flasher->shouldReceive('error')->once();
         
-        $result = $this->service->addCompetitionAuditors($competition, $auditors->pluck('id')->toArray());
+        $result = $this->service->requestAuditorAssignment($competition, $auditors->pluck('id')->toArray());
         
         $this->assertFalse($result);
     }
 
-    public function test_add_competition_auditors_handles_exception()
+    public function test_request_auditor_assignment_handles_exception()
     {
         $competition = Competition::factory()->create();
         $auditors = Admin::factory()->count(2)->create();
@@ -292,7 +311,7 @@ class CompetitionServiceTest extends TestCase
         $this->transactionManager->shouldReceive('run')->andThrow(new \Exception('DB error'));
         $this->flasher->shouldReceive('crudFailure')->with('saved')->once();
         
-        $result = $this->service->addCompetitionAuditors($competition, $auditors->pluck('id')->toArray());
+        $result = $this->service->requestAuditorAssignment($competition, $auditors->pluck('id')->toArray());
         
         $this->assertFalse($result);
     }

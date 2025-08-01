@@ -2,9 +2,7 @@
 
 namespace App\Events\Notifications;
 
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -36,6 +34,7 @@ class CompetitionNotificationEvent implements ShouldBroadcastNow
     public function __construct(int $userId, array $notificationData, string $notifiableType = User::class)
     {
         $this->userId = $userId;
+        $this->notifiableType = $notifiableType;
         $this->notificationData = $notificationData;
     }
 

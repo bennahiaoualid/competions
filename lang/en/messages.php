@@ -24,6 +24,7 @@ return [
             'response_audited' => 'response number :number has been audited',
             'hard_deleted' => 'entity has been permanently deleted',
             'level_manager_requested' => 'Request was sent to :admin to be the level manager',
+            'auditor_assignment_requested' => 'Request was sent to :admins to be the auditor',
         ],
         'fail' =>[
             'saved' => 'something went wrong while saving',
@@ -45,6 +46,11 @@ return [
         '404' => [
             'user' => 'user not found',
             'competition' => 'competition not found',
+        ],
+        'error' => [
+            'auditor_assignment_requested_pending' => ':admins are already assigned as auditors for this competition waiting for approval',
+            'auditor_assignment_requested_rejected' => ':admins are already rejected your request to be the auditor for this competition',
+            'auditor_assignment_requested_approved' => ':admins are already approved as auditors for this competition before, you can not assign them again',
         ],
         'not_allow' => [
             'user_delete' => 'you have no permission to delete a user who doesnt created by you',

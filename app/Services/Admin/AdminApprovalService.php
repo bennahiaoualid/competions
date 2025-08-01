@@ -50,6 +50,45 @@ class AdminApprovalService
     }
 
     /**
+     * Get approval status counts for a multiples admins and entity
+     */
+    public function getApprovalStatusForMultipleAdmins(array $adminIds, string $entityType, int $entityId, string $type): array
+    {
+        $results = Admin::select([
+            'admins.id as admin_id',
+            'admins.name as admin_name',
+            'admin_approvals.status'
+        ])
+        ->leftJoin('admin_approvals', function($join) use ($entityType, $entityId, $type) {
+            $join->on('admins.id', '=', 'admin_approvals.admin_id')
+                ->where('admin_approvals.entity_type', '=', $entityType)
+                ->where('admin_approvals.entity_id', '=', $entityId)
+                ->where('admin_approvals.type', '=', $type);
+        })
+        ->whereIn('admins.id', $adminIds)
+        ->get();
+
+        $grouped = [
+            'pending' => [],
+            'rejected' => [],
+            'approved' => [],
+            'new' => []
+        ];
+
+        foreach ($results as $row) {            
+            if ($row->status === null) {
+                $adminData = ['id' => $row->admin_id];
+                $grouped['new'][] = $adminData;
+            } else {
+                $adminData = ['name' => $row->admin_name];
+                $grouped[$row->status][] = $adminData;
+            }
+        }
+
+        return $grouped;
+    }
+
+    /**
      * Remove all pending approval requests for a specific entity
      */
     public function removePendingRequests(string $entityType, int $entityId, string $type): int
@@ -73,32 +112,19 @@ class AdminApprovalService
     ): Collection {
         $data = [];
         $now = now();
-         // Check if pending request already exists for this admin
-        $existingRequest = AdminApproval::where([
-            'entity_type' => $entityType,
-            'entity_id' => $entityId,
-            'type' => $type->value,
-            'status' => 'pending',
-        ])->whereIn('admin_id', $adminIds)->get();
 
-        if($existingRequest->isEmpty()){
-            foreach ($adminIds as $adminId) {
-                $data[] = [
-                    'admin_id' => $adminId,
-                    'entity_type' => $entityType,
-                    'entity_id' => $entityId,
-                    'type' => $type->value,
-                    'status' => 'pending',
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            }
-            if (!empty($data)) {
-                AdminApproval::insert($data);
-            }
-        }else{
-            return $existingRequest;
+        foreach ($adminIds as $adminId) {
+            $data[] = [
+                'admin_id' => $adminId,
+                'entity_type' => $entityType,
+                'entity_id' => $entityId,
+                'type' => $type->value,
+                'status' => 'pending',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
         }
+        AdminApproval::insert($data);
 
         // Return all approval requests (both existing and newly created)
         return Admin::whereIn('id', $adminIds)->get();

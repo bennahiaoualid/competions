@@ -8,6 +8,7 @@ use App\Models\Admin\Admin;
 use Database\Seeders\RoleSeeder;
 use App\Models\Competition\Level;
 use Illuminate\Support\Facades\Bus;
+use App\Enums\AdminApprovalTypeEnum;
 use App\Models\Competition\Competition;
 use App\Jobs\Competition\DeleteAuditorJob;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -306,8 +307,9 @@ class CompetitionTest extends TestCase
         $response->assertSessionHasErrors(['competition_id', 'user_id']);
     }
 
-    public function test_admin_can_successfully_add_auditors_to_competition()
+    public function test_admin_can_successfully_request_auditor_assignment()
     {
+        Bus::fake();
         $competition = Competition::factory()->create(['admin_id' => $this->admin->id]);
         $auditors = Admin::factory()->count(3)->create();
         // Create availability records for these auditors
@@ -324,15 +326,19 @@ class CompetitionTest extends TestCase
         $competition->fresh();
 
         foreach ($auditorIds as $auditorId) {
-            $this->assertDatabaseHas('admin_competition', [
-                'competition_id' => $competition->id,
-                'admin_id' => $auditorId
+            $this->assertDatabaseHas('admin_approvals', [
+                'admin_id' => $auditorId,
+                'entity_type' => Competition::class,
+                'entity_id' => $competition->id,
+                'type' => AdminApprovalTypeEnum::AUDITOR->value
             ]);
         }
+        Bus::assertDispatched(BatchCompetitionNotificationJob::class);
     }
 
-    public function test_add_auditors_fails_with_unauthorized_admin()
+    public function test_request_auditor_assignment_fails_with_unauthorized_admin()
     {
+        Bus::fake();
         $new_admin = Admin::factory()->create();
         $competition = Competition::factory()->create(['admin_id' => $new_admin->id]);
         $auditors = Admin::factory()->count(3)->create();
@@ -348,11 +354,14 @@ class CompetitionTest extends TestCase
             session()->get('messages')[0]['message']
         );
         foreach ($auditorIds as $auditorId) {
-            $this->assertDatabaseMissing('admin_competition', [
-                'competition_id' => $competition->id,
-                'admin_id' => $auditorId
+            $this->assertDatabaseMissing('admin_approvals', [
+                'admin_id' => $auditorId,
+                'entity_type' => Competition::class,
+                'entity_id' => $competition->id,
+                'type' => AdminApprovalTypeEnum::AUDITOR->value
             ]);
         }
+        Bus::assertNotDispatched(BatchCompetitionNotificationJob::class);
     }
 
     public function test_admin_can_successfully_remove_auditor_from_competition()
