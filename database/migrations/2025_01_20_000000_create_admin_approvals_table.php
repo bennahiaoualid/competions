@@ -34,6 +34,9 @@ return new class extends Migration
             $table->index(['admin_id', 'created_at'], 'admin_approvals_admin_created_index');
             $table->index(['admin_id', 'status'], 'admin_approvals_admin_status_index');
             $table->index(['admin_id', 'type'], 'admin_approvals_admin_type_index');
+            
+            // 🆕 UNIQUE CONSTRAINT - Prevent duplicate pending approvals
+            $table->unique(['admin_id', 'entity_type', 'entity_id', 'type'], 'unique_pending_approval');
         });
     }
 

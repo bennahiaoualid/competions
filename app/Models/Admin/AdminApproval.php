@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Database\Factories\Admin\AdminApprovalFactory;
 
 /**
  * AdminApproval Model
@@ -133,7 +134,7 @@ class AdminApproval extends Model
      * Approve the request
      */
     public function approve(): bool
-    {
+    {     
         return $this->update(['status' => 'approved']);
     }
 
@@ -141,7 +142,7 @@ class AdminApproval extends Model
      * Reject the request
      */
     public function reject(): bool
-    {
+    {  
         return $this->update(['status' => 'rejected']);
     }
 

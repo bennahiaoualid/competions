@@ -387,6 +387,28 @@ public function test_approval_workflow(): void
 5. **Add translations** - Always provide both English and Arabic translations
 6. **Write tests** - Create comprehensive tests for your new approval type
 7. **Document your changes** - Update this README when adding new approval types
+8. **Respect status transitions** - Only pending approvals can be approved/rejected
+9. **Handle duplicates gracefully** - Use `insertOrIgnore()` for bulk operations
+10. **Monitor cleanup logs** - Check logs for cleanup activity and issues
+
+## Database Constraints
+
+The approval system includes several database constraints to ensure data integrity:
+
+### Unique Constraint
+- **Purpose**: Prevents duplicate pending approvals for the same admin/entity/type
+- **Constraint**: `unique_pending_approval` on `(admin_id, entity_type, entity_id, type)`
+- **Effect**: Duplicate approval requests are ignored gracefully
+
+### Status Validation
+- **Pending → Approved**: Only pending approvals can be approved
+- **Pending → Rejected**: Only pending approvals can be rejected
+- **Validation**: Throws `InvalidArgumentException` for invalid transitions
+
+### Cleanup Constraints
+- **Time-based**: All approvals older than 24 hours are cleaned up
+- **Status-agnostic**: Cleans pending, approved, and rejected records
+- **Scheduled**: Runs every 6 hours via Laravel scheduler
 
 ## Troubleshooting
 
@@ -396,6 +418,9 @@ public function test_approval_workflow(): void
 2. **Translation missing** - Check that translations exist in both language files
 3. **Notification not sent** - Verify the notification service is properly injected
 4. **Permission denied** - Check that the admin has permission to approve the request
+5. **Duplicate constraint violation** - Use `insertOrIgnore()` for bulk operations
+6. **Invalid status transition** - Only approve/reject pending approvals
+7. **Cleanup not running** - Check scheduler configuration and logs
 
 ### Debug Tips
 
@@ -423,7 +448,58 @@ When adding a new approval type, follow this checklist:
 - [ ] Add notification method to `OptimizedCompetitionNotificationService` (if needed)
 - [ ] Write unit tests for the handler
 - [ ] Write feature tests for the complete workflow
+- [ ] Test cleanup functionality with factory
+- [ ] Verify database constraints work correctly
 - [ ] Update this documentation
+
+## Cleanup System
+
+The approval system includes an automatic cleanup mechanism to prevent database bloat and give users fresh opportunities.
+
+### How It Works
+
+- **Cleanup Period**: 24 hours
+- **Frequency**: Every 6 hours via scheduler
+- **Scope**: All approval statuses (pending, approved, rejected)
+- **Purpose**: Give request senders second chances and admins fresh opportunities
+
+### Benefits
+
+1. **Prevents Database Bloat** - Automatically removes old approval records
+2. **Fresh Opportunities** - Admins who rejected can be invited again after 24 hours
+3. **Dynamic System** - Adapts to changing circumstances and preferences
+4. **Better UX** - Request senders aren't stuck with old pending requests
+
+### Implementation
+
+```php
+// Cleanup command (runs every 6 hours)
+app(\App\Console\Commands::class)->cleanupExpiredApprovals();
+
+// Manual cleanup
+php artisan tinker --execute="app(\App\Console\Commands::class)->cleanupExpiredApprovals();"
+```
+
+### Testing Cleanup
+
+```php
+// Create test data with factory
+AdminApproval::factory()->old()->pending()->count(5)->create();
+AdminApproval::factory()->recent()->approved()->count(3)->create();
+
+// Run cleanup
+app(\App\Console\Commands::class)->cleanupExpiredApprovals();
+
+// Verify results
+AdminApproval::count(); // Should be 3 (recent ones remain)
+```
+
+### Business Logic
+
+- **24-Hour Window**: Gives reasonable time for admins to respond
+- **All Statuses**: Cleans pending, approved, and rejected records
+- **Fresh Start**: Allows for changing circumstances and preferences
+- **No Permanent Decisions**: Prevents stuck approval states
 
 ## Related Files
 
@@ -434,5 +510,8 @@ When adding a new approval type, follow this checklist:
 - `app/Services/Admin/AdminApprovalService.php` - Approval request management
 - `app/Models/Admin/AdminApproval.php` - Approval model
 - `app/Services/Notification/OptimizedCompetitionNotificationService.php` - Notification service
+- `app/Console/Commands.php` - Cleanup command
+- `routes/console.php` - Scheduler configuration
+- `database/factories/Admin/AdminApprovalFactory.php` - Test data factory
 - `lang/en/admin.php` - English translations
 - `lang/ar/admin.php` - Arabic translations 
