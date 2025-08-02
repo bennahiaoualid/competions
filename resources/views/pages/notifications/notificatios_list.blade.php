@@ -1,11 +1,9 @@
-@extends('layouts.admin.master')
+@extends('layouts.'.$type.'.master')
+@section('css')
 
-@section('title')
-    {{ __('notifications.notifications') }}
-@endsection
-
-@section('page_title')
-    {{ __('notifications.notifications') }}
+    @section('title')
+        {{ __('notifications.notifications') }}
+    @stop
 @endsection
 
 @section('content')
@@ -35,8 +33,12 @@
                 :deleteRoute="route('notifications.destroy')"
                 :notificationId="$notification['id']"
                 :createdAt="$notification['created_at']"
+                :icon="$notification['icon'] ?? null"
             />
         @endforeach
+    </div>
+    <div class="mt-2">
+        <x-pagination :paginator="$notifications" />
     </div>
 
     <x-modal name="delete_notifications_modal" title="My Modal" :show="false">

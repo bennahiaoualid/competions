@@ -54,7 +54,8 @@ return [
         'name' => 'name',
         'duration' => 'duration',
         'questions_number' => 'questions number',
-        'admin' => 'level responsible'
+        'admin' => 'level responsible',
+        'only_manager_change' => 'Only change level manager (use approval workflow)'
     ],
     'question' => [
         'the_question' => 'question',

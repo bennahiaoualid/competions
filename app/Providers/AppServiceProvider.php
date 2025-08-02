@@ -24,24 +24,20 @@ use App\Services\Monitoring\JobTrackingService;
 use App\Repository\Admin\AdminProfileRepository;
 use App\Services\Competition\CompetitionService;
 use Illuminate\Auth\Notifications\ResetPassword;
-use App\Repository\Competition\QuestionRepository;
 use App\Repository\GuestUsers\UserGuestRepository;
 use App\Repository\User\UserCompetitionRepository;
 use App\Services\GuestUsers\GlobalQuestionService;
 use App\Repository\Competition\CompetitionRepository;
-use App\Services\CashManagment\GuestUserCacheService;
 use App\Interface\Competition\AuditRepositoryInterface;
 use App\Interface\Competition\LevelRepositoryInterface;
-use App\Repository\GuestUsers\GlobalQuestionRepository;
 use App\Interface\Admin\AdminProfileRepositoryInterface;
-use App\Interface\Competition\QuestionRepositoryInterface;
 use App\Interface\GuestUsers\UserGuestRepositoryInterface;
 use App\Interface\Monitoring\JobTrackingStrategyInterface;
 use App\Interface\User\UserCompetitionRepositoryInterface;
 use App\Repository\Monitoring\DatabaseJobTrackingStrategy;
 use App\Repository\Monitoring\InMemoryJobTrackingStrategy;
 use App\Interface\Competition\CompetitionRepositoryInterface;
-use App\Interface\GuestUsers\GlobalQuestionRepositoryInterface;
+use App\Services\Notification\OptimizedCompetitionNotificationService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -77,7 +73,9 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(CompetitionRepositoryInterface::class),
                 $app->make(TransactionManagerInterface::class),
                 $app->make(FlasherInterface::class),
-                $app->make(JobTrackingService::class)
+                $app->make(JobTrackingService::class),
+                $app->make(OptimizedCompetitionNotificationService::class),
+                $app->make(\App\Services\Admin\AdminApprovalService::class)
             );
         });
 
@@ -87,7 +85,9 @@ class AppServiceProvider extends ServiceProvider
             return new LevelService(
                 $app->make(LevelRepositoryInterface::class),
                 $app->make(TransactionManagerInterface::class),
-                $app->make(FlasherInterface::class)
+                $app->make(FlasherInterface::class),
+                $app->make(OptimizedCompetitionNotificationService::class),
+                $app->make(\App\Services\Admin\AdminApprovalService::class)
             );
         });
 
@@ -100,6 +100,9 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // user competition
+
+        // approval services
+        $this->app->bind(\App\Contracts\Approval\ApprovalFactoryInterface::class, \App\Factories\Approval\ApprovalHandlerFactory::class);
         $this->app->bind(UserCompetitionRepositoryInterface::class, UserCompetitionRepository::class);
         $this->app->bind(UserCompetitionService::class, function ($app) {
             return new UserCompetitionService(

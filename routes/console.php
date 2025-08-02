@@ -9,3 +9,8 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote')->hourly();
 
 Schedule::command('app:update-user-leaderboard-results')->everyMinute();
+
+// 🆕 Clean up expired approval requests every 6 hours
+Schedule::call(function () {
+    app(\App\Console\Commands::class)->cleanupExpiredApprovals();
+})->everySixHours();

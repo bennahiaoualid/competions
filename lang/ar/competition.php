@@ -53,7 +53,8 @@ return [
         'name' => 'اسم المرحلة',
         'duration' => 'المدة',
         'questions_number' => 'عدد الاسئلة',
-        'admin' => 'مسؤول المرحلة'
+        'admin' => 'مسؤول المرحلة',
+        'only_manager_change' => 'تغيير مسؤول المرحلة فقط (استخدام نظام الموافقة)'
     ],
     'question' => [
         'the_question' => 'السؤال',

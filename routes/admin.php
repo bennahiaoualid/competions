@@ -128,6 +128,12 @@ Route::group(
             Route::patch('/availability/{adminAvailability}/auditor', [\App\Http\Controllers\Admin\AdminAvailabilityController::class, 'updateAuditor'])->name('availability.updateAuditor');
             Route::patch('/availability/{adminAvailability}/level-manager', [\App\Http\Controllers\Admin\AdminAvailabilityController::class, 'updateLevelManager'])->name('availability.updateLevelManager');
             Route::patch('/availability/{adminAvailability}/ownership-transfer', [\App\Http\Controllers\Admin\AdminAvailabilityController::class, 'updateTransferOwnership'])->name('availability.updateOwnershipTransfer');
+
+            // Admin Approval routes
+            Route::get('/approvals', [\App\Http\Controllers\Admin\AdminApprovalController::class, 'index'])->name('approvals.index');
+            Route::post('/approvals/approve', [\App\Http\Controllers\Admin\AdminApprovalController::class, 'approve'])->name('approvals.approve');
+            Route::post('/approvals/reject', [\App\Http\Controllers\Admin\AdminApprovalController::class, 'reject'])->name('approvals.reject');
+            Route::delete('/approvals/delete', [\App\Http\Controllers\Admin\AdminApprovalController::class, 'destroy'])->name('approvals.destroy');
         });
 
         require __DIR__.'/auth_admin.php';

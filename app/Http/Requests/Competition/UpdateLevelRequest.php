@@ -43,6 +43,7 @@ class UpdateLevelRequest extends FormRequest
                 'required',
                 'exists:admins,id'
             ],
+            'only_manager_change' => 'nullable|boolean',
         ];
 
         // Apply the after_or_equal:now rule if the start_date has changed

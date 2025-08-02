@@ -22,6 +22,8 @@ return [
             'approved' => 'تم الاعتماد',
             'response_audited' => 'الاجابة رقم :number تم تقييمها',
             'hard_deleted' => 'تم حذف الكيان بشكل نهائي',
+            'level_manager_requested' => 'تم ارسال طلب للمشرف :admin ليكون مدير هذا المستوى',
+            'auditor_assignment_requested' => 'تم ارسال طلب للمصحيحين :admins ليكونوا مصححين هذه المسابقة',
         ],
         'fail' =>[
             'saved' => 'حدث خطأ أثناء الحفظ',
@@ -43,6 +45,11 @@ return [
         '404' => [
             'user' => 'المستخدم غير موجود',
             'competition' => 'المسابقة غير موجودة',
+        ],
+        'error' => [
+            'auditor_assignment_requested_pending' => ':admins سبق أن تلقوا طلبك ليكونوا مصححين في هاته المسابقة في إنتظار موافقتهم',
+            'auditor_assignment_requested_rejected' => ':admins رفضوا طلبك ليكونوا مصححين في هاته المسابقة',
+            'auditor_assignment_requested_approved' => ':admins قاموا بالموافقة على طلبك سابقا لا يمكن اعادة تعيينهم',
         ],
         'not_allow' => [
             'user_delete' => 'ليس لديك الصلاحيات لحذف مستخدم لم تقم باضافته',

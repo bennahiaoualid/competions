@@ -31,6 +31,10 @@ return [
             'title' => 'بدأت المسابقة',
             'message' => 'بدأت المسابقة ":competition_title"! استعد للمشاركة.',
         ],
+        'user_added' => [
+            'title' => 'تم إضافتك للمسابقة',
+            'message' => 'تم إضافتك إلى المسابقة ":competition_title". مرحباً بك!',
+        ],
         'level_created' => [
             'title' => 'تم إضافة مستوى جديد',
             'message' => 'تم إضافة مستوى جديد ":level_name" إلى المسابقة ":competition_title".',
@@ -47,6 +51,14 @@ return [
             'title' => 'تم إكمال المستوى',
             'message' => 'تم إكمال المستوى ":level_name" في المسابقة ":competition_title".',
         ],
+        'auditor_requested' => [
+            'title' => 'طلب مراجع',
+            'message' => 'تم طلبك كمراجع للمسابقة ":competition_title"',
+        ],
+        'level_manager_requested' => [
+            'title' => 'طلب مدير مستوى',
+            'message' => 'تم طلبك كمدير مستوى لـ ":level_name" في ":competition_title"',
+        ],
     ],
     // Link text translations
     'link_text' => [
@@ -59,4 +71,27 @@ return [
     'title' => 'الاشعار',
     'data' => 'التفاصيل',
     'created_at' => 'تاريخ الإنشاء',
+    'detail_modal' => [
+        'title' => 'تفاصيل الإشعار',
+    ],
+    'view_all_notifications' => 'عرض جميع الاشعارات',
+    // Approval notifications
+    'approval' => [
+        'level_manager_requested' => [
+            'title' => 'طلب مدير مستوى',
+            'message' => 'تم طلبك كمدير مستوى لـ ":level_name" في ":competition_title"',
+        ],
+        'auditor_requested' => [
+            'title' => 'طلب مراجع',
+            'message' => 'تم طلبك كمراجع لـ ":competition_title"',
+        ],
+        'approved' => [
+            'title' => 'تمت الموافقة',
+            'message' => ':admin_name وافق على طلبك :approval_type لـ ":competition_title"',
+        ],
+        'rejected' => [
+            'title' => 'تم الرفض',
+            'message' => ':admin_name رفض طلبك :approval_type لـ ":competition_title"',
+        ],
+    ],
 ]; 

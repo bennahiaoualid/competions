@@ -7,6 +7,9 @@
 @endif
 
 <head>
+    @if(Auth::guard('web')->check())
+        <meta name="user-id" content="{{ Auth::guard('web')->id() }}">
+    @endif
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="keywords" content="HTML5 Template" />
@@ -26,7 +29,27 @@
                 @yield('content')
             </main>
     </div>
+    <x-notification-detail-modal />
+
     @livewireScripts
+
+    {{-- set up auth user global info for notifications --}}
+    @auth
+        @php
+            $userId = auth()->id();
+            $broadcastingConfig = [
+                'broadcastingChannel' => [
+                    'channel' => "notification.user." . $userId,
+                    'cluster' => config('broadcasting.connections.pusher.options.cluster')
+                ],
+                'userId' => $userId,
+                'csrfToken' => csrf_token()
+            ];
+        @endphp
+        <script>
+            window.Laravel = @json($broadcastingConfig);
+        </script>
+    @endauth
     @include('layouts.user.footer-scripts')
     @include('components.notification')
     @yield("custom_js")

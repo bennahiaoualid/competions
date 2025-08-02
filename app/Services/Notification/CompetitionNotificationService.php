@@ -7,13 +7,14 @@ use App\Models\Competition\Level;
 use App\Models\User;
 use App\Notifications\User\CompetitionNotification;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class CompetitionNotificationService
 {
     /**
      * Send notification to all users in a competition
      */
-    public function notifyCompetitionUsers(Competition $competition, string $eventType, Level $level = null, array $additionalData = []): void
+    public function notifyCompetitionUsers(Competition $competition, string $eventType, ?Level $level = null, array $additionalData = []): void
     {
         $users = $competition->users;
         
@@ -22,7 +23,6 @@ class CompetitionNotificationService
         }
 
         $notification = new CompetitionNotification($eventType, $competition, $level, $additionalData);
-        
         // Send to all users in the competition
         $users->each(function (User $user) use ($notification) {
             $user->notify($notification);
@@ -117,8 +117,6 @@ class CompetitionNotificationService
      */
     protected function getEligibleUsersForCompetition(Competition $competition): Collection
     {
-        return User::where('age', '>=', $competition->age_start)
-            ->where('age', '<=', $competition->age_end)
-            ->get();
+        return User::eligibleForCompetition($competition->age_start, $competition->age_end, $competition->id)->get();
     }
 } 

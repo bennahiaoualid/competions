@@ -6,15 +6,19 @@ use Exception;
 use Carbon\Carbon;
 use App\Models\Admin\Admin;
 use App\Traits\RegisterLogs;
+use App\Helpers\UserNotifyEmail;
 use App\Models\Competition\Level;
 use App\Contracts\FlasherInterface;
-use App\Helpers\UserNotifyEmail;
+use App\Enums\AdminApprovalTypeEnum;
 use App\Models\Competition\Competition;
 use App\Jobs\Competition\FinishLevelJob;
+use App\Services\Admin\AdminApprovalService;
 use App\Contracts\TransactionManagerInterface;
 use Illuminate\Support\Arr; // For Arr::except
+use App\Exceptions\AdminAlreadyDecidedException;
+use App\Exceptions\AdminNotAvailableAsLevelManagerException;
 use App\Interface\Competition\LevelRepositoryInterface;
-use App\Services\Notification\CompetitionNotificationService;
+use App\Services\Notification\OptimizedCompetitionNotificationService;
 
 class LevelService
 {
@@ -24,7 +28,8 @@ class LevelService
         protected LevelRepositoryInterface $levelRepository,
         protected TransactionManagerInterface $transactionManager,
         protected FlasherInterface $flasher,
-        protected CompetitionNotificationService $notificationService
+        protected OptimizedCompetitionNotificationService $notificationService,
+        protected AdminApprovalService $approvalService
     ) {
     }
 
@@ -37,9 +42,6 @@ class LevelService
     public function create(array $data, Competition $competition): bool
     {
         try {
-            if(!$this->levelRepository->isAdminAllowedToBeLevelManager($data['admin_id'])){
-                return false;
-            }
             if ($competition->hasReachedMaxLevels()) {
                 $this->flasher->error(__('messages.validation.not_allow.competition_max_levels'));
                 return false;
@@ -55,8 +57,22 @@ class LevelService
                 return false;
             }
 
-            $level = $this->levelRepository->create(array_merge($data, ['competition_id' => $competition->id]));
-            UserNotifyEmail::adminLevel($level);
+            // Remove admin_id from data - it will be set via approval
+            $adminId = $data['admin_id'] ?? null;
+            unset($data['admin_id']);
+
+            $level = $this->transactionManager->run(function () use ($data, $competition, $adminId) {
+                $level = $this->levelRepository->create(array_merge($data, [
+                    'competition_id' => $competition->id,
+                    'admin_id' => null // Will be set via approval
+                ]));
+
+                // If admin_id was provided, create approval request
+                if ($adminId) {
+                    $this->requestLevelManagerAssignment($level, $adminId);
+                }
+                return $level;
+            });
 
             // Send notification to competition users
             $this->notificationService->levelCreated($competition, $level);
@@ -64,9 +80,66 @@ class LevelService
             $this->flasher->crudSuccess('saved');
             return true;
 
+        } catch (AdminNotAvailableAsLevelManagerException $exception) {
+            $this->registerLogs('LevelService creation error: ', $exception);
+            $this->flasher->error($exception->getTransMessage());
+            return false;
         } catch (Exception $exception) {
             $this->registerLogs('LevelService creation error: ', $exception);
             $this->flasher->crudFailure('saved');
+            return false;
+        }
+    }
+
+    /**
+     * Request level manager assignment (creates approval instead of direct assignment)
+     */
+    public function requestLevelManagerAssignment(Level $level, int $adminId, bool $deletePending = false): bool
+    {
+        if(!$this->levelRepository->isAdminAllowedToBeLevelManager($adminId)){
+            throw new AdminNotAvailableAsLevelManagerException($adminId);
+        }
+
+        $adminExistsApproval = $this->approvalService->getApprovalStatus($adminId, Level::class, $level->id, AdminApprovalTypeEnum::LEVEL_MANAGER->value);
+
+        if($adminExistsApproval['rejected'] > 0 || $adminExistsApproval['approved'] > 0){
+            throw new AdminAlreadyDecidedException(
+                $adminId, 
+                Level::class, 
+                $level->id, 
+                AdminApprovalTypeEnum::LEVEL_MANAGER->value,
+            );
+        }elseif($adminExistsApproval['pending'] > 0 && $deletePending){
+            $this->approvalService->removePendingRequests(Level::class, $level->id, AdminApprovalTypeEnum::LEVEL_MANAGER->value);
+        }
+        
+        $admin = $this->approvalService->createApprovalRequest(
+            adminId: $adminId,
+            entityType: Level::class,
+            entityId: $level->id,
+            type: AdminApprovalTypeEnum::LEVEL_MANAGER
+        );
+
+        // Notify admin about level manager request
+        if($admin){
+            $this->notificationService->levelManagerRequested($level, $admin);
+            $this->flasher->success(__('messages.validation.success.level_manager_requested', ['admin' => $admin->name]));
+        }
+
+        return true;
+    }
+
+    /**
+     * Direct assignment (used by handler)
+     */
+    public function assignLevelManager(Level $level, int $adminId): bool
+    {
+        try {
+            $level->update(['admin_id' => $adminId]);
+            UserNotifyEmail::adminLevel($level);
+            return true;
+        } catch (Exception $exception) {
+            $this->registerLogs('LevelService Error assigning level manager: ', $exception);
             return false;
         }
     }
@@ -100,10 +173,6 @@ class LevelService
         try {
             $competition = $level->competition;
 
-            if(!$this->levelRepository->isAdminAllowedToBeLevelManager($data['admin_id'])){
-                return false;
-            }
-
             if($competition->status != Competition::STATUS_PENDING){
                 $this->flasher->error(__('messages.validation.not_allow.active_competition_update'));
                 return false;
@@ -129,19 +198,35 @@ class LevelService
                 }
             }
 
-            $updateData = Arr::only($data, ['name', 'description', 'start_date', 'duration', 'admin_id']);
-
-            $updated = $this->levelRepository->update($level, $updateData);
-            if ($updated && $startDateChanged) {
-                UserNotifyEmail::usersUpdateLevel($competition, $level);
-            }
+            $updateData = Arr::only($data, ['name', 'description', 'start_date', 'duration']);
+            
+            $this->transactionManager->run(function () use ($data, $level, $updateData, $competition, $startDateChanged) {
+                $updated = $this->levelRepository->update($level, $updateData);
+                if ($updated && $startDateChanged) {
+                    UserNotifyEmail::usersUpdateLevel($competition, $level);
+                }
+                if($level->admin_id != $data['admin_id'] && $updated){
+                    $this->requestLevelManagerAssignment($level, $data['admin_id'], deletePending: true);
+                }
+                return $updated;
+            });
 
             // Send notification to competition users
             $this->notificationService->levelUpdated($competition, $level);
 
+            
+
             $this->flasher->crudSuccess('updated');
             return true;
 
+        } catch (AdminNotAvailableAsLevelManagerException $exception) {
+            $this->registerLogs('LevelService update error: ', $exception);
+            $this->flasher->error($exception->getTransMessage());
+            return false;
+        } catch (AdminAlreadyDecidedException $exception) {
+            $this->registerLogs('LevelService update error: ', $exception);
+            $this->flasher->error($exception->getTransMessage());
+            return false;
         } catch (Exception $exception) {
             $this->registerLogs('LevelService update error: ', $exception);
             $this->flasher->crudFailure('updated');

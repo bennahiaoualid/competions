@@ -7,9 +7,6 @@
 @endif
 
 <head>
-    @if(Auth::guard('admin')->check())
-        <meta name="user-id" content="{{ Auth::guard('admin')->id() }}">
-    @endif
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="keywords" content="Competition Management System" />
@@ -35,6 +32,24 @@
     </div>
     <x-notification-detail-modal />
     @livewireScripts
+
+    {{-- set up auth user global info for notifications --}}
+    @auth
+        @php
+            $userId = auth()->id();
+            $broadcastingConfig = [
+                'broadcastingChannel' => [
+                    'channel' => "notification.admin." . $userId,
+                    'cluster' => config('broadcasting.connections.pusher.options.cluster')
+                ],
+                'userId' => $userId,
+                'csrfToken' => csrf_token()
+            ];
+        @endphp
+        <script>
+            window.Laravel = @json($broadcastingConfig);
+        </script>
+    @endauth
     @include('layouts.admin.footer-scripts')
     @include('layouts.admin.session_notifications_taoster')
     {{-- Include notification scripts --}}

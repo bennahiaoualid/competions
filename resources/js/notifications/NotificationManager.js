@@ -11,9 +11,6 @@ class NotificationManager {
         this.maxNotifications = 5;
         this.currentLocale = this.detectCurrentLocale();
         
-        // Get user ID from meta tag or global variable
-        this.userId = this.getUserId();
-        
         this.init();
     }
 
@@ -40,31 +37,6 @@ class NotificationManager {
         
         // Default to English
         return 'en';
-    }
-
-    /**
-     * Get the current user ID from meta tag or global variable
-     */
-    getUserId() {
-        // Try to get from meta tag first
-        const metaTag = document.querySelector('meta[name="user-id"]');
-
-        if (metaTag) {
-            return metaTag.getAttribute('content');
-        }
-        
-        // Fallback to global variable
-        if (window.userId) {
-            return window.userId;
-        }
-        
-        // Fallback to auth user ID
-        if (window.authUser && window.authUser.id) {
-            return window.authUser.id;
-        }
-        
-        console.warn('NotificationManager: No user ID found');
-        return null;
     }
 
     /**
@@ -106,11 +78,6 @@ class NotificationManager {
     }
 
     init() {
-        if (!this.userId) {
-            console.error('NotificationManager: Cannot initialize without user ID');
-            return;
-        }
-        
         this.setupEchoListener();
         this.loadInitialNotifications();
         this.updateBadge();
@@ -146,19 +113,22 @@ class NotificationManager {
             return;
         }
 
-        if (!this.userId) {
-            console.error('NotificationManager: Cannot setup Echo listener without user ID');
+        // Try admin channel first, then user channel
+        const channel = window.Laravel.broadcastingChannel.channel;
+        if(!channel){
+            console.error('NotificationManager: Cannot setup Echo listener without channel');
             return;
         }
 
-        // Try admin channel first, then user channel
-        const adminChannel = `App.Models.Admin.Admin.${this.userId}`;
-
         
         // Listen to both channels to handle both admin and user notifications
-        Echo.private(adminChannel)
+        /*Echo.private(channel)
             .notification((notification) => {
                 this.handleNewNotification(notification);
+            });*/
+            window.Echo.private(channel)
+            .listen('.notification.received', (e) => {
+                this.handleNewNotification(e);
             });
             
     }
@@ -244,6 +214,14 @@ class NotificationManager {
             // Get styles and icon for notification type
             const typeStyles = this.getNotificationTypeStyles(priorityType);
 
+            // Use custom icon if available, otherwise use type-based icon
+            const customIcon = notification.icon;
+            const iconHtml = customIcon ? 
+                `<i class="${customIcon} ${typeStyles.iconColor}"></i>` :
+                `<svg class="w-4 h-4 ${typeStyles.iconColor}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${typeStyles.icon}" />
+                </svg>`;
+
             // Detail icon button (end of row)
             const detailButton = `
                 <button class="icon-notification-detail ml-2 text-gray-400 hover:text-blue-600 focus:outline-none" title="Detail" data-id="${notification.id}">
@@ -259,9 +237,7 @@ class NotificationManager {
                         <div class="flex items-start gap-3 flex-1 min-w-0">
                             <div class="flex-shrink-0">
                                 <div class="w-8 h-8 ${typeStyles.bgColor} rounded-full flex items-center justify-center">
-                                    <svg class="w-4 h-4 ${typeStyles.iconColor}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${typeStyles.icon}" />
-                                    </svg>
+                                    ${iconHtml}
                                 </div>
                             </div>
                             <div class="flex-1 min-w-0">
@@ -358,7 +334,7 @@ class NotificationManager {
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-CSRF-TOKEN': window.Laravel.csrfToken,
                 },
                 body: JSON.stringify({
                     notification_id: notificationId
@@ -384,7 +360,7 @@ class NotificationManager {
             const response = await fetch(`/${currentLocale}/notifications/mark-all-read`, {
                 method: 'POST',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-CSRF-TOKEN': window.Laravel.csrfToken,
                 }
             });
             

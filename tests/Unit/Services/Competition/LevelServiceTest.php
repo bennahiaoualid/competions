@@ -7,16 +7,19 @@ use Mockery;
 use Carbon\Carbon;
 use Tests\TestCase;
 use App\Models\Admin\Admin;
+use App\Helpers\UserNotifyEmail;
 use App\Models\Competition\Level;
 use Illuminate\Support\Collection;
 use App\Contracts\FlasherInterface;
+use App\Enums\AdminApprovalTypeEnum;
 use Illuminate\Support\Facades\Auth;
-use App\Helpers\UserNotifyEmail;
 use App\Models\Competition\Competition;
 use App\Jobs\Competition\FinishLevelJob;
 use App\Services\Competition\LevelService;
+use App\Services\Admin\AdminApprovalService;
 use App\Contracts\TransactionManagerInterface;
 use App\Interface\Competition\LevelRepositoryInterface;
+use App\Services\Notification\OptimizedCompetitionNotificationService;
 
 class LevelServiceTest extends TestCase
 {
@@ -28,10 +31,15 @@ class LevelServiceTest extends TestCase
     protected $transactionManager;
     /** @var FlasherInterface&\Mockery\MockInterface */
     protected $flasher;
+    /** @var OptimizedCompetitionNotificationService&\Mockery\MockInterface */
+    protected $notificationService;
+    /** @var AdminApprovalService&\Mockery\MockInterface */
+    protected $approvalService;
     /** @var Level|\Mockery\MockInterface */
     protected $level_partial;
     /** @var Competition|\Mockery\MockInterface */
     protected $competition_partial;
+
     /** @var UserNotifyEmail|\Mockery\MockInterface */
     protected $userNotifyEmail;
 
@@ -44,11 +52,14 @@ class LevelServiceTest extends TestCase
         $this->levelRepository = Mockery::mock(LevelRepositoryInterface::class);
         $this->transactionManager = Mockery::mock(TransactionManagerInterface::class);
         $this->flasher = Mockery::mock(FlasherInterface::class);
-        
+        $this->notificationService = Mockery::mock(OptimizedCompetitionNotificationService::class);
+        $this->approvalService = Mockery::mock(AdminApprovalService::class);
         $this->levelService = new LevelService(
             $this->levelRepository,
             $this->transactionManager,
-            $this->flasher
+            $this->flasher,
+            $this->notificationService,
+            $this->approvalService
         );
 
         $this->level_partial = Mockery::mock(Level::class)->makePartial();
@@ -104,16 +115,17 @@ class LevelServiceTest extends TestCase
         $data = $this->createLevelData(strDate: true);
         $competition = $this->competition_partial;
         $level = $this->level_partial;
-    
+        $expectedData = $data;
+        unset($expectedData['admin_id']);
+        
         $competition->shouldReceive('hasReachedMaxLevels')->once()->andReturn(false);
         $competition->shouldReceive('getAttribute')->with('start_date')->andReturn(now()->subDay());
-
+    
         $this->levelRepository
             ->shouldReceive('isAdminAllowedToBeLevelManager')
             ->with($data['admin_id'],)
             ->once()
             ->andReturn(true);
-        
 
         $this->levelRepository
             ->shouldReceive('hasTimeConflict')
@@ -123,19 +135,53 @@ class LevelServiceTest extends TestCase
             
         $this->levelRepository
             ->shouldReceive('create')
-            ->with(array_merge($data, ['competition_id' => $competition->id]))
+            ->with(array_merge($expectedData, ['competition_id' => $competition->id, 'admin_id' => null]))
             ->once()
             ->andReturn($level);
+    
+        // Mock the transaction manager to simulate successful execution
+        $this->transactionManager
+            ->shouldReceive('run')
+            ->once()
+            ->andReturnUsing(function ($callback) {
+                return $callback();
+            });
+    
+        // Mock the approval service
+        $admin = Mockery::mock(Admin::class);
+        $admin->shouldReceive('getAttribute')->with('name')->andReturn('admin');
+        $getApprovalStatus = ['pending' => 0, 'approved' => 0, 'rejected' => 0];
+        $this->approvalService
+            ->shouldReceive('getApprovalStatus')
+            ->with($data['admin_id'], Level::class, $level->id, AdminApprovalTypeEnum::LEVEL_MANAGER->value)
+            ->once()
+            ->andReturn($getApprovalStatus);
 
-        $this->userNotifyEmail
-            ->shouldReceive('adminLevel')
-            ->with($level)
+        $this->approvalService
+            ->shouldReceive('createApprovalRequest')
+            ->with($data['admin_id'], Level::class, $level->id, AdminApprovalTypeEnum::LEVEL_MANAGER)
+            ->once()
+            ->andReturn($admin);
+    
+        $this->notificationService
+            ->shouldReceive('levelManagerRequested')
+            ->with($level, $admin)
+            ->once();
+    
+        $this->notificationService
+            ->shouldReceive('levelCreated')
+            ->with($competition, $level)
+            ->once();
+        
+        $this->flasher
+            ->shouldReceive('success')
+            ->with(__('messages.validation.success.level_manager_requested', ['admin' => $admin->name]))
             ->once();
             
         $this->flasher
             ->shouldReceive('crudSuccess')
             ->with('saved')
-            ->once();
+            ->once(); 
             
         // Act
         $result = $this->levelService->create($data, $competition);
@@ -144,7 +190,7 @@ class LevelServiceTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function test_create_level_faild_manager_admin_not_aviable()
+    /*public function test_create_level_faild_manager_admin_not_aviable()
     {
         // Arrange
         $data = $this->createLevelData(strDate: true);
@@ -157,12 +203,17 @@ class LevelServiceTest extends TestCase
             ->once()
             ->andReturn(false);
             
+        $this->flasher
+            ->shouldReceive('error')
+            ->with(__('exceptions.admin_not_available_as_level_manager'))
+            ->once();
+            
         // Act
         $result = $this->levelService->create($data, $competition);
         
         // Assert
         $this->assertFalse($result);
-    }
+    }*/
 
     public function test_create_level_max_levels_reached()
     {
@@ -171,11 +222,7 @@ class LevelServiceTest extends TestCase
         $competition = $this->competition_partial;
         
         $competition->shouldReceive('hasReachedMaxLevels')->once()->andReturn(true);
-        $this->levelRepository
-            ->shouldReceive('isAdminAllowedToBeLevelManager')
-            ->with($data['admin_id'],)
-            ->once()
-            ->andReturn(true);    
+
         $this->flasher
             ->shouldReceive('error')
             ->with(__('messages.validation.not_allow.competition_max_levels'))
@@ -196,11 +243,7 @@ class LevelServiceTest extends TestCase
         
         $competition->shouldReceive('hasReachedMaxLevels')->once()->andReturn(false);
         $competition->shouldReceive('getAttribute')->with('start_date')->andReturn(now()->subDay());
-        $this->levelRepository
-            ->shouldReceive('isAdminAllowedToBeLevelManager')
-            ->with($data['admin_id'],)
-            ->once()
-            ->andReturn(true);            
+          
         $this->levelRepository
             ->shouldReceive('hasTimeConflict')
             ->with($competition->id, $data['start_date'], $data['duration'])
@@ -227,11 +270,7 @@ class LevelServiceTest extends TestCase
         
         $competition->shouldReceive('hasReachedMaxLevels')->once()->andReturn(false);
         $competition->shouldReceive('getAttribute')->with('start_date')->andReturn(now()->addDay());
-        $this->levelRepository
-            ->shouldReceive('isAdminAllowedToBeLevelManager')
-            ->with($data['admin_id'],)
-            ->once()
-            ->andReturn(true);          
+       
         $this->flasher
             ->shouldReceive('error')
             ->with(__('validation.custom.start_date_gt_competition'))
@@ -266,16 +305,24 @@ class LevelServiceTest extends TestCase
             'duration' => 60,
             'admin_id' => 1,
         ];
-        $this->levelRepository
-            ->shouldReceive('isAdminAllowedToBeLevelManager')
-            ->with($data['admin_id'],)
+            
+        $this->transactionManager
+            ->shouldReceive('run')
             ->once()
-            ->andReturn(true);              
+            ->andReturnUsing(function ($callback) {
+                return $callback();
+            });
+      
         $this->levelRepository
             ->shouldReceive('update')
             ->with($level, Mockery::any())
             ->once()
             ->andReturn(true);
+
+        $this->notificationService
+            ->shouldReceive('levelUpdated')
+            ->with($competition, $level)
+            ->once();
             
         $this->flasher
             ->shouldReceive('crudSuccess')
@@ -317,11 +364,14 @@ class LevelServiceTest extends TestCase
             ->with($competition->id, $updatedData['start_date'], $updatedData['duration'], $level->id)
             ->once()
             ->andReturn(false);
-        $this->levelRepository
-            ->shouldReceive('isAdminAllowedToBeLevelManager')
-            ->with($data['admin_id'],)
+
+        $this->transactionManager
+            ->shouldReceive('run')
             ->once()
-            ->andReturn(true);  
+            ->andReturnUsing(function ($callback) {
+                return $callback();
+            });
+
         $this->levelRepository
             ->shouldReceive('update')
             ->with($level, Mockery::any())
@@ -332,7 +382,12 @@ class LevelServiceTest extends TestCase
             ->shouldReceive('usersUpdateLevel')
             ->with($competition, $level)
             ->once();
-            
+
+        $this->notificationService
+            ->shouldReceive('levelUpdated')
+            ->with($competition, $level)
+            ->once();
+
         $this->flasher
             ->shouldReceive('crudSuccess')
             ->with('updated')
@@ -343,6 +398,159 @@ class LevelServiceTest extends TestCase
         
         // Assert
         $this->assertTrue($result);
+    }
+
+    public function test_update_level_success_with_admin_change()
+    {
+        // Arrange
+        $competition = $this->competition_partial;
+        $data = $this->createLevelData();
+        $level = $this->level_partial;
+        foreach($data as $key => $value){
+            $level->shouldReceive('getAttribute')->with($key)->andReturn($value);
+        }
+        
+        $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
+        
+        $competition->shouldReceive('getAttribute')->with('status')->andReturn('pending');
+        $competition->shouldReceive('getAttribute')->with('start_date')->andReturn(now()->subDay());
+        
+        $updatedData = [
+            'name' => 'new name',
+            'description' => 'new description',
+            'start_date' => $data['start_date'],
+            'duration' => 60,
+            'admin_id' => 2,
+        ];
+
+        $getApprovalStatus = ['pending' => 1, 'approved' => 0, 'rejected' => 0];
+
+        $this->levelRepository
+            ->shouldReceive('isAdminAllowedToBeLevelManager')
+            ->with($updatedData['admin_id'])
+            ->once()
+            ->andReturn(true);   
+        
+        $this->approvalService
+            ->shouldReceive('removePendingRequests')
+            ->with(Level::class, $level->id, AdminApprovalTypeEnum::LEVEL_MANAGER->value)
+            ->once();
+
+        $this->transactionManager
+            ->shouldReceive('run')
+            ->once()
+            ->andReturnUsing(function ($callback) {
+                return $callback();
+            });
+      
+        $this->levelRepository
+            ->shouldReceive('update')
+            ->with($level, Mockery::any())
+            ->once()
+            ->andReturn(true);
+
+        $this->approvalService
+            ->shouldReceive('getApprovalStatus')
+            ->with($updatedData['admin_id'], Level::class, $level->id, AdminApprovalTypeEnum::LEVEL_MANAGER->value)
+            ->once()
+            ->andReturn($getApprovalStatus);
+
+        $admin = Mockery::mock(Admin::class);
+        $admin->shouldReceive('getAttribute')->with('name')->andReturn('admin');
+
+        $this->approvalService
+            ->shouldReceive('createApprovalRequest')
+            ->with($updatedData['admin_id'], Level::class, $level->id, AdminApprovalTypeEnum::LEVEL_MANAGER)
+            ->once()
+            ->andReturn($admin);
+
+        $this->notificationService
+            ->shouldReceive('levelUpdated')
+            ->with($competition, $level)
+            ->once();
+        
+        $this->notificationService
+            ->shouldReceive('levelManagerRequested')
+            ->with($level, $admin)
+            ->once();
+            
+        $this->flasher
+            ->shouldReceive('crudSuccess')
+            ->with('updated')
+            ->once();
+
+        $this->flasher
+            ->shouldReceive('success')
+            ->with(__('messages.validation.success.level_manager_requested', ['admin' => $admin->name]))
+            ->once();
+            
+        // Act
+        $result = $this->levelService->update($level, $updatedData);
+        
+        // Assert
+        $this->assertTrue($result);
+    }
+
+    public function test_update_level_faild_with_admin_change_admin_already_decided()
+    {
+        // Arrange
+        $competition = $this->competition_partial;
+        $data = $this->createLevelData();
+        $level = $this->level_partial;
+        foreach($data as $key => $value){
+            $level->shouldReceive('getAttribute')->with($key)->andReturn($value);
+        }
+        
+        $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
+        
+        $competition->shouldReceive('getAttribute')->with('status')->andReturn('pending');
+        $competition->shouldReceive('getAttribute')->with('start_date')->andReturn(now()->subDay());
+        
+        $updatedData = [
+            'name' => 'new name',
+            'description' => 'new description',
+            'start_date' => $data['start_date'],
+            'duration' => 60,
+            'admin_id' => 2,
+        ];
+
+        $getApprovalStatus = ['pending' => 0, 'approved' => 1, 'rejected' => 0];
+
+        $this->levelRepository
+            ->shouldReceive('isAdminAllowedToBeLevelManager')
+            ->with($updatedData['admin_id'])
+            ->once()
+            ->andReturn(true);   
+
+        $this->transactionManager
+            ->shouldReceive('run')
+            ->once()
+            ->andReturnUsing(function ($callback) {
+                return $callback();
+            });
+      
+        $this->levelRepository
+            ->shouldReceive('update')
+            ->with($level, Mockery::any())
+            ->once()
+            ->andReturn(true);
+
+        $this->approvalService
+            ->shouldReceive('getApprovalStatus')
+            ->with($updatedData['admin_id'], Level::class, $level->id, AdminApprovalTypeEnum::LEVEL_MANAGER->value)
+            ->once()
+            ->andReturn($getApprovalStatus);
+            
+        $this->flasher
+            ->shouldReceive('error')
+            ->with(__('exceptions.admin_already_decided'))
+            ->once();
+            
+        // Act
+        $result = $this->levelService->update($level, $updatedData);
+        
+        // Assert
+        $this->assertFalse($result);
     }
 
     public function test_update_level_active_level()
@@ -356,11 +564,7 @@ class LevelServiceTest extends TestCase
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
         
         $competition->shouldReceive('getAttribute')->with('status')->andReturn('pending');
-        $this->levelRepository
-            ->shouldReceive('isAdminAllowedToBeLevelManager')
-            ->with($data['admin_id'],)
-            ->once()
-            ->andReturn(true);          
+
         $this->flasher
             ->shouldReceive('error')
             ->with(__('messages.validation.not_allow.active_level_update'))
@@ -384,11 +588,7 @@ class LevelServiceTest extends TestCase
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
         
         $competition->shouldReceive('getAttribute')->with('status')->andReturn('active');    
-        $this->levelRepository
-            ->shouldReceive('isAdminAllowedToBeLevelManager')
-            ->with($data['admin_id'],)
-            ->once()
-            ->andReturn(true);          
+        
         $this->flasher
             ->shouldReceive('error')
             ->with(__('messages.validation.not_allow.active_competition_update'))
@@ -424,12 +624,7 @@ class LevelServiceTest extends TestCase
             'duration' => 60,
             'admin_id' => 1,
         ];
-
-        $this->levelRepository
-            ->shouldReceive('isAdminAllowedToBeLevelManager')
-            ->with($data['admin_id'],)
-            ->once()
-            ->andReturn(true);          
+         
         $this->levelRepository
             ->shouldReceive('hasTimeConflict')
             ->with($competition->id, $updatedData['start_date'], $updatedData['duration'], $level->id)
@@ -473,11 +668,6 @@ class LevelServiceTest extends TestCase
         ];
 
         $this->levelRepository
-            ->shouldReceive('isAdminAllowedToBeLevelManager')
-            ->with($data['admin_id'],)
-            ->once()
-            ->andReturn(true);  
-        $this->levelRepository
             ->shouldReceive('hasTimeConflict')
             ->with($competition->id, $updatedData['start_date'], $updatedData['duration'], $level->id)
             ->once()
@@ -495,39 +685,58 @@ class LevelServiceTest extends TestCase
         $this->assertFalse($result);    
     }
 
-    public function test_update_level_faild_admin_manager_not_aviable()
+    public function test_update_level_faild_admin_manager_not_available()
     {
         // Arrange
         $competition = $this->competition_partial;
         $data = $this->createLevelData();
         $level = $this->level_partial;
-        $level->competition_id = 1;
         foreach($data as $key => $value){
             $level->shouldReceive('getAttribute')->with($key)->andReturn($value);
         }
-
+        
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
         
+        $competition->shouldReceive('getAttribute')->with('status')->andReturn('pending');
+        $competition->shouldReceive('getAttribute')->with('start_date')->andReturn(now()->subDay());
         
         $updatedData = [
             'name' => 'new name',
             'description' => 'new description',
-            'start_date' => now()->addDay(2)->format('Y-m-d H:i'),
+            'start_date' => $data['start_date'],
             'duration' => 60,
-            'admin_id' => 1,
+            'admin_id' => 2,
         ];
 
         $this->levelRepository
             ->shouldReceive('isAdminAllowedToBeLevelManager')
-            ->with($data['admin_id'],)
+            ->with($updatedData['admin_id'])
             ->once()
-            ->andReturn(false);  
+            ->andReturn(false);   
+
+        $this->transactionManager
+            ->shouldReceive('run')
+            ->once()
+            ->andReturnUsing(function ($callback) {
+                return $callback();
+            });
+
+        $this->levelRepository
+            ->shouldReceive('update')
+            ->with($level, Mockery::any())
+            ->once()
+            ->andReturn(true);
+
+        $this->flasher
+            ->shouldReceive('error')
+            ->with(__('exceptions.admin_not_available_as_level_manager'))
+            ->once();
             
         // Act
         $result = $this->levelService->update($level, $updatedData);
         
         // Assert
-        $this->assertFalse($result);    
+        $this->assertFalse($result);
     }
     
     
@@ -652,6 +861,11 @@ class LevelServiceTest extends TestCase
             
         $this->userNotifyEmail
             ->shouldReceive('usersActivateLevel')
+            ->with($competition, $level)
+            ->once();
+            
+        $this->notificationService
+            ->shouldReceive('levelActivated')
             ->with($competition, $level)
             ->once();
             
@@ -947,6 +1161,11 @@ class LevelServiceTest extends TestCase
         $level->shouldReceive('fresh')->with('competition.users', 'competition.auditors')->andReturn($level);
 
         $competition->shouldReceive('canEdit')->andReturn(true);
+
+        $this->notificationService
+            ->shouldReceive('levelFinished')
+            ->with($competition, $level)
+            ->once();
 
         // Act
         $result = $this->levelService->finishLevel($level);

@@ -117,7 +117,7 @@ class UserNotifyEmail
             'level' => $level->name,
             'type' => 'update_level',
             'object' => 'level',
-            'link' => route('competitions.level', ['id' => base64_encode($level->id)])
+            'link' => route('competitions.level', ['level' => $level])
         ];
 
         $competition->users->chunk(100)->each(function ($usersChunk) use ($commonData) {

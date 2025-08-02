@@ -100,7 +100,7 @@
                     @php
                         $options = [] ;
                         foreach ($admins as $admin) {
-                            $options[] = ['value' => $admin->id, 'text' => $admin->name, 'selected' => false];
+                            $options[] = ['value' => $admin->id, 'text' => $admin->name];
                         }
                     @endphp
                     
@@ -108,11 +108,21 @@
                         name="admin_id"
                         :options="$options"
                         :placeholder="__('messages.global.choose')"
-                        :value="old('admin_id')"
+                        :value="$level->admin_id"
                         :disabled="false"
                     />
                     <x-input-error :messages="$errors->updateLevel->get('admin_id')" class="mt-2" />
                 </div>
+
+                @if($level->canEdit() && $level->competition->status == 'active')
+                    <div class="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                        <input type="checkbox" id="only_manager_change" name="only_manager_change" value="1" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <label for="only_manager_change" class="text-sm text-gray-700">
+                            {{ __('competition.level.only_manager_change') }}
+                        </label>
+                    </div>
+                @endif
+
                 <div class="flex justify-end">
                     @if($level->canEdit())
                         <x-button color_type="success" class="my-1" >{{ __('form.actions.update') }}</x-button>
