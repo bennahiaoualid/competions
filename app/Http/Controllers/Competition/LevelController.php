@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Competition;
 
 use Illuminate\View\View;
 use App\Models\Competition\Level;
+use App\Contracts\FlasherInterface;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use App\Models\Competition\Competition;
@@ -12,7 +13,7 @@ use App\Services\Competition\LevelService;
 use App\Traits\CrudOperationNotificationAlert;
 use App\Http\Requests\Competition\StoreLevelRequest;
 use App\Http\Requests\Competition\UpdateLevelRequest;
-use App\Interface\Competition\LevelRepositoryInterface;
+use App\Exceptions\AdminNotAvailableAsLevelManagerException;
 
 class LevelController extends Controller
 {
@@ -20,7 +21,6 @@ class LevelController extends Controller
 
     public function __construct(
         protected LevelService $levelService,
-        protected LevelRepositoryInterface $levelRepository
     ) {
     }
 
@@ -65,7 +65,21 @@ class LevelController extends Controller
      */
     public function update(UpdateLevelRequest $request, Level $level): RedirectResponse
     {
-        $this->levelService->update($level, $request->validated());
+        $data = $request->validated();
+        
+        // Check if only manager change is requested
+        if (isset($data['only_manager_change']) && $data['only_manager_change']) {
+            try{
+                $this->levelService->requestLevelManagerAssignment($level, $data['admin_id']);
+            }catch(AdminNotAvailableAsLevelManagerException $e){
+                app(FlasherInterface::class)->error($e->getTransMessage());
+                return Redirect::back();
+            }
+
+        } else {
+            $this->levelService->update($level, $data);
+        }
+        
         return Redirect::back();
     }
 

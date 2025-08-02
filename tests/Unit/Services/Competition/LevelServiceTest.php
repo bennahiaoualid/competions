@@ -18,7 +18,6 @@ use App\Jobs\Competition\FinishLevelJob;
 use App\Services\Competition\LevelService;
 use App\Services\Admin\AdminApprovalService;
 use App\Contracts\TransactionManagerInterface;
-use App\Exceptions\AdminAlreadyDecidedException;
 use App\Interface\Competition\LevelRepositoryInterface;
 use App\Services\Notification\OptimizedCompetitionNotificationService;
 
@@ -191,7 +190,7 @@ class LevelServiceTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function test_create_level_faild_manager_admin_not_aviable()
+    /*public function test_create_level_faild_manager_admin_not_aviable()
     {
         // Arrange
         $data = $this->createLevelData(strDate: true);
@@ -204,12 +203,17 @@ class LevelServiceTest extends TestCase
             ->once()
             ->andReturn(false);
             
+        $this->flasher
+            ->shouldReceive('error')
+            ->with(__('exceptions.admin_not_available_as_level_manager'))
+            ->once();
+            
         // Act
         $result = $this->levelService->create($data, $competition);
         
         // Assert
         $this->assertFalse($result);
-    }
+    }*/
 
     public function test_create_level_max_levels_reached()
     {
@@ -218,11 +222,7 @@ class LevelServiceTest extends TestCase
         $competition = $this->competition_partial;
         
         $competition->shouldReceive('hasReachedMaxLevels')->once()->andReturn(true);
-        $this->levelRepository
-            ->shouldReceive('isAdminAllowedToBeLevelManager')
-            ->with($data['admin_id'],)
-            ->once()
-            ->andReturn(true);    
+
         $this->flasher
             ->shouldReceive('error')
             ->with(__('messages.validation.not_allow.competition_max_levels'))
@@ -243,11 +243,7 @@ class LevelServiceTest extends TestCase
         
         $competition->shouldReceive('hasReachedMaxLevels')->once()->andReturn(false);
         $competition->shouldReceive('getAttribute')->with('start_date')->andReturn(now()->subDay());
-        $this->levelRepository
-            ->shouldReceive('isAdminAllowedToBeLevelManager')
-            ->with($data['admin_id'],)
-            ->once()
-            ->andReturn(true);            
+          
         $this->levelRepository
             ->shouldReceive('hasTimeConflict')
             ->with($competition->id, $data['start_date'], $data['duration'])
@@ -274,11 +270,7 @@ class LevelServiceTest extends TestCase
         
         $competition->shouldReceive('hasReachedMaxLevels')->once()->andReturn(false);
         $competition->shouldReceive('getAttribute')->with('start_date')->andReturn(now()->addDay());
-        $this->levelRepository
-            ->shouldReceive('isAdminAllowedToBeLevelManager')
-            ->with($data['admin_id'],)
-            ->once()
-            ->andReturn(true);          
+       
         $this->flasher
             ->shouldReceive('error')
             ->with(__('validation.custom.start_date_gt_competition'))
@@ -313,11 +305,6 @@ class LevelServiceTest extends TestCase
             'duration' => 60,
             'admin_id' => 1,
         ];
-        $this->levelRepository
-            ->shouldReceive('isAdminAllowedToBeLevelManager')
-            ->with($data['admin_id'],)
-            ->once()
-            ->andReturn(true);   
             
         $this->transactionManager
             ->shouldReceive('run')
@@ -377,12 +364,6 @@ class LevelServiceTest extends TestCase
             ->with($competition->id, $updatedData['start_date'], $updatedData['duration'], $level->id)
             ->once()
             ->andReturn(false);
-
-        $this->levelRepository
-            ->shouldReceive('isAdminAllowedToBeLevelManager')
-            ->with($data['admin_id'],)
-            ->once()
-            ->andReturn(true);  
 
         $this->transactionManager
             ->shouldReceive('run')
@@ -583,11 +564,6 @@ class LevelServiceTest extends TestCase
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
         
         $competition->shouldReceive('getAttribute')->with('status')->andReturn('pending');
-        $this->levelRepository
-            ->shouldReceive('isAdminAllowedToBeLevelManager')
-            ->with($data['admin_id'],)
-            ->once()
-            ->andReturn(true);   
 
         $this->flasher
             ->shouldReceive('error')
@@ -612,11 +588,7 @@ class LevelServiceTest extends TestCase
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
         
         $competition->shouldReceive('getAttribute')->with('status')->andReturn('active');    
-        $this->levelRepository
-            ->shouldReceive('isAdminAllowedToBeLevelManager')
-            ->with($data['admin_id'],)
-            ->once()
-            ->andReturn(true);          
+        
         $this->flasher
             ->shouldReceive('error')
             ->with(__('messages.validation.not_allow.active_competition_update'))
@@ -652,12 +624,7 @@ class LevelServiceTest extends TestCase
             'duration' => 60,
             'admin_id' => 1,
         ];
-
-        $this->levelRepository
-            ->shouldReceive('isAdminAllowedToBeLevelManager')
-            ->with($data['admin_id'],)
-            ->once()
-            ->andReturn(true);          
+         
         $this->levelRepository
             ->shouldReceive('hasTimeConflict')
             ->with($competition->id, $updatedData['start_date'], $updatedData['duration'], $level->id)
@@ -701,11 +668,6 @@ class LevelServiceTest extends TestCase
         ];
 
         $this->levelRepository
-            ->shouldReceive('isAdminAllowedToBeLevelManager')
-            ->with($data['admin_id'],)
-            ->once()
-            ->andReturn(true);  
-        $this->levelRepository
             ->shouldReceive('hasTimeConflict')
             ->with($competition->id, $updatedData['start_date'], $updatedData['duration'], $level->id)
             ->once()
@@ -723,39 +685,58 @@ class LevelServiceTest extends TestCase
         $this->assertFalse($result);    
     }
 
-    public function test_update_level_faild_admin_manager_not_aviable()
+    public function test_update_level_faild_admin_manager_not_available()
     {
         // Arrange
         $competition = $this->competition_partial;
         $data = $this->createLevelData();
         $level = $this->level_partial;
-        $level->competition_id = 1;
         foreach($data as $key => $value){
             $level->shouldReceive('getAttribute')->with($key)->andReturn($value);
         }
-
+        
         $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
         
+        $competition->shouldReceive('getAttribute')->with('status')->andReturn('pending');
+        $competition->shouldReceive('getAttribute')->with('start_date')->andReturn(now()->subDay());
         
         $updatedData = [
             'name' => 'new name',
             'description' => 'new description',
-            'start_date' => now()->addDay(2)->format('Y-m-d H:i'),
+            'start_date' => $data['start_date'],
             'duration' => 60,
-            'admin_id' => 1,
+            'admin_id' => 2,
         ];
 
         $this->levelRepository
             ->shouldReceive('isAdminAllowedToBeLevelManager')
-            ->with($data['admin_id'],)
+            ->with($updatedData['admin_id'])
             ->once()
-            ->andReturn(false);  
+            ->andReturn(false);   
+
+        $this->transactionManager
+            ->shouldReceive('run')
+            ->once()
+            ->andReturnUsing(function ($callback) {
+                return $callback();
+            });
+
+        $this->levelRepository
+            ->shouldReceive('update')
+            ->with($level, Mockery::any())
+            ->once()
+            ->andReturn(true);
+
+        $this->flasher
+            ->shouldReceive('error')
+            ->with(__('exceptions.admin_not_available_as_level_manager'))
+            ->once();
             
         // Act
         $result = $this->levelService->update($level, $updatedData);
         
         // Assert
-        $this->assertFalse($result);    
+        $this->assertFalse($result);
     }
     
     

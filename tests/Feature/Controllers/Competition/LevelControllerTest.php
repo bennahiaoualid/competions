@@ -5,6 +5,7 @@ namespace Tests\Feature\Controllers\Competition;
 use Tests\TestCase;
 use App\Models\User;
 use App\Models\Admin\Admin;
+use App\Jobs\SendBulkEmailJob;
 use Database\Seeders\RoleSeeder;
 use App\Models\Competition\Level;
 use Illuminate\Support\Facades\Bus;
@@ -382,6 +383,71 @@ class LevelControllerTest extends TestCase
             'competition_id' => $this->competition->id
         ]);
 
+        Bus::assertDispatched(SendBulkEmailJob::class);
+    }
+
+
+    public function test_can_update_level_assign_manager_directly()
+    {
+        $admin = Admin::factory()->create();
+        $admin->availability()->update(['level_manager' => true]);
+
+        $updateData = [
+            'name' => 'Updated Level',
+            'description' => 'Updated Description',
+            'start_date' => now()->addDays(10)->format('Y-m-d H:i'),
+            'duration' => 90,
+            'admin_id' => $admin->id,
+            'only_manager_change' => true
+        ];
+
+        $response = $this->patch(route('admin.competitions.level.update', $this->level), $updateData);
+
+        $response->assertRedirect();
+        $this->assertDatabaseMissing('levels', [
+            'id' => $this->level->id,
+            'name' => $updateData['name'],
+            'description' => $updateData['description'],
+            'duration' => $updateData['duration']
+        ]);
+        $this->assertDatabaseHas('admin_approvals', [
+            'admin_id' => $admin->id,
+            'entity_type' => Level::class,
+            'entity_id' => $this->level->id,
+            'type' => AdminApprovalTypeEnum::LEVEL_MANAGER->value
+        ]);
+        Bus::assertDispatchedTimes(BatchCompetitionNotificationJob::class, 1);
+    }
+
+    public function test_can_not_update_level_assign_manager_directly_not_available_as_manager()
+    {
+        $admin = Admin::factory()->create();
+        $admin->availability()->update(['level_manager' => true]);
+
+        $updateData = [
+            'name' => 'Updated Level',
+            'description' => 'Updated Description',
+            'start_date' => now()->addDays(10)->format('Y-m-d H:i'),
+            'duration' => 90,
+            'admin_id' =>  (Admin::factory()->create())->id,
+            'only_manager_change' => true
+        ];
+
+        $response = $this->patch(route('admin.competitions.level.update', $this->level), $updateData);
+
+        $response->assertRedirect();
+        $this->assertDatabaseMissing('levels', [
+            'id' => $this->level->id,
+            'name' => $updateData['name'],
+            'description' => $updateData['description'],
+            'duration' => $updateData['duration']
+        ]);
+        $this->assertDatabaseMissing('admin_approvals', [
+            'admin_id' => $admin->id,
+            'entity_type' => Level::class,
+            'entity_id' => $this->level->id,
+            'type' => AdminApprovalTypeEnum::LEVEL_MANAGER->value
+        ]);
         Bus::assertNothingDispatched();
     }
 

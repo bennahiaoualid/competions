@@ -10,6 +10,7 @@ class AdminAlreadyDecidedException extends Exception
     protected $entityType;
     protected $entityId;
     protected $type;
+    protected $trans_message;
 
     public function __construct(
         int $adminId,
@@ -17,6 +18,7 @@ class AdminAlreadyDecidedException extends Exception
         int $entityId,
         string $type,
         ?string $message = null,
+        ?string $trans_message = null,
         int $code = 0,
         ?Exception $previous = null
     ) {
@@ -25,8 +27,8 @@ class AdminAlreadyDecidedException extends Exception
         $this->entityId = $entityId;
         $this->type = $type;
 
-        $defaultMessage = __('exceptions.admin_already_decided');
-        
+        $defaultMessage = "The target admin has already decided either approved or rejected the request";
+        $this->trans_message = $trans_message ?? __('exceptions.admin_already_decided');
         parent::__construct($message ?? $defaultMessage, $code, $previous);
     }
 
@@ -60,6 +62,11 @@ class AdminAlreadyDecidedException extends Exception
     public function getType(): string
     {
         return $this->type;
+    }
+
+    public function getTransMessage(): string
+    {
+        return $this->trans_message;
     }
 
     /**
