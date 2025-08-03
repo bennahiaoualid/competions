@@ -37,6 +37,10 @@ return [
         'admin' => 'إدارة المشرفين',
         'user' => 'إدارة المستخدمين',
         'competition' => 'إدارة المسابقات',
+        'payment' => 'إدارة المدفوعات',
+        'payment_audit' => 'تدقيق المدفوعات',
+        'coin_pricing' => 'تسعير العملات',
+        'payment_offer' => 'عروض الدفع',
         'monitoring' => 'المراقبة',
         'general' => 'عام',
     ],
@@ -57,6 +61,15 @@ return [
     'restore user' => 'إستعادة المستخدم',
 
     'add competition' => 'إضافة مسابقة',
+    
+    // Payment Permissions
+    'approve payment' => 'الموافقة على الدفع',
+    'view payment' => 'عرض المدفوعات',
+    'manage payment' => 'إدارة المدفوعات',
+    'export payment' => 'تصدير المدفوعات',
+    'view payment_audit' => 'عرض تدقيق المدفوعات',
+    'manage coin_pricing' => 'إدارة تسعير العملات',
+    'create payment_offer' => 'إنشاء عرض دفع',
     
     // Page Titles
     'manage_permissions_for' => 'إدارة الصلاحيات لـ',

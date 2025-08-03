@@ -31,6 +31,20 @@ class RoleSeeder extends Seeder
             'view user',
             'add competition'
         ];
+
+        // Payment system permissions
+        $paymentPermissions = [
+            'approve payment',
+            'view payment',
+            'manage payment',
+            'export payment',
+            'view payment_audit',
+            'manage coin_pricing',
+            'create payment_offer'
+        ];
+
+        // Add payment permissions to main permissions array
+        $permissions = array_merge($permissions, $paymentPermissions);
         foreach($permissions as $permission){
             Permission::create(['guard_name' => 'admin', 'name' => $permission]);
         }
@@ -58,6 +72,10 @@ class RoleSeeder extends Seeder
             'update user',
             'delete user',
             'view user');
+
+        // Create accountant role with payment permissions
+        $role_accountant = Role::create(['guard_name' => 'admin', 'name' => 'accountant']);
+        $role_accountant->givePermissionTo($paymentPermissions);
         
         $admin_owner = Admin::where('email', '=', 'oualidbennahia@gmail.com')->first();
         if ($admin_owner) {
