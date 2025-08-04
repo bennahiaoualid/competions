@@ -63,7 +63,6 @@ return [
     'add competition' => 'Add Competition',
     
     // Payment Permissions
-    'approve payment' => 'Approve Payment',
     'view payment' => 'View Payment',
     'manage payment' => 'Manage Payment',
     'export payment' => 'Export Payment',

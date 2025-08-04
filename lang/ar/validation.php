@@ -192,7 +192,9 @@ return [
         'start_date' => 'تاريخ الانطلاق',
         'scores.*' => 'العلامة',
         'title' => 'العنوان',
-
+        'transaction_id' => 'رقم المعاملة',
+        'observation' => 'الملاحظة',
+        'status' => 'الحالة',
 
 
 

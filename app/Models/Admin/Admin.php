@@ -191,7 +191,29 @@ class Admin extends Authenticatable
         return $this->hasOne(AdminAvailability::class);
     } 
 
-    
+    /**
+     * The payment transactions that this admin has made.
+     */
+    public function paymentTransactions()
+    {
+        return $this->morphMany(\App\Models\Payment\PaymentTransaction::class, 'payable');
+    }
+
+    /**
+     * The coin balance for this admin.
+     */
+    public function coinBalance()
+    {
+        return $this->morphOne(\App\Models\Payment\CoinBalance::class, 'balanceable');
+    }
+
+    /**
+     * The payments that this admin has approved.
+     */
+    public function approvedPayments()
+    {
+        return $this->hasMany(\App\Models\Payment\PaymentTransaction::class, 'approver_admin_id');
+    }
 
     /**
      * override methode for storing log activity

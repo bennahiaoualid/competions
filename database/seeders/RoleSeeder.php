@@ -34,7 +34,6 @@ class RoleSeeder extends Seeder
 
         // Payment system permissions
         $paymentPermissions = [
-            'approve payment',
             'view payment',
             'manage payment',
             'export payment',

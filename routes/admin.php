@@ -4,6 +4,7 @@ use Livewire\Livewire;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Competition\AuditController;
 use App\Http\Controllers\Monitoring\MonitoringController;
+use App\Http\Controllers\Payment\Admin\PaymentController;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use App\Http\Controllers\GuestUsers\GlobalQuestionController;
 use App\Http\Controllers\Monitoring\DeletionRecordsController;
@@ -134,6 +135,18 @@ Route::group(
             Route::post('/approvals/approve', [\App\Http\Controllers\Admin\AdminApprovalController::class, 'approve'])->name('approvals.approve');
             Route::post('/approvals/reject', [\App\Http\Controllers\Admin\AdminApprovalController::class, 'reject'])->name('approvals.reject');
             Route::delete('/approvals/delete', [\App\Http\Controllers\Admin\AdminApprovalController::class, 'destroy'])->name('approvals.destroy');
+
+            // Payment routes (Owner and Accountant only)
+            Route::prefix('payment')->name('payment.')->group(function () {
+                Route::middleware(['permission:view payment'])->group(function () {
+                    Route::get('/transactions', [PaymentController::class, 'transactions'])->name('transactions');
+                });
+                Route::middleware(['permission:manage payment'])->group(function () {
+                    Route::post('/approve', [PaymentController::class, 'approve'])->name('approve');
+                    Route::post('/reject', [PaymentController::class, 'reject'])->name('reject');
+                    Route::post('/cancel', [PaymentController::class, 'cancel'])->name('cancel');
+                });
+            });
         });
 
         require __DIR__.'/auth_admin.php';

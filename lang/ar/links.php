@@ -27,6 +27,15 @@ return [
         'global_responses' => 'إجــاباتي',
         'global_order' => 'الترتيب العام',
     ],
+    'payment' => [
+        'payments' => 'المدفوعات',
+        'transactions' => 'معاملات الدفع',
+        'balances' => 'رصيد العملات',
+        'audit_logs' => 'سجلات التدقيق',
+        'review_requests' => 'طلبات المراجعة',
+        'pricing' => 'تسعير العملات',
+        'offers' => 'العروض الخاصة',
+    ],
     'home' => 'الصفحة الرئيسية',
     'log_out' => 'تسجيل الخروج',
 ];

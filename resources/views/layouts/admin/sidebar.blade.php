@@ -127,6 +127,23 @@
                 </x-nav-link>
             </li>
 
+            {{-- Payment System --}}
+            <x-nav-dropdown :title="__('links.payment.payments')"
+                            :active="request()->is(App::currentLocale() . '/admin/payment/*')
+                                    or request()->is(App::currentLocale() . '/admin/payment')" :sub="false"
+                            :links="[
+                    ['url' => route('admin.payment.transactions'), 'title' => __('links.payment.transactions') , 'active' => request()->routeIs('admin.payment.transactions'), 'subnav' => true],
+                    ['url' => '#', 'title' => 'Tool 2', 'active' => false, 'subnav' => true],
+                    ['url' => '#', 'title' => 'Tool 3', 'active' => false, 'subnav' => true],
+                ]">
+                <x-slot:icon>
+                    <i class="fas fa-credit-card me-3"></i>
+                </x-slot:icon>
+                <x-slot:titleUi>
+                    <span class="sidebar-text">{{__('links.payment.payments')}}</span>
+                </x-slot:titleUi>
+            </x-nav-dropdown>
+
 
         </ul>
     </nav>

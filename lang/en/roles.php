@@ -10,5 +10,6 @@ return [
     'super_admin' => 'super admin',
     'manager' => 'manager',
     'auditor' => 'auditor',
+    'accountant' => 'accountant',
 
 ];

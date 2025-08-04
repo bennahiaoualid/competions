@@ -63,7 +63,6 @@ return [
     'add competition' => 'إضافة مسابقة',
     
     // Payment Permissions
-    'approve payment' => 'الموافقة على الدفع',
     'view payment' => 'عرض المدفوعات',
     'manage payment' => 'إدارة المدفوعات',
     'export payment' => 'تصدير المدفوعات',

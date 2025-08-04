@@ -25,6 +25,11 @@ return [
             'hard_deleted' => 'entity has been permanently deleted',
             'level_manager_requested' => 'Request was sent to :admin to be the level manager',
             'auditor_assignment_requested' => 'Request was sent to :admins to be the auditor',
+            'payment' => [
+                'approved' => 'payment has been approved',
+                'rejected' => 'payment has been rejected',
+                'cancelled' => 'payment has been cancelled',
+            ],
         ],
         'fail' =>[
             'saved' => 'something went wrong while saving',
@@ -36,6 +41,11 @@ return [
             'finish' => 'finish operation failed',
             'approved' => 'approve fail',
             'hard_deleted' => 'something went wrong while permanently deleting',
+            'payment' => [
+                'approved' => 'failed to approve payment',
+                'rejected' => 'failed to reject payment',
+                'cancelled' => 'failed to cancel payment',
+            ],
         ],
         'info' => [
             'saved' => 'save operation is in progress',

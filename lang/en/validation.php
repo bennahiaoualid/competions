@@ -187,8 +187,9 @@ return [
         'questions_number' => 'questions number',
         'response_text' => 'response text',
         'scores.*' => 'score',
-
-
+        'transaction_id' => 'transaction id',
+        'observation' => 'observation',
+        'status' => 'status',
     ],
 
 ];

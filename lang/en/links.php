@@ -27,6 +27,15 @@ return [
         'global_responses' => 'my responses',
         'global_order' => 'global order',
     ],
+    'payment' => [
+        'payments' => 'Payments',
+        'transactions' => 'Payment Transactions',
+        'balances' => 'Coin Balances',
+        'audit_logs' => 'Audit Logs',
+        'review_requests' => 'Review Requests',
+        'pricing' => 'Coin Pricing',
+        'offers' => 'Special Offers',
+    ],
     'home' => 'home',
     'log_out' => 'Sign out',
 
