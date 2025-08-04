@@ -410,6 +410,48 @@ CREATE TABLE coin_offers (
 - ✅ Stats cards showing pending, approved, rejected, cancelled counts
 - ✅ Responsive design with proper localization
 
+### **Dedicated Payment Layout System**
+**Status**: ✅ COMPLETED
+
+#### Layout Structure Created:
+- ✅ `resources/views/layouts/payment/master.blade.php` - Payment master layout
+- ✅ `resources/views/layouts/payment/main-header.blade.php` - Clean payment navigation
+- ✅ `resources/views/layouts/payment/head.blade.php` - CSS, JS, PowerGrid integration
+- ✅ `resources/views/layouts/payment/footer-scripts.blade.php` - JavaScript functionality
+
+#### Payment Pages Created:
+- ✅ `resources/views/pages/payment/transactions.blade.php` - Shared transactions page
+- ✅ `resources/views/pages/payment/create.blade.php` - Modern payment form with Alpine.js
+- ✅ `resources/views/pages/payment/show.blade.php` - Transaction detail page
+
+#### Navigation Integration:
+- ✅ **Admin Sidebar**: Separated payment links for regular admins vs accountants
+- ✅ **User Header**: "Buy Coins" link in main navigation
+- ✅ **Role-Based Access**: Different navigation based on admin role
+
+#### Features Implemented:
+- ✅ **Clean UI**: Modern, responsive design with Tailwind CSS
+- ✅ **Alpine.js Integration**: Interactive payment method selection with focus management
+- ✅ **Form Components**: Uses standard Blade components (x-input-label, x-text-input, x-input-error)
+- ✅ **Drag & Drop**: File upload with preview functionality
+- ✅ **Status Widgets**: Color-coded payment status indicators
+- ✅ **Audit Trail**: Complete transaction history display
+- ✅ **Balance Display**: Current coin balance and statistics
+- ✅ **Multi-language**: Complete English and Arabic translations
+
+### **User-Specific Payment Table**
+**Status**: ✅ COMPLETED
+
+#### Components Created:
+- ✅ `app/Livewire/PaymentUserTransactionTable.php` - User-specific transaction table
+
+#### Features Implemented:
+- ✅ **User-Specific Data**: Shows only authenticated user's transactions
+- ✅ **Responsive Columns**: Amount, Coins, Status, Created At, Row Number
+- ✅ **Clean Actions**: View button only for transaction details
+- ✅ **Status Filtering**: Filter by payment status
+- ✅ **PowerGrid Integration**: Uses TailwindStriped theme
+
 ### **Form Requests & Validation**
 **Status**: ✅ COMPLETED
 
@@ -428,8 +470,9 @@ CREATE TABLE coin_offers (
 **Status**: ✅ COMPLETED
 
 #### Files Created/Modified:
-- ✅ `routes/admin.php` - Added payment routes with role protection
-- ✅ `app/Http/Controllers/Payment/Admin/PaymentController.php` - Accountant operations
+- ✅ `routes/web.php` - Added payment routes with either auth middleware
+- ✅ `routes/admin.php` - Added admin payment routes
+- ✅ `app/Http/Controllers/Payment/PaymentTransactionController.php` - Updated for new layout
 
 #### Features Implemented:
 - ✅ Role-protected routes (`owner|accountant`)
@@ -452,6 +495,22 @@ CREATE TABLE coin_offers (
 - ✅ Various payment states and scenarios
 - ✅ Error handling for storage operations
 
+### **Translation System**
+**Status**: ✅ COMPLETED
+
+#### Files Created/Modified:
+- ✅ `lang/en/payment.php` - Complete English translations
+- ✅ `lang/ar/payment.php` - Complete Arabic translations
+- ✅ `lang/en/links.php` - Payment navigation links
+- ✅ `lang/ar/links.php` - Arabic payment navigation links
+
+#### Translation Categories:
+- ✅ **Layout & Navigation**: Payment system title, navigation links
+- ✅ **Form Elements**: Labels, placeholders, validation messages
+- ✅ **Status & Actions**: Payment statuses, action buttons
+- ✅ **Information Cards**: Help text, usage instructions
+- ✅ **Error Messages**: Validation and system error messages
+
 ---
 
 ## 📊 **Implementation Summary**
@@ -459,10 +518,13 @@ CREATE TABLE coin_offers (
 ### **✅ Completed Steps:**
 1. ✅ **Step 1: Accountant Role & Permissions** - Fully implemented
 2. ✅ **Step 2: Payment Database Schema** - Fully implemented with UUID support
-3. ✅ **UI/UX Components** - PowerGrid tables, modals, detail rows
-4. ✅ **Form Requests** - Clean validation with proper separation
-5. ✅ **Controllers & Routes** - Web-based responses with role protection
-6. ✅ **Testing Infrastructure** - Factories and seeders with cleanup
+3. ✅ **Dedicated Payment Layout System** - Complete layout with navigation
+4. ✅ **User-Specific Payment Table** - PowerGrid table for user transactions
+5. ✅ **Modern Payment Form** - Alpine.js integration with form components
+6. ✅ **Form Requests** - Clean validation with proper separation
+7. ✅ **Controllers & Routes** - Web-based responses with role protection
+8. ✅ **Testing Infrastructure** - Factories and seeders with cleanup
+9. ✅ **Translation System** - Complete English and Arabic support
 
 ### **🔄 Next Steps:**
 1. **Step 3: Payment Cleanup System** - Automated cleanup commands
@@ -471,10 +533,12 @@ CREATE TABLE coin_offers (
 
 ### **🎯 Current Status:**
 - **Core Payment System**: ✅ Production Ready
-- **Accountant Interface**: ✅ Fully Functional
+- **Dedicated Payment Layout**: ✅ Fully Functional
+- **User Payment Interface**: ✅ Complete with Alpine.js
 - **Database Schema**: ✅ Complete with UUIDs
 - **Security Features**: ✅ Implemented
 - **Testing Infrastructure**: ✅ Comprehensive
+- **Multi-language Support**: ✅ English and Arabic
 
 ---
 
@@ -482,4 +546,50 @@ CREATE TABLE coin_offers (
 - This plan will be updated as we discuss each step
 - Each step will be marked as completed when implemented
 - Additional steps may be added based on requirements
-- Security and testing are prioritized throughout 
+- Security and testing are prioritized throughout
+
+---
+
+## 📝 **Commit Message Management**
+
+### **Current Commit Message:**
+
+#### **Latest Commit: Implement dedicated payment layout system with Alpine.js**
+```
+feat: implement dedicated payment layout system with modern UI
+
+Payment Layout System Implementation:
+- Create dedicated payment layout with clean navigation (master, header, head, footer-scripts)
+- Add shared payment pages (transactions, create, show) for both users and admins
+- Implement Alpine.js payment method selection with focus management and smooth animations
+- Use standard Blade components (x-input-label, x-text-input, x-input-error) for form consistency
+- Add user-specific PaymentUserTransactionTable with responsive columns and PowerGrid integration
+- Separate admin navigation: regular admins (Buy Coins) vs accountants (Payment Management)
+- Add complete translation system with English and Arabic support
+- Implement drag & drop file upload with preview functionality
+- Add status widgets and audit trail display
+- Include balance display and statistics cards
+
+Technical Features:
+- Dedicated payment layout system for clean separation
+- Alpine.js interactive components with focus management
+- Standard form component pattern for consistency
+- PowerGrid tables with TailwindStriped theme
+- Role-based navigation with proper access control
+- Multi-language support with complete translations
+- Responsive design with modern UI/UX
+- File upload with drag & drop and preview
+- Status indicators and audit trail display
+```
+
+### **Commit Message Generation Rules:**
+1. **When user asks for commit message**: Detect what's new/changed since last commit
+2. **Generate new commit message**: Replace the latest commit message with updated content
+3. **Follow conventional commit format**: feat:, fix:, refactor:, docs:, etc.
+4. **Include specific changes**: List files modified and features added
+5. **Maintain chronological order**: Latest commit at the top
+
+### **Example Usage:**
+- User: "generate commit message"
+- Assistant: Detects new changes (e.g., form request updates)
+- Assistant: Replaces "Commit 8" with new commit message reflecting the latest changes 

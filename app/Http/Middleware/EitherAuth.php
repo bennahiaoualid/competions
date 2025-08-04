@@ -9,10 +9,19 @@ class EitherAuth
 {
     public function handle($request, Closure $next)
     {
-        if (Auth::guard('web')->check() || Auth::guard('admin')->check()) {
+        if (Auth::guard('web')->check()) {
+            // Set web as default guard for this request
+            Auth::shouldUse('web');
             return $next($request);
         }
-        // Redirect to login (choose which one, or show a generic error)
+        
+        if (Auth::guard('admin')->check()) {
+            // Set admin as default guard for this request
+            Auth::shouldUse('admin');
+            return $next($request);
+        }
+        
+        // Neither guard is authenticated
         return redirect()->route('login');
     }
-} 
+}

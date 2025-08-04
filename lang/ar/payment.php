@@ -1,6 +1,75 @@
 <?php
 
 return [
+    // Payment layout translations
+    'title' => 'نظام الدفع',
+    'subtitle' => 'إدارة رصيد العملات والمعاملات',
+    
+    // Navigation
+    'nav' => [
+        'transactions' => 'المعاملات',
+        'create' => 'شراء عملات',
+        'balance' => 'الرصيد',
+        'back_to_dashboard' => 'العودة للوحة التحكم',
+    ],
+
+    // Page descriptions
+    'transactions_description' => 'عرض جميع معاملات الدفع وحالتها',
+    'balance_description' => 'تحقق من رصيد العملات الحالي وتاريخ المعاملات',
+
+    // Stats
+    'stats' => [
+        'pending' => 'قيد الانتظار',
+        'approved' => 'تمت الموافقة',
+        'rejected' => 'مرفوض',
+        'cancelled' => 'ملغي',
+    ],
+
+    // Detail page
+    'transaction_details' => 'تفاصيل المعاملة',
+    'transaction_id' => 'رقم المعاملة',
+    'transaction_info' => 'معلومات المعاملة',
+    'basic_info' => 'المعلومات الأساسية',
+    'approval_info' => 'معلومات الموافقة',
+    'audit_log' => 'سجل التدقيق',
+    'audit_action_created' => 'أنشأ هذا الدفع',
+    'audit_action_approved' => 'وافق على هذا الدفع',
+    'audit_action_rejected' => 'رفض هذا الدفع',
+    'audit_action_cancelled' => 'ألغى هذا الدفع',
+    'audit_action_modified' => 'عدل هذا الدفع',
+
+    // User-facing payment translations
+    'create_transaction' => 'إنشاء معاملة دفع',
+    'create_transaction_description' => 'شراء عملات لاستخدامها في خدمات الذكاء الاصطناعي والمسابقات',
+    'current_balance' => 'الرصيد الحالي',
+    'total_earned' => 'إجمالي المكتسب',
+    'coins' => 'العملات',
+    'payment_details' => 'تفاصيل الدفع',
+    'amount_dzd' => 'المبلغ (دينار جزائري)',
+    'enter_amount' => 'أدخل المبلغ بالدينار الجزائري',
+    'amount_help' => 'الحد الأدنى: 1 دينار جزائري',
+    'payment_method' => 'طريقة الدفع',
+    'cash' => 'نقداً',
+    'cash_description' => 'دفع نقدي مباشر',
+    'bank_transfer' => 'تحويل بنكي',
+    'bank_transfer_description' => 'دفع بالتحويل البنكي',
+    'mobile_money' => 'محفظة إلكترونية',
+    'mobile_money_description' => 'دفع بالمحفظة الإلكترونية',
+    'proof_image' => 'إثبات الدفع',
+    'upload_file' => 'رفع ملف',
+    'or_drag_drop' => 'أو اسحب وأفلت',
+    'image_requirements' => 'PNG, JPG, JPEG حتى 10 ميجابايت',
+    'image_preview' => 'معاينة الصورة',
+    'submit_payment' => 'إرسال الدفع',
+    'important_info' => 'معلومات مهمة',
+    'info_1' => 'سيتم مراجعة الدفع من قبل محاسبنا',
+    'info_2' => 'سيتم إضافة العملات بعد الموافقة',
+    'info_3' => 'احتفظ بإثبات الدفع للرجوع إليه',
+    'coin_usage' => 'استخدام العملات',
+    'usage_1' => 'استخدم العملات للأسئلة العالمية للذكاء الاصطناعي',
+    'usage_2' => 'استخدم العملات لمراجعة الذكاء الاصطناعي في المسابقات',
+    'usage_3' => 'العملات غير قابلة للاسترداد بعد الاستخدام',
+
     'payment_transaction' => [
         'status' => [
             'pending' => 'قيد الانتظار',

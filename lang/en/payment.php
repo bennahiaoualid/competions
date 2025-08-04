@@ -1,6 +1,75 @@
 <?php
 
 return [
+    // Payment layout translations
+    'title' => 'Payment System',
+    'subtitle' => 'Manage your coin balance and transactions',
+    
+    // Navigation
+    'nav' => [
+        'transactions' => 'Transactions',
+        'create' => 'Buy Coins',
+        'balance' => 'Balance',
+        'back_to_dashboard' => 'Back to Dashboard',
+    ],
+
+    // Page descriptions
+    'transactions_description' => 'View all your payment transactions and their status',
+    'balance_description' => 'Check your current coin balance and transaction history',
+
+    // Stats
+    'stats' => [
+        'pending' => 'Pending',
+        'approved' => 'Approved',
+        'rejected' => 'Rejected',
+        'cancelled' => 'Cancelled',
+    ],
+
+    // Detail page
+    'transaction_details' => 'Transaction Details',
+    'transaction_id' => 'Transaction ID',
+    'transaction_info' => 'Transaction Information',
+    'basic_info' => 'Basic Information',
+    'approval_info' => 'Approval Information',
+    'audit_log' => 'Audit Log',
+    'audit_action_created' => 'created this payment',
+    'audit_action_approved' => 'approved this payment',
+    'audit_action_rejected' => 'rejected this payment',
+    'audit_action_cancelled' => 'cancelled this payment',
+    'audit_action_modified' => 'modified this payment',
+
+    // User-facing payment translations
+    'create_transaction' => 'Create Payment Transaction',
+    'create_transaction_description' => 'Purchase coins to use for AI services and competitions',
+    'current_balance' => 'Current Balance',
+    'total_earned' => 'Total Earned',
+    'coins' => 'Coins',
+    'payment_details' => 'Payment Details',
+    'amount_dzd' => 'Amount (DZD)',
+    'enter_amount' => 'Enter amount in DZD',
+    'amount_help' => 'Minimum amount: 1 DZD',
+    'payment_method' => 'Payment Method',
+    'cash' => 'Cash',
+    'cash_description' => 'Direct cash payment',
+    'bank_transfer' => 'Bank Transfer',
+    'bank_transfer_description' => 'Bank transfer payment',
+    'mobile_money' => 'Mobile Money',
+    'mobile_money_description' => 'Mobile money payment',
+    'proof_image' => 'Payment Proof',
+    'upload_file' => 'Upload a file',
+    'or_drag_drop' => 'or drag and drop',
+    'image_requirements' => 'PNG, JPG, JPEG up to 10MB',
+    'image_preview' => 'Image Preview',
+    'submit_payment' => 'Submit Payment',
+    'important_info' => 'Important Information',
+    'info_1' => 'Payment will be reviewed by our accountant',
+    'info_2' => 'Coins will be credited after approval',
+    'info_3' => 'Keep your payment proof for reference',
+    'coin_usage' => 'Coin Usage',
+    'usage_1' => 'Use coins for Global AI Questions',
+    'usage_2' => 'Use coins for AI Auditing in competitions',
+    'usage_3' => 'Coins are non-refundable once used',
+
     'payment_transaction' => [
         'status' => [
             'pending' => 'Pending',

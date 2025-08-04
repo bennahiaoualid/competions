@@ -70,6 +70,17 @@ Route::group(
     Route::get('/questions',[\App\Http\Controllers\GuestUsers\UserGuestController::class, 'index'])->name('global_questions.index');
     Route::get('/global-order', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'globalUsersOrder'])->name('global_questions.global_order');
 
+
+    
+    // Payment routes for users
+    Route::middleware('either.auth')->group(function () {
+        Route::get('/payment/create', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'create'])->name('payment.create');
+        Route::post('/payment/store', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'store'])->name('payment.store');
+        Route::get('/payment/transactions', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'index'])->name('payment.transactions');
+        Route::get('/payment/transactions/{paymentTransaction}', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'show'])->name('payment.transactions.show');
+        Route::get('/payment/coin-balance', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'getCoinBalance'])->name('payment.coin-balance');
+    });
+
     // Include notification routes inside localization middleware
     require __DIR__.'/notification.php';
 

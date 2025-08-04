@@ -23,13 +23,7 @@ class PaymentTransactionController extends Controller
      */
     public function index(): View
     {
-        $user = Auth::user();
-        $transactions = $user->paymentTransactions()
-            ->with(['approver'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
-
-        return view('payment.transactions.index', compact('transactions'));
+        return view('pages.payment.transactions');
     }
 
     /**
@@ -39,7 +33,7 @@ class PaymentTransactionController extends Controller
     {
         $paymentTransaction->load(['approver', 'auditLogs.admin']);
         
-        return view('payment.transactions.show', compact('paymentTransaction'));
+        return view('pages.payment.show', compact('paymentTransaction'));
     }
 
     /**
@@ -47,7 +41,7 @@ class PaymentTransactionController extends Controller
      */
     public function create(): View
     {
-        return view('payment.transactions.create');
+        return view('pages.payment.create');
     }
 
     /**
