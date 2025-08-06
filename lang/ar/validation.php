@@ -195,9 +195,11 @@ return [
         'transaction_id' => 'رقم المعاملة',
         'observation' => 'الملاحظة',
         'status' => 'الحالة',
-
-
-
+        'pricing_id' => 'رقم التسعير',
+        'user_type' => 'نوع المستخدم',
+        'base_amount' => 'المبلغ الأساسي',
+        'base_coins' => 'العملات الأساسية',
+        'reason' => 'السبب',
     ],
 
 ];

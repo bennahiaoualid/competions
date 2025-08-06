@@ -10,6 +10,8 @@ use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Payment\PaymentTransaction;
+use App\Models\Payment\CoinPricing;
+use App\Models\Payment\CoinOffer;
 
 class PaymentSeeder extends Seeder
 {
@@ -21,6 +23,8 @@ class PaymentSeeder extends Seeder
         'users' => [],
         'payment_transactions' => [],
         'proof_images' => [],
+        'coin_pricing' => [],
+        'coin_offers' => [],
     ];
 
     /**
@@ -37,6 +41,8 @@ class PaymentSeeder extends Seeder
         $this->createAccountantAdmin();
         $this->createTestUsers();
         $this->createTestAdmins();
+        $this->createCoinPricing();
+        $this->createCoinOffers();
         $this->createPaymentTransactions();
 
         $this->command->info('✅ Payment System Seeder completed successfully!');
@@ -213,6 +219,120 @@ class PaymentSeeder extends Seeder
     }
 
     /**
+     * Create coin pricing data
+     */
+    private function createCoinPricing(): void
+    {
+        $this->command->info('💰 Creating Coin Pricing...');
+
+        $accountant = Admin::where('email', 'accountant@test.com')->first();
+
+        // Create standard user pricing (100 DZD = 50 coins)
+        $userPricing = CoinPricing::create([
+            'user_type' => 'user',
+            'base_amount' => 100.00,
+            'base_coins' => 50,
+            'is_active' => true,
+            'created_by_admin_id' => $accountant->id,
+        ]);
+        $this->createdRecords['coin_pricing'][] = $userPricing->id;
+
+        // Create standard admin pricing (100 DZD = 100 coins)
+        $adminPricing = CoinPricing::create([
+            'user_type' => 'admin',
+            'base_amount' => 100.00,
+            'base_coins' => 100,
+            'is_active' => true,
+            'created_by_admin_id' => $accountant->id,
+        ]);
+        $this->createdRecords['coin_pricing'][] = $adminPricing->id;
+
+        // Create some historical pricing
+        $historicalPricing = CoinPricing::create([
+            'user_type' => 'user',
+            'base_amount' => 100.00,
+            'base_coins' => 40,
+            'is_active' => false,
+            'created_by_admin_id' => $accountant->id,
+        ]);
+        $this->createdRecords['coin_pricing'][] = $historicalPricing->id;
+
+        $this->command->info('✅ Coin pricing created successfully');
+    }
+
+    /**
+     * Create coin offers data
+     */
+    private function createCoinOffers(): void
+    {
+        $this->command->info('🎁 Creating Coin Offers...');
+
+        $accountant = Admin::where('email', 'accountant@test.com')->first();
+
+        // Create weekend special offer
+        $weekendOffer = CoinOffer::create([
+            'name' => 'Weekend Special',
+            'description' => 'Extra coins for weekend purchases',
+            'user_type' => 'both',
+            'discount_percentage' => 20,
+            'min_amount' => 100.00,
+            'max_amount' => 1000.00,
+            'start_date' => now()->subDays(5),
+            'end_date' => now()->addDays(25),
+            'is_active' => true,
+            'created_by_admin_id' => $accountant->id,
+        ]);
+        $this->createdRecords['coin_offers'][] = $weekendOffer->id;
+
+        // Create new user bonus
+        $newUserOffer = CoinOffer::create([
+            'name' => 'New User Bonus',
+            'description' => 'Welcome bonus for new users',
+            'user_type' => 'user',
+            'discount_percentage' => 25,
+            'min_amount' => 50.00,
+            'max_amount' => 500.00,
+            'start_date' => now()->subDays(10),
+            'end_date' => now()->addDays(20),
+            'is_active' => true,
+            'created_by_admin_id' => $accountant->id,
+        ]);
+        $this->createdRecords['coin_offers'][] = $newUserOffer->id;
+
+        // Create bulk purchase offer
+        $bulkOffer = CoinOffer::create([
+            'name' => 'Bulk Purchase Bonus',
+            'description' => 'Extra coins for large purchases',
+            'user_type' => 'both',
+            'discount_percentage' => 15,
+            'min_amount' => 500.00,
+            'max_amount' => null,
+            'start_date' => now()->subDays(15),
+            'end_date' => now()->addDays(15),
+            'is_active' => true,
+            'created_by_admin_id' => $accountant->id,
+        ]);
+        $this->createdRecords['coin_offers'][] = $bulkOffer->id;
+
+        // Create expired offer
+        $expiredOffer = CoinOffer::create([
+            'name' => 'Expired Special',
+            'description' => 'This offer has expired',
+            'user_type' => 'admin',
+            'discount_percentage' => 10,
+            'min_amount' => null,
+            'max_amount' => null,
+            'start_date' => now()->subDays(30),
+            'end_date' => now()->subDays(5),
+            'is_active' => true,
+            'created_by_admin_id' => $accountant->id,
+        ]);
+        $this->createdRecords['coin_offers'][] = $expiredOffer->id;
+
+        $this->command->info('✅ Coin offers created successfully');
+    }
+
+    /**
      * Clean up all created records
      */
     public function cleanup(): void
@@ -223,6 +343,14 @@ class PaymentSeeder extends Seeder
         // First delete dependent tables if they exist
         if (class_exists('App\Models\Payment\PaymentAuditLog')) {
             \App\Models\Payment\PaymentAuditLog::query()->delete();
+        }
+        
+        // Delete coin offers and pricing
+        if (class_exists('App\Models\Payment\CoinOffer')) {
+            CoinOffer::query()->delete();
+        }
+        if (class_exists('App\Models\Payment\CoinPricing')) {
+            CoinPricing::query()->delete();
         }
         
         // Then delete main table

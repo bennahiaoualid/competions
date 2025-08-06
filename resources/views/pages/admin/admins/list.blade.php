@@ -13,7 +13,6 @@
 @section('content')
     <div class="flex justify-between items-center my-2 p-4 shadow-sm" >
         <h1 class="text-xl font-bold">{{__('links.admin.list')}}</h1>
-        {{ 'gg'.old('id') }}
         @can("add admin")
             <div x-data>
                 <x-button

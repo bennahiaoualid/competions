@@ -4,7 +4,7 @@ return [
 
     'admin' => [
         'dashboard' => 'لوحة التحكم',
-        'admins' => 'المشرفين',
+        'admins' => 'المشرفون',
         'list' => 'قائمة المشرفين',
         'permissions' => 'الصلاحيات',
     ],
@@ -15,26 +15,29 @@ return [
         'delayed_processes' => 'العمليات المؤجلة',
     ],
     'user' =>[
-        'list' => 'المستخدمين',
+        'list' => 'المستخدمون',
     ],
     'competition' =>[
         'competitions' => 'المسابقات',
         'list' => 'قائمة المسابقات',
-        'auditing_responses' => 'مراجعة الاجابات'
+        'auditing_responses' => 'مراجعة الإجابات'
     ],
     'global_user'=>[
-        'global_questions' => 'الأسئلة العامة',
-        'global_responses' => 'إجــاباتي',
-        'global_order' => 'الترتيب العام',
+        'global_questions' => 'الأسئلة العالمية',
+        'global_responses' => 'إجاباتي',
+        'global_order' => 'الترتيب العالمي',
     ],
     'payment' => [
         'payments' => 'المدفوعات',
         'accountant_payments' => 'إدارة المدفوعات',
         'transactions' => 'المعاملات',
+        'pricing' => 'تسعير العملات',
+        'offers' => 'عروض العملات',
         'create' => 'شراء عملات',
         'buy_coins' => 'شراء عملات',
         'balance' => 'الرصيد',
     ],
-    'home' => 'الصفحة الرئيسية',
+    'home' => 'الرئيسية',
     'log_out' => 'تسجيل الخروج',
+
 ];

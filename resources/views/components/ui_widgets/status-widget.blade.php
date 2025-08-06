@@ -20,6 +20,8 @@
             $color_border = 'border-sky-300';
             break;
         case 'pending':
+        case 'disabled':
+        case 'cancelled':
             $color = $outline ? 'bg-yellow-100' : 'bg-yellow-300';
             $color_border = 'border-yellow-300';
             break;

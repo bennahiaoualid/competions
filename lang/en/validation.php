@@ -190,6 +190,11 @@ return [
         'transaction_id' => 'transaction id',
         'observation' => 'observation',
         'status' => 'status',
+        'pricing_id' => 'pricing id',
+        'user_type' => 'user type',
+        'base_amount' => 'base amount',
+        'base_coins' => 'base coins',
+        'reason' => 'reason',
     ],
 
 ];

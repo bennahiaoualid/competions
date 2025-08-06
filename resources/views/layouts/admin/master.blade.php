@@ -22,7 +22,7 @@
         <!-- Main Content -->
         <div class="flex-1 flex flex-col">
             <!-- Header -->
-        @include("layouts.admin.main-header")
+            @include("layouts.admin.main-header")
 
             <!-- Main -->
             <main class="flex-1 p-4">

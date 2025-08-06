@@ -31,6 +31,8 @@ return [
         'payments' => 'Payments',
         'accountant_payments' => 'Payment Management',
         'transactions' => 'Transactions',
+        'pricing' => 'Coin Pricing',
+        'offers' => 'Coin Offers',
         'create' => 'Buy Coins',
         'buy_coins' => 'Buy Coins',
         'balance' => 'Balance',

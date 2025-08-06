@@ -144,7 +144,7 @@
                                         or request()->is(App::currentLocale() . '/admin/payment')" :sub="false"
                                 :links="[
                         ['url' => route('admin.payment.transactions'), 'title' => __('links.payment.transactions') , 'active' => request()->routeIs('admin.payment.transactions'), 'subnav' => true],
-                        ['url' => route('admin.payment.coin-balance'), 'title' => __('links.payment.balance') , 'active' => request()->routeIs('admin.payment.coin-balance'), 'subnav' => true],
+                        ['url' => route('admin.payment.coin_pricing.index'), 'title' => __('links.payment.pricing') , 'active' => request()->routeIs('admin.payment.coin_pricing.index'), 'subnav' => true],
                     ]">
                     <x-slot:icon>
                         <i class="fas fa-credit-card me-3"></i>

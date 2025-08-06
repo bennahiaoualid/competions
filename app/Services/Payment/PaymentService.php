@@ -11,6 +11,7 @@ use App\Models\Payment\PaymentAuditLog;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Payment\PaymentTransaction;
 use App\Contracts\TransactionManagerInterface;
+use App\Services\Payment\CoinPricingService;
 
 class PaymentService
 {
@@ -18,7 +19,8 @@ class PaymentService
 
     public function __construct(
         protected TransactionManagerInterface $transactionManager,
-        protected FlasherInterface $flasher
+        protected FlasherInterface $flasher,
+        protected CoinPricingService $coinPricingService
     ) {}
 
     /**
@@ -188,8 +190,12 @@ class PaymentService
     {
         try {
             $result = $this->transactionManager->run(function () use ($request) {
-                // Calculate coins based on amount (this will be dynamic later)
-                $coins = $this->calculateCoins($request->amount);
+                // Determine user type
+                $userType = Auth::user() instanceof \App\Models\Admin\Admin ? 'admin' : 'user';
+                
+                // Calculate coins using dynamic pricing system
+                $pricingResult = $this->coinPricingService->calculateCoins($request->amount, $userType);
+                $coins = $pricingResult['final_coins'];
                 
                 // Store proof image
                 $proofPath = $request->file('proof_image')->store('payment_proofs', 'payment_proofs');
@@ -216,15 +222,6 @@ class PaymentService
             $this->flasher->crudFailure('saved');
             return false;
         }
-    }
-
-    /**
-     * Calculate coins based on amount (temporary - will be replaced with dynamic pricing)
-     */
-    private function calculateCoins(float $amount): int
-    {
-        // Temporary calculation: 100 DZD = 50 coins for users
-        return (int) ($amount / 100 * 50);
     }
 
     /**

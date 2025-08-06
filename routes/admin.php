@@ -7,6 +7,7 @@ use App\Http\Controllers\Monitoring\MonitoringController;
 use App\Http\Controllers\Payment\Admin\PaymentController;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use App\Http\Controllers\GuestUsers\GlobalQuestionController;
+use App\Http\Controllers\Payment\Admin\CoinPricingController;
 use App\Http\Controllers\Monitoring\DeletionRecordsController;
 
 /*
@@ -145,6 +146,16 @@ Route::group(
                     Route::post('/approve', [PaymentController::class, 'approve'])->name('approve');
                     Route::post('/reject', [PaymentController::class, 'reject'])->name('reject');
                     Route::post('/cancel', [PaymentController::class, 'cancel'])->name('cancel');
+                });
+                
+                Route::prefix('coin-pricing')->middleware(['role:owner|accountant'])->name('coin_pricing.')->group(function () {
+                    Route::get('/', [CoinPricingController::class, 'index'])->name('index');
+                    Route::middleware('permission:manage coin_pricing')->group(function () {
+                        Route::post('/store', [CoinPricingController::class, 'store'])->name('store');
+                        Route::delete('/delete', [CoinPricingController::class, 'destroy'])->name('destroy');
+                        Route::patch('/activate', [CoinPricingController::class, 'activate'])->name('activate');
+                        Route::patch('/deactivate', [CoinPricingController::class, 'deactivate'])->name('deactivate');
+                    });
                 });
             });
         });
