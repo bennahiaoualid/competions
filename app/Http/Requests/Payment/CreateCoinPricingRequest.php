@@ -23,6 +23,11 @@ class CreateCoinPricingRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'name' => [
+                'required', 'string', 'max:100',
+                Rule::unique('coin_pricing', 'name'),
+            ],
+            'display_name' => ['nullable', 'string', 'max:255'],
             'user_type' => [
                 'required', 'string',
                 Rule::in(UserTypeEnum::values()),

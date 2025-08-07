@@ -38,6 +38,18 @@
                 @method('post')
 
                 <div>
+                    <x-input-label for="name" :value="__('payment.pricing.fields.name')" />
+                    <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" placeholder="Standard User Package" />
+                    <x-input-error :messages="$errors->createCoinPricing->get('name')" class="mt-2" />
+                </div>
+
+                <div>
+                    <x-input-label for="display_name" :value="__('payment.pricing.fields.display_name')" />
+                    <x-text-input id="display_name" name="display_name" type="text" class="mt-1 block w-full" placeholder="Standard user package with basic features" />
+                    <x-input-error :messages="$errors->createCoinPricing->get('display_name')" class="mt-2" />
+                </div>
+
+                <div>
                     @php
                         $options = [];
                         foreach ($types as $type) {

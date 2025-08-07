@@ -48,7 +48,7 @@ final class CoinOfferTable extends PowerGridComponent
                 'email'
             ],
             'coinPricing' => [
-                'user_type'
+                'name',
             ]
         ];
     }
@@ -68,9 +68,7 @@ final class CoinOfferTable extends PowerGridComponent
             ->add('discount_percentage', function (CoinOffer $offer) {
                 return $offer->discount_percentage . '%';
             })
-            ->add('pricing_info', function (CoinOffer $offer) {
-                return $offer->coinPricing?->rate_description ?? 'N/A';
-            })
+            ->add('coinPricing.name')
             ->add('user_type')
             ->add('date_range', function (CoinOffer $offer) {
                 return DateTimeHelper::toLocalString($offer->start_date) . ' - ' . DateTimeHelper::toLocalString($offer->end_date);
@@ -99,8 +97,8 @@ final class CoinOfferTable extends PowerGridComponent
 
             Column::make(__('payment.offers.fields.discount_percentage'), 'discount_percentage'),
 
-            Column::make(__('payment.offers.fields.pricing'), 'pricing_info'),
-
+            Column::make(__('payment.offers.fields.pricing_name'), 'coinPricing.name'),
+            
             Column::make(__('payment.offers.fields.status'), 'status_widget'),
 
             Column::action(__('payment.offers.fields.actions'))

@@ -319,7 +319,9 @@ FOREIGN KEY (review_request_id) REFERENCES payment_review_requests(id) ON DELETE
 -- coin_pricing table
 CREATE TABLE coin_pricing (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    user_type ENUM('user', 'admin') NOT NULL,
+    name VARCHAR(100) UNIQUE NOT NULL, -- Short, unique name for pricing rule
+    display_name VARCHAR(255) NULL, -- Optional longer description
+    user_type ENUM('user', 'admin', 'both') NOT NULL, -- Updated to include 'both'
     base_amount DECIMAL(10,2) NOT NULL, -- Money amount (DZD)
     base_coins INTEGER NOT NULL, -- Coins given
     is_active BOOLEAN DEFAULT TRUE,
@@ -330,6 +332,7 @@ CREATE TABLE coin_pricing (
     -- Indexes
     INDEX idx_user_type (user_type),
     INDEX idx_is_active (is_active),
+    INDEX idx_name (name), -- Index for name lookups
     
     -- Foreign keys
     FOREIGN KEY (created_by_admin_id) REFERENCES admins(id) ON DELETE RESTRICT
@@ -362,6 +365,11 @@ CREATE TABLE coin_offers (
     FOREIGN KEY (created_by_admin_id) REFERENCES admins(id) ON DELETE RESTRICT
 );
 ```
+
+#### Enhanced User Type System:
+- **User**: Pricing applies only to regular users
+- **Admin**: Pricing applies only to admin users  
+- **Both**: Pricing applies to both users and admins (new feature)
 
 #### Pricing Management Permissions:
 - **Owner**: Set base pricing, create any offers, override pricing
@@ -415,6 +423,92 @@ CREATE TABLE coin_offers (
 - **Special Offers**: Weekend specials (20% extra), new user bonus (25% extra)
 - **Time-based Offers**: Limited time promotions with start/end dates
 - **Pricing-specific Offers**: Different offers for different pricing tiers
+
+---
+
+### Step 5.2: Enhanced Coin Pricing System with Names and "Both" User Type
+**Status**: ✅ COMPLETED
+**Priority**: Medium
+**Estimated Time**: 1 day
+
+#### Tasks:
+- ✅ Add name and display_name fields to coin_pricing table
+- ✅ Update user_type enum to include 'both' option
+- ✅ Update models with new fields and validation
+- ✅ Update services to handle 'both' user type logic
+- ✅ Update PowerGrid tables to display names
+- ✅ Update forms to include name fields
+- ✅ Update translations for new fields
+- ✅ Test enhanced functionality
+- ✅ Apply consistent PowerGrid pattern with detail rows
+- ✅ Fix CoinOffer structure in PaymentSeeder
+
+#### Database Changes:
+```sql
+-- Add to coin_pricing table
+ALTER TABLE coin_pricing 
+ADD COLUMN name VARCHAR(100) UNIQUE NOT NULL AFTER id,
+ADD COLUMN display_name VARCHAR(255) NULL AFTER name,
+MODIFY COLUMN user_type ENUM('user', 'admin', 'both') NOT NULL;
+
+-- Add index for name field
+ALTER TABLE coin_pricing ADD INDEX idx_name (name);
+```
+
+#### Enhanced Features:
+- **Name Field**: Short, unique names for pricing rules (e.g., "Standard User", "Premium Admin")
+- **Display Name**: Optional longer descriptions (e.g., "Standard user package with basic features")
+- **Both User Type**: Single pricing rule can apply to both users and admins
+- **Improved UX**: Better organization and identification of pricing rules
+- **Consistent UI Pattern**: PowerGrid tables with detail rows following project standards
+
+#### Files Updated:
+- ✅ `database/migrations/2024_12_19_000005_create_coin_pricing_table.php` - Updated with name fields and 'both' user type
+- ✅ `app/Models/Payment/CoinPricing.php` - Added name fields and enhanced scope logic
+- ✅ `app/Enums/UserTypeEnum.php` - Added 'both' option with label
+- ✅ `app/Services/Payment/CoinPricingService.php` - Updated logic for 'both' type
+- ✅ `app/Livewire/CoinPricingTable.php` - Applied consistent PowerGrid pattern with detail rows
+- ✅ `app/Http/Requests/Payment/CreateCoinPricingRequest.php` - Added name validation
+- ✅ `resources/views/pages/admin/payment/pricing.blade.php` - Updated form fields
+- ✅ `resources/views/components/tables/payment/pricing-detail-row.blade.php` - Created detail row component
+- ✅ `lang/en/payment.php` & `lang/ar/payment.php` - Added name field translations
+- ✅ `database/factories/Payment/CoinPricingFactory.php` - Updated with name generation
+- ✅ `database/seeders/PaymentSeeder.php` - Updated with named pricing rules and fixed CoinOffer structure
+
+#### Business Logic Updates:
+```php
+// Enhanced service logic for 'both' user type
+public function getApplicablePricing($userType): ?CoinPricing
+{
+    return CoinPricing::active()
+        ->where(function($query) use ($userType) {
+            $query->where('user_type', $userType)
+                  ->orWhere('user_type', 'both');
+        })
+        ->orderBy('user_type', 'desc') // 'both' comes after specific types
+        ->first();
+}
+```
+
+#### UI Enhancements:
+- **PowerGrid Table**: Clean main table with 5 essential columns (Name, User Type, Rate, Status, Actions)
+- **Detail Rows**: Comprehensive information display including display name, coins per DZD, created by, timestamps, and active offers
+- **Forms**: Add name and display name input fields with proper validation
+- **Validation**: Ensure unique names and proper formatting
+- **Consistent Pattern**: Follows same structure as PaymentTransactionTable and CoinOfferTable
+
+#### Translation Updates:
+- **Name Labels**: "Pricing Name", "Display Name"
+- **User Type Labels**: "User Only", "Admin Only", "User & Admin"
+- **Validation Messages**: Name uniqueness and format validation
+- **Help Text**: Guidance for naming conventions
+- **Active Offers**: Added translations for offer display in detail rows
+
+#### Fixed Issues:
+- **CoinOffer Structure**: Corrected PaymentSeeder to use proper `coin_pricing_id` relationships
+- **PowerGrid Pattern**: Applied consistent detail row pattern across all payment tables
+- **Performance**: Optimized queries with proper eager loading
+- **UX Consistency**: Unified table behavior and styling across payment system
 
 ---
 
@@ -615,7 +709,8 @@ php artisan payment:expire-offers --dry-run
 8. ✅ **Testing Infrastructure** - Factories and seeders with cleanup
 9. ✅ **Translation System** - Complete English and Arabic support
 10. ✅ **Step 5: Dynamic Coin Pricing System** - Fully completed (pricing + offers management with detail rows)
-11. 📋 **Step 5.1: Auto-Expire Offers Command** - Planned (scheduled command for offer expiration)
+11. ✅ **Step 5.2: Enhanced Coin Pricing System with Names and "Both" User Type** - Fully completed (name fields, display names, 'both' user type, consistent UI pattern)
+12. 📋 **Step 5.1: Auto-Expire Offers Command** - Planned (scheduled command for offer expiration)
 
 ### **🔄 Next Steps:**
 1. **Step 5.1: Auto-Expire Offers Command** - Scheduled command to automatically expire offers
@@ -629,6 +724,8 @@ php artisan payment:expire-offers --dry-run
 - **Database Schema**: ✅ Complete with UUIDs and enhanced offer relationships
 - **Dynamic Pricing System**: ✅ Fully complete (pricing + offers management with detail rows)
 - **Enhanced Offer System**: ✅ Fully implemented with UI and management
+- **Enhanced Pricing System**: ✅ Fully complete (names, display names, 'both' user type, consistent UI pattern)
+- **UI Pattern Consistency**: ✅ All PowerGrid tables follow same detail row pattern
 - **Auto-Expire System**: 📋 Planned (Step 5.1)
 - **Security Features**: ✅ Implemented
 - **Testing Infrastructure**: ✅ Comprehensive
@@ -648,36 +745,42 @@ php artisan payment:expire-offers --dry-run
 
 ### **Current Commit Message:**
 
-#### **Latest Commit: Complete coin pricing and offers system with detail row UI**
+#### **Latest Commit: Complete enhanced coin pricing system with consistent UI pattern**
 ```
-feat: complete coin pricing and offers system with detail row UI
+feat: complete enhanced coin pricing system with consistent UI pattern
 
-Coin Pricing and Offers System Implementation:
-- Create coin_pricing and coin_offers database tables with proper relationships and constraints
-- Implement CoinPricingService and CoinOfferService with dynamic calculation logic and offer management
-- Add CoinPricing and CoinOffer models with relationships, scopes, and helper methods
-- Create CoinPricingController and CoinOfferController for complete admin management
-- Build CoinPricingTable and CoinOfferTable PowerGrid components with filtering, actions, and modal dispatches
-- Add pricing and offers management interfaces with create, delete, activate, deactivate actions
-- Implement detail row components for comprehensive information display (offer-detail-row.blade.php)
-- Create form requests for coin pricing and offer operations (CreateCoinPricingRequest, CreateCoinOfferRequest)
-- Add comprehensive test data generation with CoinPricingFactory and CoinOfferFactory
-- Update PaymentService to use dynamic pricing instead of hardcoded calculations
-- Add complete translation support for pricing and offers system (English and Arabic)
-- Include validation attributes in validation.php for form field translations
-- Refactor CoinOfferTable to follow PaymentTransactionTable pattern with detail rows
+Enhanced Coin Pricing System Implementation:
+- Add name and display_name fields to coin_pricing table with proper validation and indexing
+- Update UserTypeEnum to include 'both' option for universal pricing rules
+- Enhance CoinPricing model with name fields, helper methods, and improved scope logic
+- Update CoinPricingService to handle 'both' user type with proper ordering logic
+- Apply consistent PowerGrid pattern to CoinPricingTable with detail rows (5 essential columns)
+- Create pricing-detail-row.blade.php component for comprehensive information display
+- Update CreateCoinPricingRequest with name validation and unique constraints
+- Add name and display_name fields to pricing form with proper placeholders
+- Update CoinPricingFactory with intelligent name generation based on user type
+- Fix CoinOffer structure in PaymentSeeder to use proper coin_pricing_id relationships
+- Add complete translation support for new fields and UI elements (English and Arabic)
+- Update PaymentSeeder with named pricing rules including universal package
+- Apply consistent UI pattern across all payment PowerGrid tables
 
 Technical Features:
-- Dynamic pricing calculation based on user type and applicable offers (5-90% discount range)
-- PowerGrid tables with status widgets, filtering, and action modals
-- Detail row components for comprehensive information display
-- Form validation following project patterns (no authorize, no custom messages)
-- Comprehensive test data with factories and seeders
-- Multi-language support with complete translations
-- Integration with existing payment system architecture
-- Audit trail and status management for pricing and offer records
-- Unique constraint to prevent duplicate active offers per pricing rule
-- Complete UI/UX with consistent patterns and responsive design
+- Dynamic pricing calculation with 'both' user type support (specific types prioritized over universal)
+- Clean PowerGrid table with 5 essential columns and comprehensive detail rows
+- Proper eager loading with offers relationship for performance optimization
+- Unique name constraints with validation and proper error handling
+- Comprehensive test data generation with realistic naming conventions
+- Multi-language support with complete translations for all new elements
+- Consistent detail row pattern following PaymentTransactionTable and CoinOfferTable standards
+- Enhanced UX with better organization and identification of pricing rules
+- Proper foreign key relationships and data integrity in test data
+- Complete UI/UX consistency across payment system components
+
+Database Schema:
+- coin_pricing: name (VARCHAR(100) UNIQUE), display_name (VARCHAR(255) NULL), user_type ENUM('user','admin','both')
+- Proper indexing for name field and optimized queries
+- Enhanced scope logic for 'both' user type handling
+- Complete audit trail and status management for pricing records
 ```
 
 ### **Commit Message Generation Rules:**

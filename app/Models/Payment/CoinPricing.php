@@ -11,6 +11,8 @@ class CoinPricing extends Model
 {
     protected $table = 'coin_pricing';
     protected $fillable = [
+        'name',
+        'display_name',
         'user_type',
         'base_amount',
         'base_coins',
@@ -50,7 +52,10 @@ class CoinPricing extends Model
 
     public function scopeForUserType($query, string $userType)
     {
-        return $query->where('user_type', $userType);
+        return $query->where(function($q) use ($userType) {
+            $q->where('user_type', $userType)
+              ->orWhere('user_type', 'both');
+        });
     }
 
     // Helper methods
@@ -101,5 +106,25 @@ class CoinPricing extends Model
                    ->where('start_date', '<=', now())
                    ->where('end_date', '>=', now())
                    ->first();
+    }
+
+    public function getDisplayNameAttribute(): string
+    {
+        return $this->display_name ?? $this->name;
+    }
+
+    public function getFullNameAttribute(): string
+    {
+        return $this->display_name ? "{$this->name} - {$this->display_name}" : $this->name;
+    }
+
+    public function getUserTypeLabelAttribute(): string
+    {
+        return match($this->user_type) {
+            'user' => __('payment.pricing.user_type.user'),
+            'admin' => __('payment.pricing.user_type.admin'),
+            'both' => __('payment.pricing.user_type.both'),
+            default => $this->user_type
+        };
     }
 } 

@@ -229,6 +229,8 @@ class PaymentSeeder extends Seeder
 
         // Create standard user pricing (100 DZD = 50 coins)
         $userPricing = CoinPricing::create([
+            'name' => 'Standard User Package',
+            'display_name' => 'Standard user package with basic features',
             'user_type' => 'user',
             'base_amount' => 100.00,
             'base_coins' => 50,
@@ -239,6 +241,8 @@ class PaymentSeeder extends Seeder
 
         // Create standard admin pricing (100 DZD = 100 coins)
         $adminPricing = CoinPricing::create([
+            'name' => 'Premium Admin Package',
+            'display_name' => 'Premium admin package with enhanced features',
             'user_type' => 'admin',
             'base_amount' => 100.00,
             'base_coins' => 100,
@@ -247,8 +251,22 @@ class PaymentSeeder extends Seeder
         ]);
         $this->createdRecords['coin_pricing'][] = $adminPricing->id;
 
+        // Create universal pricing for both users and admins (100 DZD = 75 coins)
+        $universalPricing = CoinPricing::create([
+            'name' => 'Universal Package',
+            'display_name' => 'Universal package for both users and admins',
+            'user_type' => 'both',
+            'base_amount' => 100.00,
+            'base_coins' => 75,
+            'is_active' => true,
+            'created_by_admin_id' => $accountant->id,
+        ]);
+        $this->createdRecords['coin_pricing'][] = $universalPricing->id;
+
         // Create some historical pricing
         $historicalPricing = CoinPricing::create([
+            'name' => 'Legacy User Package',
+            'display_name' => 'Previous user package with lower rates',
             'user_type' => 'user',
             'base_amount' => 100.00,
             'base_coins' => 40,
@@ -268,63 +286,60 @@ class PaymentSeeder extends Seeder
         $this->command->info('🎁 Creating Coin Offers...');
 
         $accountant = Admin::where('email', 'accountant@test.com')->first();
+        
+        // Get the pricing rules we created
+        $userPricing = CoinPricing::where('name', 'Standard User Package')->first();
+        $adminPricing = CoinPricing::where('name', 'Premium Admin Package')->first();
+        $universalPricing = CoinPricing::where('name', 'Universal Package')->first();
 
-        // Create weekend special offer
+        // Create weekend special offer for universal pricing
         $weekendOffer = CoinOffer::create([
+            'coin_pricing_id' => $universalPricing->id,
             'name' => 'Weekend Special',
             'description' => 'Extra coins for weekend purchases',
-            'user_type' => 'both',
             'discount_percentage' => 20,
-            'min_amount' => 100.00,
-            'max_amount' => 1000.00,
             'start_date' => now()->subDays(5),
             'end_date' => now()->addDays(25),
-            'is_active' => true,
+            'expired' => false,
             'created_by_admin_id' => $accountant->id,
         ]);
         $this->createdRecords['coin_offers'][] = $weekendOffer->id;
 
-        // Create new user bonus
+        // Create new user bonus for user pricing
         $newUserOffer = CoinOffer::create([
+            'coin_pricing_id' => $userPricing->id,
             'name' => 'New User Bonus',
             'description' => 'Welcome bonus for new users',
-            'user_type' => 'user',
             'discount_percentage' => 25,
-            'min_amount' => 50.00,
-            'max_amount' => 500.00,
             'start_date' => now()->subDays(10),
             'end_date' => now()->addDays(20),
-            'is_active' => true,
+            'expired' => false,
             'created_by_admin_id' => $accountant->id,
         ]);
         $this->createdRecords['coin_offers'][] = $newUserOffer->id;
 
-        // Create bulk purchase offer
+        // Create bulk purchase offer for admin pricing
         $bulkOffer = CoinOffer::create([
+            'coin_pricing_id' => $adminPricing->id,
             'name' => 'Bulk Purchase Bonus',
             'description' => 'Extra coins for large purchases',
-            'user_type' => 'both',
             'discount_percentage' => 15,
-            'min_amount' => 500.00,
-            'max_amount' => null,
             'start_date' => now()->subDays(15),
             'end_date' => now()->addDays(15),
-            'is_active' => true,
+            'expired' => false,
             'created_by_admin_id' => $accountant->id,
         ]);
         $this->createdRecords['coin_offers'][] = $bulkOffer->id;
 
-        // Create expired offer
+        // Create expired offer for universal pricing
         $expiredOffer = CoinOffer::create([
+            'coin_pricing_id' => $universalPricing->id,
             'name' => 'Expired Special',
             'description' => 'This offer has expired',
-            'user_type' => 'admin',
             'discount_percentage' => 10,
-            'min_amount' => null,
-            'max_amount' => null,
             'start_date' => now()->subDays(30),
             'end_date' => now()->subDays(5),
-            'is_active' => true,
+            'expired' => true,
             'created_by_admin_id' => $accountant->id,
         ]);
         $this->createdRecords['coin_offers'][] = $expiredOffer->id;

@@ -27,13 +27,17 @@ final class CoinPricingTable extends PowerGridComponent
             PowerGrid::footer()
                 ->showPerPage()
                 ->showRecordCount(),
+            PowerGrid::detail()
+                ->view('components.tables.payment.pricing-detail-row')
+                ->showCollapseIcon()
+                ->collapseOthers()
         ];
     }
 
     public function datasource(): Builder
     {
         return CoinPricing::query()
-            ->with('createdByAdmin')
+            ->with(['createdByAdmin', 'offers'])
             ->orderBy('created_at', 'desc');
     }
 
@@ -56,6 +60,15 @@ final class CoinPricingTable extends PowerGridComponent
                 $currentPage = request()->get('page', 1);
                 static $counter = ($currentPage - 1) * $perPage;
                 return ++$counter;
+            })
+            ->add('name', function (CoinPricing $pricing) {
+                return e($pricing->name);
+            })
+            ->add('display_name', function (CoinPricing $pricing) {
+                return e($pricing->display_name ?? '');
+            })
+            ->add('full_name', function (CoinPricing $pricing) {
+                return e($pricing->full_name);
             })
             ->add('user_type', function (CoinPricing $pricing) {
                 $enum = UserTypeEnum::tryFrom($pricing->user_type);
@@ -86,27 +99,17 @@ final class CoinPricingTable extends PowerGridComponent
     public function columns(): array
     {
         return [
-            Column::make('#', 'row_number')
+            Column::make('#', 'row_number'),
+
+            Column::make(__('payment.pricing.fields.name'), 'name')
                 ->sortable()
                 ->searchable(),
 
-            Column::make(__('payment.pricing.fields.user_type'), 'user_type')
-                ->sortable(),
+            Column::make(__('payment.pricing.fields.user_type'), 'user_type'),
 
-            Column::make(__('payment.pricing.fields.rate'), 'rate_description')
-                ->sortable(),
+            Column::make(__('payment.pricing.fields.rate'), 'rate_description'),
 
-            Column::make(__('payment.pricing.fields.coins_per_dzd'), 'coins_per_dzd')
-                ->sortable(),
-
-            Column::make(__('payment.pricing.fields.status'), 'status')
-                ->sortable(),
-
-            Column::make(__('payment.pricing.fields.created_by'), 'created_by_admin_name')
-                ->sortable(),
-
-            Column::make(__('payment.pricing.fields.created_at'), 'created_at_formatted', 'created_at')
-                ->sortable(),
+            Column::make(__('payment.pricing.fields.status'), 'status'),
 
             Column::action(__('payment.pricing.fields.actions'))
         ];
@@ -143,9 +146,7 @@ final class CoinPricingTable extends PowerGridComponent
                     'detail' => 'add_coin_offer_modal', 
                     'value' => $row->id,
                     'input_detail' => [
-                        'coinPrice' => $row->user_type .' | '.
-                            $row->base_amount .'DZD | '.
-                            $row->base_coins .'C'
+                        'coinPrice' => $row->name
                         ]
                 ]
             );

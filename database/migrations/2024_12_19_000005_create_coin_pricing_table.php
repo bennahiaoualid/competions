@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('coin_pricing', function (Blueprint $table) {
             $table->id();
-            $table->enum('user_type', ['user', 'admin'])->comment('Type of user this pricing applies to');
+            $table->string('name', 100)->unique()->comment('Short, unique name for pricing rule');
+            $table->string('display_name', 255)->nullable()->comment('Optional longer description');
+            $table->enum('user_type', ['user', 'admin', 'both'])->comment('Type of user this pricing applies to');
             $table->decimal('base_amount', 10, 2)->comment('Money amount in DZD');
             $table->integer('base_coins')->comment('Number of coins given for this amount');
             $table->boolean('is_active')->default(true)->comment('Whether this pricing is currently active');
@@ -23,6 +25,7 @@ return new class extends Migration
             // Indexes
             $table->index('user_type');
             $table->index('is_active');
+            $table->index('name');
         });
     }
 

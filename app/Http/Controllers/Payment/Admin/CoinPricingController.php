@@ -32,7 +32,7 @@ class CoinPricingController extends Controller
      */
     public function store(CreateCoinPricingRequest $request): RedirectResponse
     {
-        $data = $request->only(['user_type', 'base_amount', 'base_coins']);
+        $data = $request->only(['name', 'display_name', 'user_type', 'base_amount', 'base_coins']);
 
         $this->coinPricingService->createPricing($data);
 

@@ -64,7 +64,11 @@ class CoinPricingService
     public function getActivePricing(string $userType): ?CoinPricing
     {
         return CoinPricing::active()
-            ->forUserType($userType)
+            ->where(function($query) use ($userType) {
+                $query->where('user_type', $userType)
+                      ->orWhere('user_type', 'both');
+            })
+            ->orderBy('user_type', 'desc') // 'both' comes after specific types
             ->latest()
             ->first();
     }
@@ -290,7 +294,7 @@ class CoinPricingService
             $errors[] = 'Base coins must be greater than 0';
         }
 
-        if (!in_array($data['user_type'], ['user', 'admin'])) {
+        if (!in_array($data['user_type'], ['user', 'admin', 'both'])) {
             $errors[] = 'Invalid user type';
         }
 

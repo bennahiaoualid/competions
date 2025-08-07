@@ -115,14 +115,17 @@ return [
 
     'pricing' => [
         'user_type' => [
-            'user' => 'مستخدم',
-            'admin' => 'مشرف',
+            'user' => 'مستخدم فقط',
+            'admin' => 'مشرف فقط',
+            'both' => 'مستخدم ومشرف',
         ],
         'status' => [
             'active' => 'نشط',
             'disabled' => 'غير نشط',
         ],
         'fields' => [
+            'name' => 'اسم التسعير',
+            'display_name' => 'اسم العرض',
             'user_type' => 'نوع المستخدم',
             'base_amount' => 'المبلغ الأساسي (دينار جزائري)',
             'base_coins' => 'العملات الأساسية',
@@ -168,7 +171,7 @@ return [
             'name' => 'اسم العرض',
             'description' => 'الوصف',
             'discount_percentage' => 'نسبة الخصم (%)',
-            'pricing' => 'قاعدة التسعير',
+            'pricing_name' => 'اسم  التسعير',
             'user_type' => 'نوع المستخدم',
             'date_range' => 'المدة الزمنية',
             'status' => 'الحالة',
@@ -202,6 +205,7 @@ return [
         'discount_off' => 'خصم',
         'expired_on' => 'منتهي الصلاحية في',
         'active_until' => 'نشط حتى',
+        'active_offers' => 'العروض النشطة',
     ],
 
     // Additional payment fields

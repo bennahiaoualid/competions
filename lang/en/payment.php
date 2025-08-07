@@ -121,7 +121,7 @@ return [
             'name' => 'Offer Name',
             'description' => 'Description',
             'discount_percentage' => 'Discount (%)',
-            'pricing' => 'Pricing Rule',
+            'pricing_name' => 'Pricing Name',
             'user_type' => 'User Type',
             'date_range' => 'Date Range',
             'status' => 'Status',
@@ -155,6 +155,7 @@ return [
         'discount_off' => 'discount off',
         'expired_on' => 'Expired on',
         'active_until' => 'Active until',
+        'active_offers' => 'Active Offers',
     ],
 
     'actions' => [
@@ -172,14 +173,17 @@ return [
 
     'pricing' => [
         'user_type' => [
-            'user' => 'User',
-            'admin' => 'Admin',
+            'user' => 'User Only',
+            'admin' => 'Admin Only',
+            'both' => 'User & Admin',
         ],
         'status' => [
             'active' => 'Active',
             'disabled' => 'Disabled',
         ],
         'fields' => [
+            'name' => 'Pricing Name',
+            'display_name' => 'Display Name',
             'user_type' => 'User Type',
             'base_amount' => 'Base Amount (DZD)',
             'base_coins' => 'Base Coins',
