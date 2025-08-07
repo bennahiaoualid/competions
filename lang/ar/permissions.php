@@ -68,7 +68,7 @@ return [
     'export payment' => 'تصدير المدفوعات',
     'view payment_audit' => 'عرض تدقيق المدفوعات',
     'manage coin_pricing' => 'إدارة تسعير العملات',
-    'create payment_offer' => 'إنشاء عرض دفع',
+    'manage payment_offer' => 'إدارة عروض الدفع',
     
     // Page Titles
     'manage_permissions_for' => 'إدارة الصلاحيات لـ',

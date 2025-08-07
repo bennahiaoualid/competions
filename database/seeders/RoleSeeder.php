@@ -39,7 +39,7 @@ class RoleSeeder extends Seeder
             'export payment',
             'view payment_audit',
             'manage coin_pricing',
-            'create payment_offer'
+            'manage payment_offer'
         ];
 
         // Add payment permissions to main permissions array

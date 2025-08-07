@@ -51,6 +51,12 @@ final class CoinPricingTable extends PowerGridComponent
     {
         return PowerGrid::fields()
             ->add('id')
+            ->add('row_number', function ($row) {
+                $perPage = $this->perPage ?? 10;
+                $currentPage = request()->get('page', 1);
+                static $counter = ($currentPage - 1) * $perPage;
+                return ++$counter;
+            })
             ->add('user_type', function (CoinPricing $pricing) {
                 $enum = UserTypeEnum::tryFrom($pricing->user_type);
                 return e($enum?->label() ?? ucfirst($pricing->user_type));
@@ -80,7 +86,7 @@ final class CoinPricingTable extends PowerGridComponent
     public function columns(): array
     {
         return [
-            Column::make('#', 'id')
+            Column::make('#', 'row_number')
                 ->sortable()
                 ->searchable(),
 
@@ -117,7 +123,7 @@ final class CoinPricingTable extends PowerGridComponent
             Filter::select('status', 'is_active')
                 ->dataSource([
                     ['id' => '1', 'name' => __('payment.pricing.status.active')],
-                    ['id' => '0', 'name' => __('payment.pricing.status.inactive')],
+                    ['id' => '0', 'name' => __('payment.pricing.status.disabled')],
                 ])
                 ->optionValue('id')
                 ->optionLabel('name'),
@@ -127,6 +133,23 @@ final class CoinPricingTable extends PowerGridComponent
     public function actions(CoinPricing $row): array
     {
         $actions = [];
+        
+        if (Auth::user()->can('manage payment_offer')) {
+            $actions[] = Button::add('add_offer')
+                ->slot('<i class="fa-solid fa-plus text-base"></i>')
+                ->class('px-2 py-1 text-xs inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150
+                bg-transparent text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white focus:bg-blue-600 focus:text-white active:bg-blue-600 active:text-white focus:ring-blue-600')
+                ->dispatch('open-modal', [
+                    'detail' => 'add_coin_offer_modal', 
+                    'value' => $row->id,
+                    'input_detail' => [
+                        'coinPrice' => $row->user_type .' | '.
+                            $row->base_amount .'DZD | '.
+                            $row->base_coins .'C'
+                        ]
+                ]
+            );
+        }
         if (Auth::user()->can('manage coin_pricing')) {
             // Delete action
             $actions[] = Button::add('delete')

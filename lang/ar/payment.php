@@ -148,6 +148,62 @@ return [
         ],
     ],
 
+    // Coin Offers translations
+    'offers' => [
+        'title' => 'إدارة عروض العملات',
+        'description' => 'إدارة العروض الخاصة والخصومات لشراء العملات',
+        'create' => [
+            'title' => 'إنشاء عرض جديد',
+            'button' => 'إنشاء عرض',
+        ],
+        'list' => [
+            'title' => 'جميع العروض',
+        ],
+        'status' => [
+            'active' => 'نشط',
+            'scheduled' => 'مجدول',
+            'expired' => 'منتهي الصلاحية',
+        ],
+        'fields' => [
+            'name' => 'اسم العرض',
+            'description' => 'الوصف',
+            'discount_percentage' => 'نسبة الخصم (%)',
+            'pricing' => 'قاعدة التسعير',
+            'user_type' => 'نوع المستخدم',
+            'date_range' => 'المدة الزمنية',
+            'status' => 'الحالة',
+            'created_by' => 'أنشأ بواسطة',
+            'created_at' => 'تاريخ الإنشاء',
+            'actions' => 'الإجراءات',
+            'coin_pricing' => 'قاعدة التسعير',
+            'select_pricing' => 'اختر قاعدة التسعير',
+            'start_date' => 'تاريخ البداية',
+            'end_date' => 'تاريخ النهاية',
+            'pricing_details' => 'تفاصيل التسعير',
+            'discount_details' => 'تفاصيل الخصم',
+            'status_details' => 'تفاصيل الحالة',
+        ],
+        'delete' => [
+            'title' => 'حذف العرض',
+            'message' => 'هل أنت متأكد من حذف هذا العرض؟ لا يمكن التراجع عن هذا الإجراء.',
+            'confirm' => 'حذف العرض',
+        ],
+        'activate' => [
+            'title' => 'تفعيل العرض',
+            'message' => 'هل أنت متأكد من تفعيل هذا العرض؟',
+            'confirm' => 'تفعيل العرض',
+        ],
+        'deactivate' => [
+            'title' => 'إلغاء تفعيل العرض',
+            'message' => 'هل أنت متأكد من إلغاء تفعيل هذا العرض؟',
+            'confirm' => 'إلغاء التفعيل',
+        ],
+        'no_description' => 'لا يوجد وصف',
+        'discount_off' => 'خصم',
+        'expired_on' => 'منتهي الصلاحية في',
+        'active_until' => 'نشط حتى',
+    ],
+
     // Additional payment fields
     'proof_image' => 'إثبات الدفع',
     'created_at' => 'تاريخ الإنشاء',

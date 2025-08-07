@@ -5,6 +5,7 @@ namespace App\Models\Payment;
 use App\Models\Admin\Admin;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CoinPricing extends Model
 {
@@ -29,6 +30,16 @@ class CoinPricing extends Model
     public function createdByAdmin(): BelongsTo
     {
         return $this->belongsTo(Admin::class, 'created_by_admin_id');
+    }
+
+    public function offers(): HasMany
+    {
+        return $this->hasMany(CoinOffer::class);
+    }
+
+    public function activeOffer(): HasMany
+    {
+        return $this->hasMany(CoinOffer::class)->where('expired', false);
     }
 
     // Scopes
@@ -81,5 +92,14 @@ class CoinPricing extends Model
     public function getRateDescriptionAttribute(): string
     {
         return "{$this->formatted_amount} = {$this->formatted_coins}";
+    }
+
+    public function getCurrentOffer(): ?CoinOffer
+    {
+        return $this->offers()
+                   ->where('expired', false)
+                   ->where('start_date', '<=', now())
+                   ->where('end_date', '>=', now())
+                   ->first();
     }
 } 

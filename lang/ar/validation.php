@@ -16,8 +16,8 @@ return [
     'accepted' => 'The :attribute must be accepted.',
     'accepted_if' => 'The :attribute must be accepted when :other is :value.',
     'active_url' => 'The :attribute is not a valid URL.',
-    'after' => 'The :attribute must be a date after :date.',
-    'after_or_equal' => 'The :attribute must be a date after or equal to :date.',
+    'after' => ':attribute يجب ان يكون بعد :date.',
+    'after_or_equal' => ':attribute يجب ان يكون بعد او يساوي :date.',
     'alpha' => 'The :attribute must only contain letters.',
     'alpha_dash' => 'The :attribute must only contain letters, numbers, dashes and underscores.',
     'alpha_num' => 'The :attribute must only contain letters and numbers.',
@@ -154,6 +154,7 @@ return [
         'age_minmax_validation' => ':attribute يجب ان يكون اكبر او يساوي :other.',
         'start_date' => [
             'after_or_equal' => 'وقت الانطلاق يجب أن لا يكون قبل الوقت الحالي.',
+            'after' => 'وقت الانطلاق يجب أن لا يكون قبل الوقت الحالي.',
         ],
         'start_date_gt_competition' => "وقت انطلاق المرحلة يجب أن لا يكون قبل وقت انطلاق المسابقة"
     ],
@@ -190,6 +191,7 @@ return [
         'role' => 'الوظيفة',
         'response_text' => 'نص الاجابة',
         'start_date' => 'تاريخ الانطلاق',
+        'end_date' => 'تاريخ الانتهاء',
         'scores.*' => 'العلامة',
         'title' => 'العنوان',
         'transaction_id' => 'رقم المعاملة',
@@ -200,6 +202,11 @@ return [
         'base_amount' => 'المبلغ الأساسي',
         'base_coins' => 'العملات الأساسية',
         'reason' => 'السبب',
+        'name' => 'الاسم',
+        'description' => 'الوصف',
+        'discount_percentage' => 'نسبة الخصم',
+        'coin_pricing_id' => 'رقم التسعير',
+        'now' => 'الآن',
     ],
 
 ];

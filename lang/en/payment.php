@@ -99,18 +99,75 @@ return [
             'observation' => 'Observation',
             'accountant_observation' => 'Accountant Observation',
         ],
-        'actions' => [
-            'approve' => 'Approve Payment',
-            'reject' => 'Reject Payment',
-            'cancel' => 'Cancel Payment',
+    ],
+
+    // Coin Offers translations
+    'offers' => [
+        'title' => 'Coin Offers Management',
+        'description' => 'Manage special offers and discounts for coin purchases',
+        'create' => [
+            'title' => 'Create New Offer',
+            'button' => 'Create Offer',
         ],
-        'messages' => [
-            'approve_confirmation' => 'Are you sure you want to approve this payment?',
-            'reject_confirmation' => 'Are you sure you want to reject this payment?',
-            'cancel_confirmation' => 'Are you sure you want to cancel this payment?',
-            'optional_observation' => 'Optional observation (optional)',
-            'required_observation' => 'Please provide a reason for rejection',
+        'list' => [
+            'title' => 'All Offers',
         ],
+        'status' => [
+            'active' => 'Active',
+            'scheduled' => 'Scheduled',
+            'expired' => 'Expired',
+        ],
+        'fields' => [
+            'name' => 'Offer Name',
+            'description' => 'Description',
+            'discount_percentage' => 'Discount (%)',
+            'pricing' => 'Pricing Rule',
+            'user_type' => 'User Type',
+            'date_range' => 'Date Range',
+            'status' => 'Status',
+            'created_by' => 'Created By',
+            'created_at' => 'Created At',
+            'actions' => 'Actions',
+            'coin_pricing' => 'Pricing Rule',
+            'select_pricing' => 'Select Pricing Rule',
+            'start_date' => 'Start Date',
+            'end_date' => 'End Date',
+            'pricing_details' => 'Pricing Details',
+            'discount_details' => 'Discount Details',
+            'status_details' => 'Status Details',
+        ],
+        'delete' => [
+            'title' => 'Delete Offer',
+            'message' => 'Are you sure you want to delete this offer? This action cannot be undone.',
+            'confirm' => 'Delete Offer',
+        ],
+        'activate' => [
+            'title' => 'Activate Offer',
+            'message' => 'Are you sure you want to activate this offer?',
+            'confirm' => 'Activate Offer',
+        ],
+        'deactivate' => [
+            'title' => 'Deactivate Offer',
+            'message' => 'Are you sure you want to deactivate this offer?',
+            'confirm' => 'Deactivate Offer',
+        ],
+        'no_description' => 'No description provided',
+        'discount_off' => 'discount off',
+        'expired_on' => 'Expired on',
+        'active_until' => 'Active until',
+    ],
+
+    'actions' => [
+        'approve' => 'Approve Payment',
+        'reject' => 'Reject Payment',
+        'cancel' => 'Cancel Payment',
+    ],
+    'messages' => [
+        'approve_confirmation' => 'Are you sure you want to approve this payment?',
+        'reject_confirmation' => 'Are you sure you want to reject this payment?',
+        'cancel_confirmation' => 'Are you sure you want to cancel this payment?',
+        'optional_observation' => 'Optional observation (optional)',
+        'required_observation' => 'Please provide a reason for rejection',
     ],
 
     'pricing' => [

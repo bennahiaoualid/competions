@@ -8,6 +8,7 @@ use App\Http\Controllers\Payment\Admin\PaymentController;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use App\Http\Controllers\GuestUsers\GlobalQuestionController;
 use App\Http\Controllers\Payment\Admin\CoinPricingController;
+use App\Http\Controllers\Payment\Admin\CoinOfferController;
 use App\Http\Controllers\Monitoring\DeletionRecordsController;
 
 /*
@@ -155,6 +156,14 @@ Route::group(
                         Route::delete('/delete', [CoinPricingController::class, 'destroy'])->name('destroy');
                         Route::patch('/activate', [CoinPricingController::class, 'activate'])->name('activate');
                         Route::patch('/deactivate', [CoinPricingController::class, 'deactivate'])->name('deactivate');
+                    });
+                });
+                
+                Route::prefix('coin-offers')->middleware(['role:owner|accountant'])->name('coin_offers.')->group(function () {
+                    Route::get('/', [CoinOfferController::class, 'index'])->name('index');
+                    Route::middleware('permission:manage payment_offer')->group(function () {
+                        Route::post('/store', [CoinOfferController::class, 'store'])->name('store');
+                        Route::delete('/delete', [CoinOfferController::class, 'destroy'])->name('destroy');
                     });
                 });
             });

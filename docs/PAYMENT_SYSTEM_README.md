@@ -302,17 +302,17 @@ FOREIGN KEY (review_request_id) REFERENCES payment_review_requests(id) ON DELETE
 ---
 
 ### Step 5: Dynamic Coin Pricing System
-**Status**: Planned
+**Status**: ✅ COMPLETED
 **Priority**: Medium
 **Estimated Time**: 2 days
 
 #### Tasks:
-- [ ] Create coin_pricing table
-- [ ] Create coin_offers table
-- [ ] Implement dynamic pricing service
-- [ ] Create pricing management interface
-- [ ] Add offer creation functionality
-- [ ] Test pricing calculations
+- ✅ Create coin_pricing table
+- ✅ Create coin_offers table
+- ✅ Implement dynamic pricing service
+- ✅ Create pricing management interface
+- ✅ Add offer creation functionality
+- ✅ Test pricing calculations
 
 #### Database Tables:
 ```sql
@@ -338,25 +338,27 @@ CREATE TABLE coin_pricing (
 -- coin_offers table
 CREATE TABLE coin_offers (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    coin_pricing_id BIGINT UNSIGNED NOT NULL, -- Link to coin pricing rule
     name VARCHAR(255) NOT NULL,
     description TEXT NULL,
-    user_type ENUM('user', 'admin', 'both') NOT NULL,
-    discount_percentage INTEGER NOT NULL, -- 10 = 10% extra coins
-    min_amount DECIMAL(10,2) NULL, -- Minimum purchase for offer
-    max_amount DECIMAL(10,2) NULL, -- Maximum purchase for offer
+    discount_percentage INTEGER NOT NULL CHECK (discount_percentage BETWEEN 5 AND 90), -- 5-90% range
     start_date TIMESTAMP NOT NULL,
     end_date TIMESTAMP NOT NULL,
-    is_active BOOLEAN DEFAULT TRUE,
+    expired BOOLEAN DEFAULT FALSE, -- Whether this offer is expired
     created_by_admin_id BIGINT UNSIGNED NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
     -- Indexes
-    INDEX idx_user_type (user_type),
-    INDEX idx_is_active (is_active),
+    INDEX idx_coin_pricing_id (coin_pricing_id),
+    INDEX idx_expired (expired),
     INDEX idx_date_range (start_date, end_date),
     
+    -- Unique constraint: Only one active offer per pricing rule
+    UNIQUE KEY unique_active_offer_per_pricing (coin_pricing_id, expired),
+    
     -- Foreign keys
+    FOREIGN KEY (coin_pricing_id) REFERENCES coin_pricing(id) ON DELETE CASCADE,
     FOREIGN KEY (created_by_admin_id) REFERENCES admins(id) ON DELETE RESTRICT
 );
 ```
@@ -365,29 +367,116 @@ CREATE TABLE coin_offers (
 - **Owner**: Set base pricing, create any offers, override pricing
 - **Accountant**: Create temporary offers, adjust pricing within limits, view history
 
-#### Files to Create/Modify:
-- `database/migrations/create_coin_pricing_table.php`
-- `database/migrations/create_coin_offers_table.php`
-- `app/Models/Payment/CoinPricing.php`
-- `app/Models/Payment/CoinOffer.php`
-- `app/Services/Payment/CoinPricingService.php`
-- `app/Http/Controllers/Payment/Admin/CoinPricingController.php`
-- `app/Http/Controllers/Payment/Admin/CoinOfferController.php`
-- `resources/views/payment/admin/pricing/index.blade.php`
-- `resources/views/payment/admin/offers/index.blade.php`
+#### Files Created/Modified:
+- ✅ `database/migrations/2024_12_19_000005_create_coin_pricing_table.php` - Base pricing rules
+- ✅ `database/migrations/2024_12_19_000006_create_coin_offers_table.php` - Enhanced offers system with pricing relationships
+- ✅ `app/Models/Payment/CoinPricing.php` - Pricing model with offer relationships and helper methods
+- ✅ `app/Models/Payment/CoinOffer.php` - Enhanced offer model with pricing relationship and 5-90% validation
+- ✅ `app/Services/Payment/CoinPricingService.php` - Core pricing business logic
+- ✅ `app/Services/Payment/CoinOfferService.php` - Core offer business logic
+- ✅ `app/Http/Controllers/Payment/Admin/CoinPricingController.php` - Pricing management
+- ✅ `app/Http/Controllers/Payment/Admin/CoinOfferController.php` - Offer management (index, store, destroy, activate, deactivate)
+- ✅ `app/Livewire/CoinPricingTable.php` - PowerGrid table for pricing management
+- ✅ `app/Livewire/CoinOfferTable.php` - PowerGrid table for offer management with detail rows
+- ✅ `resources/views/pages/admin/payment/pricing.blade.php` - Pricing management interface
+- ✅ `resources/views/pages/admin/payment/offers.blade.php` - Offers management interface with modals
+- ✅ `resources/views/components/tables/payment/offer-detail-row.blade.php` - Detail row component for offers
+- ✅ `app/Http/Requests/Payment/CreateCoinPricingRequest.php` - Form validation
+- ✅ `app/Http/Requests/Payment/CreateCoinOfferRequest.php` - Offer form validation
+- ✅ `app/Enums/UserTypeEnum.php` - User type definitions with labels and colors
+- ✅ `database/factories/CoinPricingFactory.php` - Test data generation
+- ✅ `database/factories/CoinOfferFactory.php` - Enhanced offer test data with pricing relationships
+- ✅ `database/seeders/PaymentSeeder.php` - Updated with pricing and offers data
+- ✅ `lang/en/payment.php` & `lang/ar/payment.php` - Complete translations including offers and detail rows
+- ✅ `lang/en/links.php` & `lang/ar/links.php` - Navigation links including offers
+- ✅ `lang/en/validation.php` & `lang/ar/validation.php` - Validation attributes
+- ✅ `routes/admin.php` - Added coin offers routes with proper middleware
 
 #### Pricing Features:
-- Dynamic base pricing for users and admins
-- Special offers with time limits and conditions
-- Automatic coin calculation with offers
-- Pricing history and audit trail
-- Offer management interface
+- ✅ Dynamic base pricing for users and admins
+- ✅ Special offers linked to specific pricing rules (5-90% discount range)
+- ✅ Automatic coin calculation with offers (implemented in service)
+- ✅ Pricing history and audit trail
+- ✅ Offer management interface (fully implemented)
+- ✅ PowerGrid table with filtering and actions
+- ✅ Detail row components for comprehensive information display
+- ✅ Form validation with translation support
+- ✅ Test data generation and seeding
+
+#### Enhanced Offer System:
+- **Linked to Pricing**: Each offer is linked to a specific coin pricing rule
+- **Discount Range**: 5-90% discount percentage with validation
+- **Unique Constraint**: Only one active offer per pricing rule
+- **Status Management**: Simple expired/active status with date validation
+- **Performance**: Indexed fields for efficient queries
 
 #### Example Pricing Scenarios:
 - **Base Pricing**: Users (100 DZD = 50 coins), Admins (100 DZD = 100 coins)
-- **Special Offers**: New user bonus, weekend specials, bulk discounts
-- **Time-based Offers**: Limited time promotions
-- **Conditional Offers**: Minimum purchase requirements
+- **Special Offers**: Weekend specials (20% extra), new user bonus (25% extra)
+- **Time-based Offers**: Limited time promotions with start/end dates
+- **Pricing-specific Offers**: Different offers for different pricing tiers
+
+---
+
+### Step 5.1: Auto-Expire Offers Command
+**Status**: Planned
+**Priority**: Medium
+**Estimated Time**: 0.5 day
+
+#### Tasks:
+- [ ] Create auto-expire offers command
+- [ ] Implement scheduled job for daily execution
+- [ ] Add command to console routes
+- [ ] Test auto-expire functionality
+- [ ] Add logging for expired offers
+
+#### Command Features:
+```php
+// Auto-expire command logic
+public function handle(): void
+{
+    $expiredOffers = CoinOffer::where('expired', false)
+        ->where('end_date', '<', now())
+        ->get();
+    
+    foreach ($expiredOffers as $offer) {
+        $offer->update(['expired' => true]);
+        $this->logExpiredOffer($offer);
+    }
+    
+    $this->info("Expired {$expiredOffers->count()} offers");
+}
+```
+
+#### Scheduled Execution:
+- **Daily at 1 AM**: Automatic offer expiration check
+- **Manual execution**: `php artisan payment:expire-offers`
+- **Logging**: Track all expired offers for audit
+
+#### Files to Create/Modify:
+- `app/Console/Commands/ExpireCoinOffersCommand.php` - Auto-expire command
+- `routes/console.php` - Add scheduled command
+- `app/Jobs/ExpireOffersJob.php` - Background job (optional)
+- `database/migrations/create_offer_expiration_logs_table.php` - Logging table (optional)
+
+#### Business Rules:
+- ✅ Only expire offers where `expired = false` AND `end_date < now()`
+- ✅ Update `expired` field to `true`
+- ✅ Log expiration for audit trail
+- ✅ Send notification to admin (optional)
+- ✅ Handle bulk operations efficiently
+
+#### Example Usage:
+```bash
+# Manual execution
+php artisan payment:expire-offers
+
+# Check scheduled tasks
+php artisan schedule:list
+
+# Test command
+php artisan payment:expire-offers --dry-run
+```
 
 ---
 
@@ -525,17 +614,22 @@ CREATE TABLE coin_offers (
 7. ✅ **Controllers & Routes** - Web-based responses with role protection
 8. ✅ **Testing Infrastructure** - Factories and seeders with cleanup
 9. ✅ **Translation System** - Complete English and Arabic support
+10. ✅ **Step 5: Dynamic Coin Pricing System** - Fully completed (pricing + offers management with detail rows)
+11. 📋 **Step 5.1: Auto-Expire Offers Command** - Planned (scheduled command for offer expiration)
 
 ### **🔄 Next Steps:**
-1. **Step 3: Payment Cleanup System** - Automated cleanup commands
-2. **Step 4: Payment Review System** - Review request functionality
-3. **Step 5: Dynamic Coin Pricing System** - Flexible pricing management
+1. **Step 5.1: Auto-Expire Offers Command** - Scheduled command to automatically expire offers
+2. **Step 3: Payment Cleanup System** - Automated cleanup commands
+3. **Step 4: Payment Review System** - Review request functionality
 
 ### **🎯 Current Status:**
 - **Core Payment System**: ✅ Production Ready
 - **Dedicated Payment Layout**: ✅ Fully Functional
 - **User Payment Interface**: ✅ Complete with Alpine.js
-- **Database Schema**: ✅ Complete with UUIDs
+- **Database Schema**: ✅ Complete with UUIDs and enhanced offer relationships
+- **Dynamic Pricing System**: ✅ Fully complete (pricing + offers management with detail rows)
+- **Enhanced Offer System**: ✅ Fully implemented with UI and management
+- **Auto-Expire System**: 📋 Planned (Step 5.1)
 - **Security Features**: ✅ Implemented
 - **Testing Infrastructure**: ✅ Comprehensive
 - **Multi-language Support**: ✅ English and Arabic
@@ -554,32 +648,36 @@ CREATE TABLE coin_offers (
 
 ### **Current Commit Message:**
 
-#### **Latest Commit: Implement dedicated payment layout system with Alpine.js**
+#### **Latest Commit: Complete coin pricing and offers system with detail row UI**
 ```
-feat: implement dedicated payment layout system with modern UI
+feat: complete coin pricing and offers system with detail row UI
 
-Payment Layout System Implementation:
-- Create dedicated payment layout with clean navigation (master, header, head, footer-scripts)
-- Add shared payment pages (transactions, create, show) for both users and admins
-- Implement Alpine.js payment method selection with focus management and smooth animations
-- Use standard Blade components (x-input-label, x-text-input, x-input-error) for form consistency
-- Add user-specific PaymentUserTransactionTable with responsive columns and PowerGrid integration
-- Separate admin navigation: regular admins (Buy Coins) vs accountants (Payment Management)
-- Add complete translation system with English and Arabic support
-- Implement drag & drop file upload with preview functionality
-- Add status widgets and audit trail display
-- Include balance display and statistics cards
+Coin Pricing and Offers System Implementation:
+- Create coin_pricing and coin_offers database tables with proper relationships and constraints
+- Implement CoinPricingService and CoinOfferService with dynamic calculation logic and offer management
+- Add CoinPricing and CoinOffer models with relationships, scopes, and helper methods
+- Create CoinPricingController and CoinOfferController for complete admin management
+- Build CoinPricingTable and CoinOfferTable PowerGrid components with filtering, actions, and modal dispatches
+- Add pricing and offers management interfaces with create, delete, activate, deactivate actions
+- Implement detail row components for comprehensive information display (offer-detail-row.blade.php)
+- Create form requests for coin pricing and offer operations (CreateCoinPricingRequest, CreateCoinOfferRequest)
+- Add comprehensive test data generation with CoinPricingFactory and CoinOfferFactory
+- Update PaymentService to use dynamic pricing instead of hardcoded calculations
+- Add complete translation support for pricing and offers system (English and Arabic)
+- Include validation attributes in validation.php for form field translations
+- Refactor CoinOfferTable to follow PaymentTransactionTable pattern with detail rows
 
 Technical Features:
-- Dedicated payment layout system for clean separation
-- Alpine.js interactive components with focus management
-- Standard form component pattern for consistency
-- PowerGrid tables with TailwindStriped theme
-- Role-based navigation with proper access control
+- Dynamic pricing calculation based on user type and applicable offers (5-90% discount range)
+- PowerGrid tables with status widgets, filtering, and action modals
+- Detail row components for comprehensive information display
+- Form validation following project patterns (no authorize, no custom messages)
+- Comprehensive test data with factories and seeders
 - Multi-language support with complete translations
-- Responsive design with modern UI/UX
-- File upload with drag & drop and preview
-- Status indicators and audit trail display
+- Integration with existing payment system architecture
+- Audit trail and status management for pricing and offer records
+- Unique constraint to prevent duplicate active offers per pricing rule
+- Complete UI/UX with consistent patterns and responsive design
 ```
 
 ### **Commit Message Generation Rules:**

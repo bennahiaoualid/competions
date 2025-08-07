@@ -182,6 +182,7 @@ return [
         'max_score.*' => 'max score',
         'score' => 'score',
         'start_date' => 'start date',
+        'end_date' => 'end date',
         'question_text' => 'question text',
         'question_text.*' => 'question text',
         'questions_number' => 'questions number',
@@ -195,6 +196,10 @@ return [
         'base_amount' => 'base amount',
         'base_coins' => 'base coins',
         'reason' => 'reason',
+        'name' => 'name',
+        'description' => 'description',
+        'discount_percentage' => 'discount percentage',
+        'coin_pricing_id' => 'coin pricing id',
     ],
 
 ];
