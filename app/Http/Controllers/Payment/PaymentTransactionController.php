@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Payment\PaymentTransaction;
 use App\Services\Payment\PaymentService;
 use App\Contracts\FlasherInterface;
+use App\Http\Requests\Payment\StorePaymentTransactionRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -41,20 +42,15 @@ class PaymentTransactionController extends Controller
      */
     public function create(): View
     {
-        return view('pages.payment.create');
+        $coinPricing = $this->paymentService->getCoinPricingForUser();
+        return view('pages.payment.create', compact('coinPricing'));
     }
 
     /**
      * Store payment transaction
      */
-    public function store(Request $request): RedirectResponse
+    public function store(StorePaymentTransactionRequest $request): RedirectResponse
     {
-        $request->validate([
-            'amount' => 'required|numeric|min:1',
-            'payment_method' => 'required|in:cash,bank_transfer,mobile_money',
-            'proof_image' => 'required|image|max:10240', // 10MB max
-        ]);
-
         $this->paymentService->createPaymentFromRequest($request);
         
         return redirect()->back();

@@ -86,7 +86,9 @@ final class PaymentTransactionTable extends PowerGridComponent
                 return e($transaction->accountant_observation ?? 'N/A');
             })
             ->add('proof_image_url', function (PaymentTransaction $transaction) {
-                return $transaction->proof_image_path ? asset('storage/' . $transaction->proof_image_path) : null;
+                return $transaction->proof_image_path
+                    ? route('transactions.proof', $transaction->id)
+                    : null;
             });
     }
 

@@ -90,12 +90,23 @@ return [
             'remove_auditor_only_one' => 'you cant delete the only auditor in a competition',
             'global_question_choices' => 'choices number should be at between 2 or 5 choices',
             'not_authorized' => 'you are not authorized to proceed this action',
-            
+            'transcation_incorrect_user_type' => 'This action is not allowed for your account type.',
             'only_one_active_offer' => 'There is active offer for this coin pricing, only one active offer is allowed',
         ],
         'invalid_deletion_type' => 'Invalid deletion type. This operation is not allowed for this entity type.',
         'insufficient_permissions' => 'You do not have sufficient permissions to perform this action.',
         'contact' => 'contact administrator',
+        'images' => [
+            'file_size_exceeded' => 'File size must not exceed :max_size MB',
+            'file_type_not_allowed' => 'File type not allowed. Allowed types: :allowed_types',
+            'width_out_of_range' => 'Image width must be between :min_width and :max_width pixels',
+            'height_out_of_range' => 'Image height must be between :min_height and :max_height pixels',
+            'invalid_image_file' => 'Invalid image file',
+            'upload_failed' => 'Failed to upload image',
+            'processing_failed' => 'Failed to process image',
+            'thumbnail_generation_failed' => 'Failed to generate thumbnail',
+            'deletion_failed' => 'Failed to delete image',
+        ],
     ],
     'alert'=>[
         'type' =>[

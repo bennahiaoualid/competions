@@ -1,9 +1,10 @@
 <?php
 
-use App\Http\Controllers\User\UserController;
-use App\Http\Controllers\User\UserProfileController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\User\UserController;
+use App\Http\Controllers\User\UserProfileController;
+use App\Http\Controllers\Payment\PaymentProofController;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 Route::get('/test-email', function () {
     try {
@@ -79,6 +80,9 @@ Route::group(
         Route::get('/payment/transactions', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'index'])->name('payment.transactions');
         Route::get('/payment/transactions/{paymentTransaction}', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'show'])->name('payment.transactions.show');
         Route::get('/payment/coin-balance', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'getCoinBalance'])->name('payment.coin-balance');
+    
+        Route::get('/transactions/{transaction}/proof', [PaymentProofController::class, 'show'])
+        ->name('transactions.proof');
     });
 
     // Include notification routes inside localization middleware

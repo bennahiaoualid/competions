@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use App\Enums\UserTypeEnum;
 use App\Models\Admin\Admin;
 use Illuminate\Support\Str;
 use App\Models\Competition\Level;
@@ -151,6 +152,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getAgeAttribute()
     {
         return Carbon::parse($this->attributes['birthdate'])->age;
+    }
+
+    /**
+     * Get the user type
+     */
+    public function getUserType(): UserTypeEnum
+    {
+        return UserTypeEnum::USER;
     }
 
 

@@ -61,7 +61,7 @@ return [
         'numeric' => ':attribute يجب ان يكون اكبر او يساوي من :value.',
         'string' => 'The :attribute must be greater than or equal to :value characters.',
     ],
-    'image' => 'The :attribute must be an image.',
+    'image' => ':attribute يجب ان يكون صورة.',
     'in' => ':attribute المختار غير صحيح',
     'in_array' => 'The :attribute field does not exist in :other.',
     'integer' => ' :attribute يجب ان بكون صحيح',
@@ -88,7 +88,7 @@ return [
         'numeric' => ':attribute يجب ان لا يكون اكبر من  :max',
         'string' => ':attribute يجب ان لا يحتوي على اكثر من  :max احرف',
     ],
-    'mimes' => 'The :attribute must be a file of type: :values.',
+    'mimes' => ':attribute يجب ان يكون من نوع :values.',
     'mimetypes' => 'The :attribute must be a file of type: :values.',
     'min' => [
         'array' => ':attribute يجب ان يحتوي على الاقل على :min عناصر.',
@@ -206,6 +206,8 @@ return [
         'description' => 'الوصف',
         'discount_percentage' => 'نسبة الخصم',
         'coin_pricing_id' => 'رقم التسعير',
+        'payment_method' => 'طريقة الدفع',
+        'proof_image' => 'صورة اثبات الدفع',
         'now' => 'الآن',
     ],
 

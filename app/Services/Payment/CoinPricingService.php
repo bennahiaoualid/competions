@@ -9,6 +9,7 @@ use App\Contracts\FlasherInterface;
 use App\Models\Payment\CoinPricing;
 use Illuminate\Support\Facades\Auth;
 use App\Contracts\TransactionManagerInterface;
+use Ramsey\Uuid\Type\Integer;
 
 class CoinPricingService
 {
@@ -22,35 +23,15 @@ class CoinPricingService
     /**
      * Calculate coins for a given amount and user type
      */
-    public function calculateCoins(float $amount, string $userType): array
+    public function calculateCoins(CoinPricing $coinPricing): int
     {
         try {
-            // Get base pricing for user type
-            $basePricing = $this->getActivePricing($userType);
-            if (!$basePricing) {
-                throw new \Exception("No active pricing found for user type: {$userType}");
+            $coins = $coinPricing->base_coins;
+            if($coinPricing->activeOffer){
+                $offer = $coinPricing->activeOffer->first();
+                $coins = $offer->calculateTotalCoins($coins);
             }
-
-            // Calculate base coins
-            $baseCoins = $basePricing->calculateCoinsForAmount($amount);
-
-            // Find applicable offers
-            $applicableOffers = $this->getApplicableOffers($amount, $userType);
-            $bestOffer = $this->findBestOffer($applicableOffers, $baseCoins);
-
-            // Calculate final coins
-            $finalCoins = $bestOffer 
-                ? $bestOffer->calculateTotalCoins($baseCoins)
-                : $baseCoins;
-
-            return [
-                'base_coins' => $baseCoins,
-                'final_coins' => $finalCoins,
-                'extra_coins' => $finalCoins - $baseCoins,
-                'applied_offer' => $bestOffer,
-                'base_pricing' => $basePricing,
-                'all_applicable_offers' => $applicableOffers
-            ];
+            return $coins;
 
         } catch (\Exception $e) {
             $this->registerLogs('Coin calculation error: ', $e);

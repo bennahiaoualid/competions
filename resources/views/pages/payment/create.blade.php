@@ -31,97 +31,76 @@
         <form action="{{ route('payment.store') }}" method="POST" enctype="multipart/form-data" class="p-6">
             @csrf
             
-            <!-- Amount Input -->
+            <!-- Coin Pricing -->
             <div>
-                <x-input-label for="amount" :value="__('payment.amount_dzd')" />
-                <div class="relative">
-                    <x-text-input id="amount" 
-                                  name="amount" 
-                                  type="number"
-                                  :value="old('amount')"
-                                  min="1" 
-                                  step="0.01"
-                                  class="mt-1 block w-full pr-12"
-                                  :placeholder="__('payment.enter_amount')" />
-                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                        <span class="text-gray-500 sm:text-sm">DZD</span>
-                    </div>
-                </div>
-                <x-input-error :messages="$errors->get('amount')" class="mt-2" />
-                <p class="mt-1 text-sm text-gray-500">{{ __('payment.amount_help') }}</p>
+                <x-input-label :value="__('payment.select_coin_pricing')" />
+                <x-selected-card-hover name="coin_pricing_id" :value="old('coin_pricing_id')" model="selectedCoinPricingId">
+                    @foreach($coinPricing as $pricing)
+                        <div class="relative">
+                            @if($pricing->activeOffer->count() > 0)
+                                @php
+                                    $offer = $pricing->activeOffer->first();
+                                @endphp
+                                <!-- Discount Ribbon -->
+                                <div class="absolute top-[2%] -start-2 bg-primary text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg transform rotate-45 z-10">
+                                    + {{ $offer->discount_percentage }}%
+                                </div>
+                            @endif
+                            <x-selected-card 
+                                :value="$pricing->id" 
+                                :selected="old('coin_pricing_id') == $pricing->id"
+                                model="selectedCoinPricingId">
+                                
+                                <div class="flex flex-1 flex-col items-center gap-1">
+                                    <h3 class="md:text-xl text-center font-bold text-primary">{{ $pricing->display_name }}</h3>
+                                    <span class="block text-sm md:text-base font-medium text-gray-900">{{ number_format($pricing->base_amount, 2) }} DZD</span>
+                                    <span class="mt-1 flex items-center text-sm md:text-base text-gray-500">{{ __('payment.get_coins', ['coins' => $pricing->base_coins]) }}</span>
+                                    @if($offer)
+                                        <span class="mt-1 flex items-center text-sm md:text-base text-primary">
+                                            {{ __('payment.extra_coins') .' : ' . $offer->calculateExtraCoins($pricing->base_coins) }} 
+                                            <i class="fa-solid fa-coins ms-2 text-yellow-500"></i>
+                                        </span>
+                                    @endif
+                                </div>
+                            </x-selected-card>
+                        </div>
+                    @endforeach
+                </x-selected-card-hover>
+                <x-input-error :messages="$errors->storePaymentTransaction->get('coin_pricing_id')" class="mt-2" />
             </div>
 
             <!-- Payment Method -->
-            <div class="mt-6" x-data="{ selectedMethod: '{{ old('payment_method') }}' }">
+            <div class="mt-6">
                 <x-input-label :value="__('payment.payment_method')" />
-                <div class="mt-2 grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <label class="relative flex cursor-pointer rounded-lg border border-gray-300 bg-white p-4 shadow-sm focus:outline-none hover:border-blue-500 transition-all duration-200"
-                           :class="{ 'border-blue-500 bg-blue-50': selectedMethod === 'cash' }"
-                           @click="selectedMethod = 'cash'; $refs.cashRadio.checked = true; $refs.cashRadio.focus()">
-                        <input type="radio" 
-                               name="payment_method" 
-                               value="cash" 
-                               x-ref="cashRadio"
-                               class="sr-only" 
-                               {{ old('payment_method') == 'cash' ? 'checked' : '' }}>
-                        <span class="flex flex-1">
-                            <span class="flex flex-col">
-                                <span class="block text-sm font-medium text-gray-900">{{ __('payment.cash') }}</span>
-                                <span class="mt-1 flex items-center text-sm text-gray-500">{{ __('payment.cash_description') }}</span>
-                            </span>
-                        </span>
-                        <span class="pointer-events-none absolute -inset-px rounded-lg border-2 transition-all duration-200" 
-                              :class="{ 'border-blue-500': selectedMethod === 'cash', 'border-transparent': selectedMethod !== 'cash' }" 
-                              aria-hidden="true"></span>
-                    </label>
+                <x-selected-card-hover name="payment_method" :value="old('payment_method')" model="selectedMethod" grid="grid-cols-1 md:grid-cols-3">
+                    <x-selected-card 
+                        value="cash" 
+                        :selected="old('payment_method') == 'cash'"
+                        model="selectedMethod">
+                        <div class="flex flex-1 flex-col items-center gap-1">
+                            <h3 class="md:text-xl text-center font-semibold text-primary">{{ __('payment.cash') }}</h3>
+                            <span class="mt-1 flex items-center text-sm text-gray-500">{{ __('payment.cash_description') }}</span>
+                        </div>
+                    </x-selected-card>
 
-                    <label class="relative flex cursor-pointer rounded-lg border border-gray-300 bg-white p-4 shadow-sm focus:outline-none hover:border-blue-500 transition-all duration-200"
-                           :class="{ 'border-blue-500 bg-blue-50': selectedMethod === 'bank_transfer' }"
-                           @click="selectedMethod = 'bank_transfer'; $refs.bankRadio.checked = true; $refs.bankRadio.focus()">
-                        <input type="radio" 
-                               name="payment_method" 
-                               value="bank_transfer" 
-                               x-ref="bankRadio"
-                               class="sr-only" 
-                               {{ old('payment_method') == 'bank_transfer' ? 'checked' : '' }}>
-                        <span class="flex flex-1">
-                            <span class="flex flex-col">
-                                <span class="block text-sm font-medium text-gray-900">{{ __('payment.bank_transfer') }}</span>
-                                <span class="mt-1 flex items-center text-sm text-gray-500">{{ __('payment.bank_transfer_description') }}</span>
-                            </span>
-                        </span>
-                        <span class="pointer-events-none absolute -inset-px rounded-lg border-2 transition-all duration-200" 
-                              :class="{ 'border-blue-500': selectedMethod === 'bank_transfer', 'border-transparent': selectedMethod !== 'bank_transfer' }" 
-                              aria-hidden="true"></span>
-                    </label>
-
-                    <label class="relative flex cursor-pointer rounded-lg border border-gray-300 bg-white p-4 shadow-sm focus:outline-none hover:border-blue-500 transition-all duration-200"
-                           :class="{ 'border-blue-500 bg-blue-50': selectedMethod === 'mobile_money' }"
-                           @click="selectedMethod = 'mobile_money'; $refs.mobileRadio.checked = true; $refs.mobileRadio.focus()">
-                        <input type="radio" 
-                               name="payment_method" 
-                               value="mobile_money" 
-                               x-ref="mobileRadio"
-                               class="sr-only" 
-                               {{ old('payment_method') == 'mobile_money' ? 'checked' : '' }}>
-                        <span class="flex flex-1">
-                            <span class="flex flex-col">
-                                <span class="block text-sm font-medium text-gray-900">{{ __('payment.mobile_money') }}</span>
-                                <span class="mt-1 flex items-center text-sm text-gray-500">{{ __('payment.mobile_money_description') }}</span>
-                            </span>
-                        </span>
-                        <span class="pointer-events-none absolute -inset-px rounded-lg border-2 transition-all duration-200" 
-                              :class="{ 'border-blue-500': selectedMethod === 'mobile_money', 'border-transparent': selectedMethod !== 'mobile_money' }" 
-                              aria-hidden="true"></span>
-                    </label>
-                </div>
-                <x-input-error :messages="$errors->get('payment_method')" class="mt-2" />
+                    <x-selected-card 
+                        value="bank_transfer" 
+                        :selected="old('payment_method') == 'bank_transfer'"
+                        model="selectedMethod">
+                        
+                        <div class="flex flex-1 flex-col items-center gap-1">
+                            <h3 class="md:text-xl text-center font-semibold text-primary">{{ __('payment.bank_transfer') }}</h3>
+                            <span class="mt-1 flex items-center text-sm text-gray-500">{{ __('payment.bank_transfer_description') }}</span>
+                        </div>
+                    </x-selected-card>
+                </x-selected-card-hover>
+                <x-input-error :messages="$errors->storePaymentTransaction->get('payment_method')" class="mt-2" />
             </div>
 
             <!-- Proof Image Upload -->
             <div class="mt-6">
                 <x-input-label for="proof_image" :value="__('payment.proof_image')" />
-                <div class="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-blue-500 transition-colors">
+                <div class="drag-drop-zone mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-blue-500 transition-colors">
                     <div class="space-y-1 text-center">
                         <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
                             <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -131,12 +110,12 @@
                                 <span>{{ __('payment.upload_file') }}</span>
                                 <input id="proof_image" name="proof_image" type="file" class="sr-only" accept="image/*" required>
                             </label>
-                            <p class="pl-1">{{ __('payment.or_drag_drop') }}</p>
+                            <p class="pl-1 ms-2">{{ __('payment.or_drag_drop') }}</p>
                         </div>
                         <p class="text-xs text-gray-500">{{ __('payment.image_requirements') }}</p>
                     </div>
                 </div>
-                <x-input-error :messages="$errors->get('proof_image')" class="mt-2" />
+                <x-input-error :messages="$errors->storePaymentTransaction->get('proof_image')" class="mt-2" />
             </div>
 
             <!-- Preview Section -->
@@ -205,68 +184,132 @@
         </div>
     </div>
 </div>
-
+@endsection 
+@section('custom_js')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const fileInput = document.getElementById('proof_image');
-    const preview = document.getElementById('image-preview');
-    const previewImg = document.getElementById('preview-img');
-    const removeBtn = document.getElementById('remove-image');
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('proof_image');
+        const preview = document.getElementById('image-preview');
+        const previewImg = document.getElementById('preview-img');
+        const removeBtn = document.getElementById('remove-image');
+    
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                compressAndPreviewImage(file);
+            }
+        });
+    
+        removeBtn.addEventListener('click', function() {
+            fileInput.value = '';
+            preview.classList.add('hidden');
+            previewImg.src = '';
+        });
+    
+        // Handle drag and drop
+        const dropZone = fileInput.closest('.drag-drop-zone');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+    
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+    
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+    
+        function highlight(e) {
+            dropZone.classList.add('border-blue-500', 'bg-blue-50');
+        }
+    
+        function unhighlight(e) {
+            dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+        }
+    
+        dropZone.addEventListener('drop', handleDrop, false);
+    
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                compressAndPreviewImage(files[0]);
+            }
+        }
 
-    fileInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                previewImg.src = e.target.result;
-                preview.classList.remove('hidden');
+        // Image compression function
+        function compressAndPreviewImage(file) {
+            // Check if file is an image
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file.');
+                return;
+            }
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+
+            img.onload = function() {
+                // Calculate new dimensions (max 1200px width/height)
+                let { width, height } = img;
+                const maxSize = 1200;
+                
+                if (width > height) {
+                    if (width > maxSize) {
+                        height = (height * maxSize) / width;
+                        width = maxSize;
+                    }
+                } else {
+                    if (height > maxSize) {
+                        width = (width * maxSize) / height;
+                        height = maxSize;
+                    }
+                }
+
+                // Set canvas dimensions
+                canvas.width = width;
+                canvas.height = height;
+
+                // Draw compressed image
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Convert to blob with compression
+                canvas.toBlob(function(compressedBlob) {
+                    // Create a new file from the compressed blob
+                    const compressedFile = new File([compressedBlob], file.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                    });
+
+                    // Create a FileList-like object
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(compressedFile);
+                    fileInput.files = dataTransfer.files;
+
+                    // Show preview
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImg.src = e.target.result;
+                        preview.classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(compressedBlob);
+
+                    // Show compression info
+                    const originalSize = (file.size / 1024 / 1024).toFixed(2);
+                    const compressedSize = (compressedBlob.size / 1024 / 1024).toFixed(2);
+                    console.log(`Image compressed: ${originalSize}MB → ${compressedSize}MB`);
+                }, 'image/jpeg', 0.8); // 80% quality
             };
-            reader.readAsDataURL(file);
+
+            img.src = URL.createObjectURL(file);
         }
     });
-
-    removeBtn.addEventListener('click', function() {
-        fileInput.value = '';
-        preview.classList.add('hidden');
-        previewImg.src = '';
-    });
-
-    // Handle drag and drop
-    const dropZone = fileInput.closest('.border-dashed');
-    
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, preventDefaults, false);
-    });
-
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropZone.addEventListener(eventName, highlight, false);
-    });
-
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, unhighlight, false);
-    });
-
-    function highlight(e) {
-        dropZone.classList.add('border-blue-500', 'bg-blue-50');
-    }
-
-    function unhighlight(e) {
-        dropZone.classList.remove('border-blue-500', 'bg-blue-50');
-    }
-
-    dropZone.addEventListener('drop', handleDrop, false);
-
-    function handleDrop(e) {
-        const dt = e.dataTransfer;
-        const files = dt.files;
-        fileInput.files = files;
-        fileInput.dispatchEvent(new Event('change'));
-    }
-});
 </script>
-@endsection 
+@endsection

@@ -2,6 +2,7 @@
 
 namespace App\Models\Admin;
 
+use App\Enums\UserTypeEnum;
 use App\Observers\AdminObserver;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Permission\Traits\HasRoles;
@@ -116,6 +117,14 @@ class Admin extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    /**
+     * Get the user type
+     */
+    public function getUserType(): UserTypeEnum
+    {
+        return UserTypeEnum::ADMIN;
+    }
 
     // Define the scope
     public function scopeWithoutRoles($query, array $roles)

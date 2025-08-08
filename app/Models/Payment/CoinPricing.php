@@ -54,7 +54,7 @@ class CoinPricing extends Model
     {
         return $query->where(function($q) use ($userType) {
             $q->where('user_type', $userType)
-              ->orWhere('user_type', 'both');
+                ->orWhere('user_type', 'both');
         });
     }
 

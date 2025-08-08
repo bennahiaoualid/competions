@@ -3,19 +3,22 @@
 namespace App\Services\Payment;
 
 use Exception;
+use App\Enums\UserTypeEnum;
 use App\Traits\RegisterLogs;
+use App\Traits\ImageManipulation;
 use App\Contracts\FlasherInterface;
 use App\Models\Payment\CoinBalance;
+use App\Models\Payment\CoinPricing;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Payment\PaymentAuditLog;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Payment\PaymentTransaction;
-use App\Contracts\TransactionManagerInterface;
 use App\Services\Payment\CoinPricingService;
+use App\Contracts\TransactionManagerInterface;
 
 class PaymentService
 {
-    use RegisterLogs;
+    use RegisterLogs, ImageManipulation;
 
     public function __construct(
         protected TransactionManagerInterface $transactionManager,
@@ -177,7 +180,14 @@ class PaymentService
     public function deleteProofImage(PaymentTransaction $payment): bool
     {
         if ($payment->proof_image_path) {
-            return Storage::disk('payment_proofs')->delete($payment->proof_image_path);
+            // Get thumbnails from payment metadata if available
+            $thumbnails = $payment->metadata['thumbnails'] ?? [];
+            
+            /*return $this->deleteImage(
+                $payment->proof_image_path,
+                'payment_proofs',
+                $thumbnails
+            );*/
         }
         
         return true;
@@ -189,32 +199,77 @@ class PaymentService
     public function createPaymentFromRequest($request): bool
     {
         try {
+            
             $result = $this->transactionManager->run(function () use ($request) {
+                // Condition 1: Validate the image
+                $imageValidationErrors = $this->validateImage($request->file('proof_image'), [
+                    'max_size' => 10240, // 10MB
+                    'allowed_mimes' => ['jpeg', 'jpg', 'png', 'gif'],
+                    'min_width' => 100,
+                    'max_width' => 5000,
+                    'min_height' => 100,
+                    'max_height' => 5000,
+                ]);
+
+                if (!empty($imageValidationErrors)) {
+                    $translatedErrors = $this->translateImageErrors($imageValidationErrors);
+                    foreach ($translatedErrors as $error) {
+                        $this->flasher->error($error);
+                    }
+                    return false;
+                }
+
+                // Get the selected coin pricing
+                $coinPricing = CoinPricing::with('activeOffer')->findOrFail($request->coin_pricing_id);
+                
                 // Determine user type
-                $userType = Auth::user() instanceof \App\Models\Admin\Admin ? 'admin' : 'user';
+                $userType = Auth::user()->getUserType()->value;
+                // Condition 2: Validate coin pricing matches user type
+                if ($coinPricing->user_type !== $userType && $coinPricing->user_type !== 'both') {
+                    $this->flasher->error(__('messages.validation.not_allow.transcation_incorrect_user_type'));
+                    return false;
+                }
                 
-                // Calculate coins using dynamic pricing system
-                $pricingResult = $this->coinPricingService->calculateCoins($request->amount, $userType);
-                $coins = $pricingResult['final_coins'];
-                
-                // Store proof image
-                $proofPath = $request->file('proof_image')->store('payment_proofs', 'payment_proofs');
+                // Calculate coins using the selected pricing
+                $coins = $this->coinPricingService->calculateCoins($coinPricing);
+                // Process proof image with optimization
+                $imageResult = $this->saveImage(
+                    $request->file('proof_image'),
+                    config('image.private_types.transaction.path'),
+                    [
+                        'disk' => config('image.private_types.transaction.disk'),
+                        'quality' => config('image.private_types.transaction.quality'),
+                        'max_width' => config('image.private_types.transaction.max_width'),
+                        'max_height' => config('image.private_types.transaction.max_height'),
+                        'format' => config('image.format'),
+                    ]
+                );
+
+                if (!$imageResult['success']) {
+                    $this->flasher->error(__('messages.validation.images.processing_failed'));
+                    return false;
+                }
+
+                $proofPath = $imageResult['path'];
                 
                 // Create payment transaction
                 $payment = $this->createPayment([
                     'payable_id' => Auth::id(),
                     'payable_type' => get_class(Auth::user()),
-                    'amount' => $request->amount,
+                    'amount' => $coinPricing->base_amount,
                     'coins_credited' => $coins,
                     'payment_method' => $request->payment_method,
                     'proof_image_path' => $proofPath,
-                    'status' => 'pending'
+                    'status' => 'pending',
                 ]);
 
                 return true;
             });
 
-            $this->flasher->crudSuccess('saved');
+            if ($result) {
+                $this->flasher->crudSuccess('saved');
+            }
+            
             return $result;
 
         } catch (\Exception $e) {
@@ -222,6 +277,16 @@ class PaymentService
             $this->flasher->crudFailure('saved');
             return false;
         }
+    }
+
+    public function getCoinPricingForUser()
+    {
+        $userType = Auth::user()->getUserType();
+        $coinPricing = CoinPricing::with('activeOffer')
+                        ->active()
+                        ->forUserType($userType->value)
+                        ->get();
+        return $coinPricing;
     }
 
     /**

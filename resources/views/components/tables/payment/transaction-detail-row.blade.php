@@ -9,7 +9,7 @@
         <!-- Coins Credited -->
         <div class="bg-white p-3 rounded-lg shadow-sm">
             <h4 class="text-sm font-semibold text-gray-700 mb-2">{{ __('payment.payment_transaction.fields.coins_credited') }}</h4>
-            <p class="text-sm text-gray-900">{{ number_format($row->coins_credited) }} {{ __('payment.payment_transaction.coins') }}</p>
+            <p class="text-sm text-gray-900">{{ number_format($row->coins_credited) }} {{ __('payment.payment_transaction.fields.coins_credited') }}</p>
         </div>
 
         <!-- Payer Type -->
@@ -38,14 +38,14 @@
 
         <!-- Proof Image -->
         @if($row->proof_image_url)
-        <div class="bg-white p-3 rounded-lg shadow-sm md:col-span-2 lg:col-span-3">
-            <h4 class="text-sm font-semibold text-gray-700 mb-2">{{ __('payment.payment_transaction.fields.proof_image') }}</h4>
-            <div class="flex justify-center">
-                <img src="{{ $row->proof_image_url }}" 
-                     alt="{{ __('payment.payment_transaction.fields.proof_image') }}" 
-                     class="max-w-xs max-h-48 object-contain rounded-lg shadow-sm border border-gray-200">
+            <div class="bg-white p-3 rounded-lg shadow-sm md:col-span-2 lg:col-span-3">
+                <h4 class="text-sm font-semibold text-gray-700 mb-2">{{ __('payment.payment_transaction.fields.proof_image') }}</h4>
+                <div class="flex justify-center">
+                    <img src="{{ $row->proof_image_url }}" 
+                        alt="{{ __('payment.payment_transaction.fields.proof_image') }}" 
+                        class="max-w-full max-h-48 object-contain rounded-lg shadow-sm border border-gray-200">
+                </div>
             </div>
-        </div>
         @endif
     </div>
 </div> 

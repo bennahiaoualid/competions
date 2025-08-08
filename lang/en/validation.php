@@ -200,6 +200,8 @@ return [
         'description' => 'description',
         'discount_percentage' => 'discount percentage',
         'coin_pricing_id' => 'coin pricing id',
+        'payment_method' => 'payment method',
+        'proof_image' => 'proof image',
     ],
 
 ];

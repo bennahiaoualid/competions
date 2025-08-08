@@ -50,6 +50,7 @@
     
     @include('layouts.payment.footer-scripts')
     @include('components.notification')
+    @include('layouts.session_notifications_taoster')
     @yield("custom_js")
 </body>
 </html> 
