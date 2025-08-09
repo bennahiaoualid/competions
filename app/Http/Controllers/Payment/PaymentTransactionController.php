@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Payment;
 use App\Http\Controllers\Controller;
 use App\Models\Payment\PaymentTransaction;
 use App\Services\Payment\PaymentService;
+use App\Services\Payment\PaymentReviewService;
 use App\Contracts\FlasherInterface;
 use App\Http\Requests\Payment\StorePaymentTransactionRequest;
+use App\Http\Requests\Payment\OrderReviewRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -16,7 +18,8 @@ class PaymentTransactionController extends Controller
 {
     public function __construct(
         protected PaymentService $paymentService,
-        protected FlasherInterface $flasher
+        protected FlasherInterface $flasher,
+        protected PaymentReviewService $paymentReviewService,
     ) {}
 
     /**
@@ -34,18 +37,16 @@ class PaymentTransactionController extends Controller
     {
         $paymentTransaction = PaymentTransaction::where('uuid', $uuid)->firstOrFail();
 
-        $authUser = Auth::user();
-        $authClass = $authUser instanceof \App\Models\Admin\Admin
-            ? \App\Models\Admin\Admin::class
-            : \App\Models\User::class;
-
-        if ($paymentTransaction->payable_id !== $authUser->id || $paymentTransaction->payable_type !== $authClass) {
+        if (!$this->isUserAllowedToSeeTransaction($paymentTransaction)) {
             abort(403);
         }
 
         $paymentTransaction->load(['approver']);
+        $canOrderReview = in_array($paymentTransaction->status, ['rejected', 'cancelled']);
 
-        return view('pages.payment.show', compact('paymentTransaction'));
+        $review = $paymentTransaction->reviewRequests()->latest()->first();
+
+        return view('pages.payment.show', compact('paymentTransaction', 'canOrderReview', 'review'));
     }
 
 
@@ -81,5 +82,33 @@ class PaymentTransactionController extends Controller
             'total_earned' => $coinBalance ? $coinBalance->total_earned : 0,
             'total_spent' => $coinBalance ? $coinBalance->total_spent : 0,
         ]);
+    }
+
+    /**
+     * Order a review for a rejected/cancelled transaction
+     */
+    public function orderReview(OrderReviewRequest $request): RedirectResponse
+    {
+        $transaction = PaymentTransaction::findOrFail($request->transaction_id);
+
+        if (!$this->isUserAllowedToSeeTransaction($transaction)) {
+            abort(403);
+        }
+
+        if (!in_array($transaction->status, ['rejected', 'cancelled'])) {
+            abort(403);
+        }
+
+        $this->paymentReviewService->requestReview($transaction, $request->reason);
+
+        return redirect()->back();
+    }
+
+    public function isUserAllowedToSeeTransaction(PaymentTransaction $transaction): bool
+    {
+        $authUser = Auth::user();
+        $authClass = get_class($authUser);
+
+        return $transaction->payable_id === $authUser->id && $transaction->payable_type === $authClass;
     }
 } 

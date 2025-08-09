@@ -232,17 +232,17 @@ const CLEANUP_PROTECTION_RULES = [
 ---
 
 ### Step 4: Payment Review System
-**Status**: Planned
+**Status**: 🚧 IN PROGRESS
 **Priority**: Medium
 **Estimated Time**: 2 days
 
 #### Tasks:
-- [ ] Create payment_review_requests table
-- [ ] Implement review request functionality
-- [ ] Create accountant review interface
+- [x] Create payment_review_requests table
+- [x] Implement review request functionality (uses transaction_id)
+- [x] Create accountant review interface (PowerGrid table + modals)
 - [ ] Add review notifications
-- [ ] Implement review approval/rejection logic
-- [ ] Test review workflow
+- [x] Implement review approval/rejection logic
+- [x] Test review workflow (basic)
 
 #### Database Tables:
 ```sql
@@ -266,39 +266,47 @@ CREATE TABLE payment_review_requests (
     FOREIGN KEY (payment_transaction_id) REFERENCES payment_transactions(id) ON DELETE CASCADE,
     FOREIGN KEY (reviewed_by_admin_id) REFERENCES admins(id) ON DELETE SET NULL
 );
-
--- Add to payment_transactions table
-has_review_request BOOLEAN DEFAULT FALSE,
-review_request_id BIGINT UNSIGNED NULL,
-FOREIGN KEY (review_request_id) REFERENCES payment_review_requests(id) ON DELETE SET NULL
 ```
 
+> Note: We intentionally did not add any new columns to `payment_transactions` (no `has_review_request` / `review_request_id`).
+
+#### Files Created/Modified:
+- ✅ `database/migrations/2025_01_01_000001_create_payment_review_requests_table.php`
+- ✅ `app/Models/Payment/PaymentReviewRequest.php`
+- ✅ `app/Services/Payment/PaymentReviewService.php`
+- ✅ `app/Http/Controllers/Payment/PaymentTransactionController.php` (added `orderReview` action)
+- ✅ `app/Http/Controllers/Payment/Admin/ReviewManagementController.php` (index/approve/reject)
+- ✅ `app/Http/Requests/Payment/OrderReviewRequest.php`
+- ✅ `app/Http/Requests/Payment/ApproveReviewRequest.php`
+- ✅ `app/Http/Requests/Payment/RejectReviewRequest.php`
+- ✅ `app/Livewire/PaymentReviewRequestTable.php` (PowerGrid table with detail rows & actions)
+- ✅ `resources/views/components/tables/payment/review-detail-row.blade.php`
+- ✅ `resources/views/pages/admin/payment/reviews.blade.php` (admin list with modals)
+- ✅ `resources/views/pages/payment/show.blade.php` (Order Review button, modal, review info block)
+- ✅ `routes/web.php` (POST `payment/reviews/order`)
+- ✅ `routes/admin.php` (payment reviews routes group)
+- ✅ `resources/views/layouts/admin/sidebar.blade.php` (Payment > Reviews link)
+- ✅ `lang/en/payment.php` & `lang/ar/payment.php` (review labels, actions; added `messages.already_exists`)
+- ✅ `lang/en/links.php` & `lang/ar/links.php` (sidebar link labels for Reviews)
+
+#### Review Features (current):
+- User/Admin can order a review from the transaction detail page when status is `rejected` or `cancelled` and no existing review.
+- Requests validated with `transaction_id` and reason; ownership enforced and status restricted.
+- Accountant sees a reviews list (PowerGrid) with essential columns and detail rows.
+- Actions: Approve (updates review to approved and delegates to `PaymentService->approvePayment` to credit coins/update transaction) and Reject (marks review rejected with observation).
+
+#### Business Rules Enforced:
+- Only owner of the transaction can place a review request.
+- Only `rejected`/`cancelled` transactions are eligible for review.
+- No schema changes to `payment_transactions` as per decision.
+- All writes wrapped with `TransactionManagerInterface`; UI feedback via `FlasherInterface`.
+- Timestamps/logic use UTC.
 #### Review Rules:
 - ✅ Only rejected/cancelled payments can be reviewed
 - ✅ Only payment owner can request review
 - ✅ 7-day deadline to request review
 - ✅ 48-hour deadline for accountant response
 - ✅ Auto-reject if no response within 48 hours
-
-#### Files to Create/Modify:
-- `database/migrations/create_payment_review_requests_table.php`
-- `database/migrations/add_review_fields_to_payment_transactions.php`
-- `app/Models/Payment/PaymentReviewRequest.php`
-- `app/Services/Payment/PaymentReviewService.php`
-- `app/Http/Controllers/Payment/PaymentReviewController.php`
-- `app/Http/Controllers/Payment/Admin/ReviewManagementController.php`
-- `app/Notifications/Payment/PaymentReviewRequested.php`
-- `app/Notifications/Payment/PaymentReviewDecision.php`
-- `resources/views/payment/reviews/request.blade.php`
-- `resources/views/payment/admin/reviews/pending.blade.php`
-
-#### Review Features:
-- User/Admin review request form
-- Accountant review dashboard
-- Review status notifications
-- Review history tracking
-- Review decision notifications
-
 ---
 
 ### Step 5: Dynamic Coin Pricing System

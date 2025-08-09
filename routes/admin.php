@@ -174,6 +174,17 @@ Route::group(
                         Route::delete('/delete', [CoinOfferController::class, 'destroy'])->name('destroy');
                     });
                 });
+
+                // Payment review management (no UI yet)
+                Route::prefix('reviews')->middleware(['role:owner|accountant'])->name('reviews.')->group(function () {
+                    Route::middleware('permission:view payment')->group(function () {
+                        Route::get('/', [\App\Http\Controllers\Payment\Admin\ReviewManagementController::class, 'index'])->name('index');
+                    });
+                    Route::middleware('permission:manage payment')->group(function () {
+                        Route::post('/approve', [\App\Http\Controllers\Payment\Admin\ReviewManagementController::class, 'approve'])->name('approve');
+                        Route::post('/reject', [\App\Http\Controllers\Payment\Admin\ReviewManagementController::class, 'reject'])->name('reject');
+                    });
+                });
             });
         });
 

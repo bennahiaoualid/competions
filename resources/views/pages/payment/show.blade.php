@@ -90,6 +90,21 @@
                             <dd class="text-sm md:text-base text-gray-900">{{ $paymentTransaction->accountant_observation }}</dd>
                         </div>
                         @endif
+                        @if($canOrderReview && !$review)
+                        <div x-data>
+                            <x-button
+                                name="myModal"
+                                color_type="warning"
+                                size="sm"
+                                :outline="true"
+                                x-on:click="$dispatch('open-modal', { detail: 'order-review-modal' })">
+                                <x-slot:icon>
+                                    <i class="fa-solid fa-rotate text-base me-2"></i>
+                                </x-slot:icon>
+                                {{__("payment.review.actions.order")}}
+                            </x-button>
+                        </div>
+                        @endif
                     </dl>
                 </div>
             </div>
@@ -105,7 +120,55 @@
                 </div>
             </div>
             @endif
+
+            {{-- Review Details --}}
+            @if($review)
+            <div class="my-3 md:mt-6 md:mb-3 p-2 md:px-4 md:py-2 bg-white rounded-lg shadow-sm border border-gray-300">
+                <h2 class="text-xl md:text-2xl font-semibold text-gray-900 text-center sm:text-start">{{ __('payment.review.detail.review_info') }}</h2>
+                <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                    <div class="space-y-2">
+                        <p><span class="font-medium">{{ __('payment.review.detail.status') }}:</span> {{ __('payment.review.status.' . $review->status) }}</p>
+                        <p><span class="font-medium">{{ __('payment.created_at') }}:</span> {{ \App\Helpers\DateTimeHelper::toLocalString($review->created_at) }}</p>
+                    </div>
+                    <div class="space-y-2">
+                        <p><span class="font-medium">{{ __('payment.review.detail.request_reason') }}:</span> {{ $review->request_reason }}</p>
+                    </div>
+                    <div class="space-y-2">
+                        <p><span class="font-medium">{{ __('payment.review.detail.reviewed_by') }}:</span> {{ $review->reviewer?->name ?? '—' }}</p>
+                        <p><span class="font-medium">{{ __('payment.review.detail.reviewed_at') }}:</span> {{ $review->reviewed_at ? \App\Helpers\DateTimeHelper::toLocalString($review->reviewed_at) : '—' }}</p>
+                        <p><span class="font-medium">{{ __('payment.review.detail.observation') }}:</span> {{ $review->review_observation ?? __('payment.review.detail.no_observation') }}</p>
+                    </div>
+                </div>
+            </div>
+            @endif
         </div>
     </div>
 </div>
+
+
+@if($canOrderReview)
+    {{-- Order Review Modal --}}
+    <x-modal name="order-review-modal" title="{{ __('payment.review.actions.order') }}" :show="$errors->hasBag('orderReview')">
+        <x-slot:modalhead>
+            {{ __('payment.review.actions.order') }}
+        </x-slot>
+        <form id="order-review-form" method="post" action="{{ route('payment.reviews.order') }}" class="space-y-2">
+            @csrf
+            @method('post')
+
+            <input type="hidden" name="transaction_id" value="{{ $paymentTransaction->id }}" />
+
+            <div>
+                <x-input-label for="order_review_reason" :value="__('payment.pricing.fields.reason')" />
+                <x-text-area id="order_review_reason" name="reason" class="mt-1 block w-full" rows="3" placeholder="{{ __('payment.payment_transaction.messages.required_observation') }}" required />
+                <x-input-error :messages="$errors->orderReview->get('reason')" class="mt-2" />
+            </div>
+        </form>
+        <x-slot:modalfooter>
+            <div class="flex justify-end">
+                <x-button form="order-review-form" color_type="primary">{{ __('payment.review.actions.order') }}</x-button>
+            </div>
+        </x-slot:modalfooter>
+    </x-modal>
+@endif
 @endsection 

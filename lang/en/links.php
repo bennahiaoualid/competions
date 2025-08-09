@@ -37,6 +37,7 @@ return [
         'buy_coins' => 'Buy Coins',
         'balance' => 'Balance',
         'audit_logs' => 'Audit Logs',
+            'reviews' => 'Reviews',
     ],
     'home' => 'home',
     'log_out' => 'Sign out',

@@ -107,6 +107,41 @@ return [
     ],
 
     // Coin Offers translations
+    'review' => [
+        'page_title' => 'Payment Reviews',
+        'columns' => [
+            'transaction_uuid' => 'Transaction UUID',
+            'payer' => 'Payer',
+            'status' => 'Status',
+            'created_at' => 'Created At',
+            'actions' => 'Actions',
+        ],
+        'status' => [
+            'pending' => 'Pending',
+            'approved' => 'Approved',
+            'rejected' => 'Rejected',
+        ],
+        'actions' => [
+            'approve' => 'Approve Review',
+            'reject' => 'Reject Review',
+            'order' => 'Order Review',
+        ],
+        'messages' => [
+            'approve_confirmation' => 'Approve this review request?',
+            'reject_confirmation' => 'Reject this review request?',
+            'already_exists' => 'A review request already exists for this transaction',
+        ],
+        'detail' => [
+            'review_info' => 'Review Information',
+            'status' => 'Status',
+            'request_reason' => 'Request Reason',
+            'reviewed_by' => 'Reviewed By',
+            'reviewed_at' => 'Reviewed At',
+            'observation' => 'Observation',
+            'no_observation' => 'No observation',
+        ],
+    ],
+
     'offers' => [
         'title' => 'Coin Offers Management',
         'description' => 'Manage special offers and discounts for coin purchases',

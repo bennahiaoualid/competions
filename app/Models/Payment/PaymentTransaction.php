@@ -63,6 +63,12 @@ class PaymentTransaction extends Model
         return $this->hasMany(PaymentAuditLog::class);
     }
 
+    // Review requests relationship
+    public function reviewRequests(): HasMany
+    {
+        return $this->hasMany(PaymentReviewRequest::class);
+    }
+
     // Coin balance relationship
     public function coinBalance()
     {

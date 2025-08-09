@@ -118,6 +118,41 @@ return [
         ],
     ],
 
+    'review' => [
+        'page_title' => 'مراجعات الدفع',
+        'columns' => [
+            'transaction_uuid' => 'معرّف المعاملة',
+            'payer' => 'المدفوع له',
+            'status' => 'الحالة',
+            'created_at' => 'تاريخ الإنشاء',
+            'actions' => 'الإجراءات',
+        ],
+        'status' => [
+            'pending' => 'قيد الانتظار',
+            'approved' => 'تمت الموافقة',
+            'rejected' => 'تم الرفض',
+        ],
+        'actions' => [
+            'approve' => 'الموافقة على المراجعة',
+            'reject' => 'رفض المراجعة',
+            'order' => 'طلب مراجعة',
+        ],
+        'messages' => [
+            'approve_confirmation' => 'هل تريد الموافقة على طلب المراجعة؟',
+            'reject_confirmation' => 'هل تريد رفض طلب المراجعة؟',
+            'already_exists' => 'لقد تم طلب مراجعة هذه المعاملة بالفعل',
+        ],
+        'detail' => [
+            'review_info' => 'معلومات المراجعة',
+            'status' => 'الحالة',
+            'request_reason' => 'سبب الطلب',
+            'reviewed_by' => 'تمت المراجعة بواسطة',
+            'reviewed_at' => 'تاريخ المراجعة',
+            'observation' => 'الملاحظة',
+            'no_observation' => 'لا توجد ملاحظة',
+        ],
+    ],
+
     'pricing' => [
         'user_type' => [
             'user' => 'مستخدم فقط',
