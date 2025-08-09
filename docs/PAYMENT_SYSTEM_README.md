@@ -926,34 +926,39 @@ php artisan payment:expire-offers --dry-run
 
 ### **Current Commit Message:**
 
-#### **Latest Commit: Admin audit logs (UI, routes), sidebar link, translations; archive plan in README**
+#### **Latest Commit: Payment review system (service, UI, routes), order review in detail page, sidebar link, translations; README update**
 ```
-feat(admin-payment): add audit logs page with PowerGrid detail rows and routes
+feat(payment-review): implement review requests (service, UI, routes) and admin management
 
-chore(admin): add PaymentAuditController (index, delete disabled)
-
-feat(ui): add Audit Logs link to admin payment sidebar
-
-i18n: add audit translations and sidebar link labels (en, ar)
-
-docs: update README with audit module, sidebar link, and archive plan
-
-Changes:
-- Update PaymentAuditLogTable: columns (ID, Tx UUID, Payer, Action, Admin, Created At), filters, detail rows, delete action dispatch
-- Create audit log detail row blade
-- Create admin audit logs page with modal and Livewire component
-- Add admin routes: GET /admin/payment/audit-logs (view payment_audit), POST /admin/payment/audit-logs/delete (owner)
-- Add PaymentAuditController (index, delete disabled with flash)
-- Add Audit Logs link to admin sidebar under Payment menu
-- Add translations for audit module and sidebar link (en/ar)
-- Update README with module summary, navigation, and Archive plan
+- db: add payment_review_requests table migration
+- model: create PaymentReviewRequest with relations and scopes
+- service: PaymentReviewService (request, approve, reject) using transactions + flasher
+- user: add orderReview in PaymentTransactionController (transaction_id + reason; ownership + status checks)
+- admin: add ReviewManagementController (index, approve, reject)
+- requests: add OrderReviewRequest, ApproveReviewRequest, RejectReviewRequest
+- routes: POST /payment/reviews/order (web); admin reviews routes (index/approve/reject)
+- ui(admin): PaymentReviewRequestTable (PowerGrid) with detail rows and approve/reject actions
+- ui(admin): reviews page with modals
+- ui(user): show.blade.php – order review button + modal; review info block if exists
+- nav: add “Reviews” link under Payment in admin sidebar
+- i18n: add review translations (en/ar), sidebar link labels; add messages.already_exists
+- docs: update README Step 4 to In Progress with implemented items and rules
 
 Files modified/added:
-- app/Livewire/PaymentAuditLogTable.php
-- resources/views/components/tables/payment/audit-log-detail-row.blade.php
-- resources/views/pages/admin/payment/audit_logs.blade.php
-- app/Http/Controllers/Payment/Admin/PaymentAuditController.php
+- database/migrations/2025_01_01_000001_create_payment_review_requests_table.php
+- app/Models/Payment/PaymentReviewRequest.php
+- app/Services/Payment/PaymentReviewService.php
+- app/Http/Controllers/Payment/PaymentTransactionController.php
+- app/Http/Controllers/Payment/Admin/ReviewManagementController.php
+- app/Http/Requests/Payment/OrderReviewRequest.php
+- app/Http/Requests/Payment/ApproveReviewRequest.php
+- app/Http/Requests/Payment/RejectReviewRequest.php
+- app/Livewire/PaymentReviewRequestTable.php
+- resources/views/components/tables/payment/review-detail-row.blade.php
+- resources/views/pages/admin/payment/reviews.blade.php
+- resources/views/pages/payment/show.blade.php
 - resources/views/layouts/admin/sidebar.blade.php
+- routes/web.php
 - routes/admin.php
 - lang/en/payment.php
 - lang/ar/payment.php
