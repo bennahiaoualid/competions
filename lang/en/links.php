@@ -36,6 +36,7 @@ return [
         'create' => 'Buy Coins',
         'buy_coins' => 'Buy Coins',
         'balance' => 'Balance',
+        'audit_logs' => 'Audit Logs',
     ],
     'home' => 'home',
     'log_out' => 'Sign out',

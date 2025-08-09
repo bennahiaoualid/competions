@@ -146,6 +146,7 @@
                         ['url' => route('admin.payment.transactions'), 'title' => __('links.payment.transactions') , 'active' => request()->routeIs('admin.payment.transactions'), 'subnav' => true],
                         ['url' => route('admin.payment.coin_pricing.index'), 'title' => __('links.payment.pricing') , 'active' => request()->routeIs('admin.payment.coin_pricing.index'), 'subnav' => true],
                         ['url' => route('admin.payment.coin_offers.index'), 'title' => __('links.payment.offers') , 'active' => request()->routeIs('admin.payment.coin_offers.index'), 'subnav' => true],
+                        ['url' => route('admin.payment.audit_logs'), 'title' => __('links.payment.audit_logs') , 'active' => request()->routeIs('admin.payment.audit_logs'), 'subnav' => true],
                     ]">
                     <x-slot:icon>
                         <i class="fas fa-credit-card me-3"></i>

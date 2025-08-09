@@ -233,4 +233,39 @@ return [
     'cannot_approve_own_payment' => 'لا يمكنك الموافقة على دفعتك الخاصة',
     'cannot_reject_own_payment' => 'لا يمكنك رفض دفعتك الخاصة',
     'cannot_cancel_own_payment' => 'لا يمكنك إلغاء دفعتك الخاصة',
+
+    // Audit logs (admin)
+    'audit' => [
+        'page_title' => 'سجل تدقيق الدفع',
+        'columns' => [
+            'id' => 'المعرف',
+            'transaction_uuid' => 'معرّف المعاملة',
+            'payer' => 'المدفوع له',
+            'action' => 'الإجراء',
+            'admin' => 'المشرف',
+            'created_at' => 'تاريخ الإنشاء',
+            'actions' => 'الإجراءات',
+            'ip_address' => 'عنوان IP',
+            'user_agent' => 'وكيل المستخدم',
+        ],
+        'actions' => [
+            'delete' => 'حذف',
+            'created' => 'تم الإنشاء',
+            'approved' => 'تمت الموافقة',
+            'rejected' => 'تم الرفض',
+            'modified' => 'تم التعديل',
+        ],
+        'messages' => [
+            'delete_confirmation' => 'هل أنت متأكد من حذف سجل التدقيق هذا؟',
+            'deletion_disabled_warning' => 'الحذف معطل لسجلات التدقيق. سيتم توفير الأرشفة قريبًا.',
+            'deletion_disabled_flash' => 'الحذف معطل. استخدم الأرشفة عند توفرها.',
+            'deleted_successfully' => 'تم حذف سجل التدقيق بنجاح.',
+        ],
+        'detail' => [
+            'transaction' => 'المعاملة',
+            'changes' => 'التغييرات',
+            'old_values' => 'القيم القديمة',
+            'new_values' => 'القيم الجديدة',
+        ],
+    ],
 ]; 

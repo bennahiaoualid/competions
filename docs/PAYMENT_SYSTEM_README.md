@@ -813,6 +813,60 @@ php artisan payment:expire-offers --dry-run
 
 ---
 
+### **Admin: Payment Audit Logs**
+**Status**: ✅ COMPLETED (index UI) / ❌ Deletion (disabled) / 📋 Archive (planned)
+
+#### Features:
+- ✅ Admin page listing audit logs using PowerGrid with detail rows
+- ✅ Detail row shows transaction UUID, payer, admin, action, timestamps, IP, user agent, old/new values (pretty JSON)
+- ✅ Action: Delete button opens modal (disabled server-side; flashes warning)
+- ✅ Routes:
+  - GET `/admin/payment/audit-logs` → `PaymentAuditController@index` (permission: `view payment_audit`)
+  - POST `/admin/payment/audit-logs/delete` → `PaymentAuditController@delete` (role: `owner`; currently blocked)
+- ✅ Translations: `lang/en/payment.php` and `lang/ar/payment.php` under `audit` keys
+- ✅ Navigation: Admin sidebar Payment menu includes an "Audit Logs" link
+- ❌ Deletion: Intentionally disabled to keep audit logs immutable
+- 📋 Archive: Planned (see below)
+
+#### Files Created/Modified:
+- ✅ `app/Livewire/PaymentAuditLogTable.php`
+- ✅ `resources/views/components/tables/payment/audit-log-detail-row.blade.php`
+- ✅ `resources/views/pages/admin/payment/audit_logs.blade.php`
+- ✅ `app/Http/Controllers/Payment/Admin/PaymentAuditController.php`
+- ✅ `routes/admin.php` (audit routes)
+- ✅ `resources/views/layouts/admin/sidebar.blade.php` (added Audit Logs link)
+- ✅ `lang/en/payment.php` & `lang/ar/payment.php` (audit translations)
+- ✅ `lang/en/links.php` & `lang/ar/links.php` (sidebar link labels)
+
+### **Planned: Audit Logs Archiving**
+**Status**: Planned
+
+#### Goals:
+- Preserve audit integrity; avoid deletion
+- Enable archiving of logs older than N days (default 365) to a separate table or storage
+
+#### Approach:
+- Create `payment_audit_logs_archive` table mirroring `payment_audit_logs`
+- Command + schedule (daily) to move eligible records
+- Optional on-demand archive action for owner
+- Indexes on `created_at` for range moves
+- UI: Replace Delete button with Archive when implemented
+
+#### Configuration:
+```php
+'audit' => [
+    'archive_after_days' => 365,
+]
+```
+
+#### Files to Create/Modify:
+- `app/Console/Commands/ArchivePaymentAuditLogsCommand.php`
+- `routes/console.php` (schedule daily)
+- `database/migrations/create_payment_audit_logs_archive_table.php`
+- `app/Services/Payment/PaymentAuditArchiveService.php` (optional)
+- `app/Http/Controllers/Payment/Admin/PaymentAuditController.php` (archive action)
+- `resources/views/pages/admin/payment/audit_logs.blade.php` (archive modal)
+
 ## 📊 **Implementation Summary**
 
 ### **✅ Completed Steps:**
@@ -864,17 +918,39 @@ php artisan payment:expire-offers --dry-run
 
 ### **Current Commit Message:**
 
-#### **Latest Commit: Correct transaction detail docs (route/method) **
+#### **Latest Commit: Admin audit logs (UI, routes), sidebar link, translations; archive plan in README**
 ```
+feat(admin-payment): add audit logs page with PowerGrid detail rows and routes
 
+chore(admin): add PaymentAuditController (index, delete disabled)
 
-Details:
-- Document actual route GET /payment/transactions/{paymentTransaction} (name: payment.transactions.show)
-- Document controller method PaymentTransactionController@show with route-model binding
-- Document secure proof access via transactions.proof route from the detail view
-- Clarify that ownership check and audit visibility gating are planned (not implemented yet)
+feat(ui): add Audit Logs link to admin payment sidebar
 
-Files modified:
+i18n: add audit translations and sidebar link labels (en, ar)
+
+docs: update README with audit module, sidebar link, and archive plan
+
+Changes:
+- Update PaymentAuditLogTable: columns (ID, Tx UUID, Payer, Action, Admin, Created At), filters, detail rows, delete action dispatch
+- Create audit log detail row blade
+- Create admin audit logs page with modal and Livewire component
+- Add admin routes: GET /admin/payment/audit-logs (view payment_audit), POST /admin/payment/audit-logs/delete (owner)
+- Add PaymentAuditController (index, delete disabled with flash)
+- Add Audit Logs link to admin sidebar under Payment menu
+- Add translations for audit module and sidebar link (en/ar)
+- Update README with module summary, navigation, and Archive plan
+
+Files modified/added:
+- app/Livewire/PaymentAuditLogTable.php
+- resources/views/components/tables/payment/audit-log-detail-row.blade.php
+- resources/views/pages/admin/payment/audit_logs.blade.php
+- app/Http/Controllers/Payment/Admin/PaymentAuditController.php
+- resources/views/layouts/admin/sidebar.blade.php
+- routes/admin.php
+- lang/en/payment.php
+- lang/ar/payment.php
+- lang/en/links.php
+- lang/ar/links.php
 - docs/PAYMENT_SYSTEM_README.md
 ```
 

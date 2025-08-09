@@ -234,4 +234,39 @@ return [
     'cannot_approve_own_payment' => 'You cannot approve your own payment',
     'cannot_reject_own_payment' => 'You cannot reject your own payment',
     'cannot_cancel_own_payment' => 'You cannot cancel your own payment',
+
+    // Audit logs (admin)
+    'audit' => [
+        'page_title' => 'Payment Audit Logs',
+        'columns' => [
+            'id' => 'ID',
+            'transaction_uuid' => 'Transaction UUID',
+            'payer' => 'Payer',
+            'action' => 'Action',
+            'admin' => 'Admin',
+            'created_at' => 'Created At',
+            'actions' => 'Actions',
+            'ip_address' => 'IP Address',
+            'user_agent' => 'User Agent',
+        ],
+        'actions' => [
+            'delete' => 'Delete',
+            'created' => 'Created',
+            'approved' => 'Approved',
+            'rejected' => 'Rejected',
+            'modified' => 'Modified',
+        ],
+        'messages' => [
+            'delete_confirmation' => 'Are you sure you want to delete this audit log?',
+            'deletion_disabled_warning' => 'Deletion is disabled for audit logs. Archiving will be available soon.',
+            'deletion_disabled_flash' => 'Deletion disabled. Use Archive when available.',
+            'deleted_successfully' => 'Audit log deleted successfully.',
+        ],
+        'detail' => [
+            'transaction' => 'Transaction',
+            'changes' => 'Changes',
+            'old_values' => 'Old Values',
+            'new_values' => 'New Values',
+        ],
+    ],
 ]; 

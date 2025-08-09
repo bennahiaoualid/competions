@@ -148,6 +148,14 @@ Route::group(
                     Route::post('/reject', [PaymentController::class, 'reject'])->name('reject');
                     Route::post('/cancel', [PaymentController::class, 'cancel'])->name('cancel');
                 });
+
+                // Audit logs
+                Route::middleware(['permission:view payment_audit'])->group(function () {
+                    Route::get('/audit-logs', [\App\Http\Controllers\Payment\Admin\PaymentAuditController::class, 'index'])->name('audit_logs');
+                });
+                Route::middleware(['role:owner'])->group(function () {
+                    Route::post('/audit-logs/delete', [\App\Http\Controllers\Payment\Admin\PaymentAuditController::class, 'delete'])->name('audit_logs.delete');
+                });
                 
                 Route::prefix('coin-pricing')->middleware(['role:owner|accountant'])->name('coin_pricing.')->group(function () {
                     Route::get('/', [CoinPricingController::class, 'index'])->name('index');
