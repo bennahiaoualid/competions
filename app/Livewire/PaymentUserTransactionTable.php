@@ -111,7 +111,7 @@ final class PaymentUserTransactionTable extends PowerGridComponent
                 ->slot('<i class="fa-solid fa-eye text-base"></i>')
                 ->class('px-2 py-1 text-xs inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150
             bg-transparent text-primary border-primary hover:bg-primary hover:text-white focus:bg-primary focus:text-white active:bg-primary active:text-white focus:ring-primary')
-                ->openModal('view-payment-modal', ['paymentId' => $row->uuid])
+                ->route('payment.transactions.show', ['paymentTransaction' => $row->uuid])
         ];
     }
 

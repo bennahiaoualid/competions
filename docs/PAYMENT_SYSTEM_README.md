@@ -743,6 +743,15 @@ php artisan payment:expire-offers --dry-run
 - ✅ **Status Filtering**: Filter by payment status
 - ✅ **PowerGrid Integration**: Uses TailwindStriped theme
 
+### **Transaction Detail Access**
+**Status**: ✅ COMPLETED
+
+#### Updates:
+- ✅ Transaction detail route: `GET /payment/transactions/{paymentTransaction}` named `payment.transactions.show` (route-model binding by ID)
+- ✅ Controller method: `PaymentTransactionController@show(PaymentTransaction $paymentTransaction)` returns the detail view
+- ✅ Proof image: Detail view uses secure proof route `transactions.proof` instead of public storage
+- 🔜 Ownership check: Controller-level enforcement comparing `payable_id` and `payable_type` to the authenticated principal (user/admin) will be added in a follow-up
+
 ### **Form Requests & Validation**
 **Status**: ✅ COMPLETED
 
@@ -855,66 +864,18 @@ php artisan payment:expire-offers --dry-run
 
 ### **Current Commit Message:**
 
-#### **Latest Commit: Implement enhanced image processing system with security and configuration**
+#### **Latest Commit: Correct transaction detail docs (route/method) **
 ```
-feat: implement enhanced image processing system with security and configuration
 
-Enhanced Image Processing System Implementation:
-- Create comprehensive config/image.php with private/public image type configuration
-- Enhance ImageManipulation trait with driver detection (Imagick preferred, GD fallback)
-- Add memory management and validation to prevent server crashes from large images
-- Implement secure private storage for transaction proofs (local disk)
-- Create storage link for public image access (public/storage → storage/app/public)
-- Integrate image processing with PaymentService using config-based settings
-- Add transaction-specific optimization (1200px max, 85% quality, JPEG format)
-- Remove thumbnail generation for transaction proofs to simplify storage
-- Fix CoinPricing query builder issue (findOrFail()->with() returning query builder instead of model)
-- Replace hardcoded image settings with configuration-driven approach
-- Implement proper exception handling with rethrowing for calling code
-- Add collision detection for unique filename generation with storage checking
 
-Security and Performance Features:
-- Private storage for sensitive transaction proofs (not publicly accessible)
-- Public storage for competition/system images (accessible via /storage/)
-- Memory safety checks to prevent processing images that exceed server limits
-- Automatic format conversion to JPEG for consistency and smaller file sizes
-- Quality compression (85% for transaction proofs) balancing quality and size
-- Size optimization (max 1200x1200px) for transaction proofs
-- Driver optimization using best available image processing library
-- File size reduction of ~80% through optimization and compression
+Details:
+- Document actual route GET /payment/transactions/{paymentTransaction} (name: payment.transactions.show)
+- Document controller method PaymentTransactionController@show with route-model binding
+- Document secure proof access via transactions.proof route from the detail view
+- Clarify that ownership check and audit visibility gating are planned (not implemented yet)
 
-Configuration System:
-- Centralized image settings in config/image.php with environment variable support
-- Private types configuration for secure storage (transactions, profiles, documents)
-- Public types configuration for accessible storage (competitions, system, public content)
-- Transaction-specific settings (local disk, 1200px max, 85% quality)
-- Environment flexibility allowing settings changes via .env variables
-
-Technical Improvements:
-- Proper error propagation with exceptions bubbling up to calling code
-- Configuration centralization eliminating hardcoded values
-- Type safety with proper configuration structure and validation
-- Performance optimization through memory management and driver selection
-- Security implementation with private/public storage separation
-- Maintainability through centralized configuration and consistent processing
-
-Bug Fixes:
-- Fixed CoinPricing query issue where findOrFail()->with() returned query builder
-- Removed registerLog calls and properly rethrow exceptions for calling code
-- Replaced hardcoded image settings with config-based configuration
-- Fixed exception handling to prevent silent failures in image processing
-
-File Structure:
-- storage/app/public/ (public images accessible via /storage/)
-- storage/app/transactions/ (private transaction proofs)
-- public/storage → storage/app/public (symbolic link for public access)
-- config/image.php (centralized configuration with type definitions)
-
-Database and Storage:
-- Created storage link for public image access while maintaining security
-- Configured private storage for sensitive transaction proofs
-- Implemented secure file storage with proper visibility settings
-- Added memory management to prevent server issues with large images
+Files modified:
+- docs/PAYMENT_SYSTEM_README.md
 ```
 
 ### **Commit Message Generation Rules:**

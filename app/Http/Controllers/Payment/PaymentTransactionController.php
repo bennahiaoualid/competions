@@ -30,12 +30,24 @@ class PaymentTransactionController extends Controller
     /**
      * Show payment transaction details
      */
-    public function show(PaymentTransaction $paymentTransaction): View
+    public function show(string $uuid): View
     {
-        $paymentTransaction->load(['approver', 'auditLogs.admin']);
-        
+        $paymentTransaction = PaymentTransaction::where('uuid', $uuid)->firstOrFail();
+
+        $authUser = Auth::user();
+        $authClass = $authUser instanceof \App\Models\Admin\Admin
+            ? \App\Models\Admin\Admin::class
+            : \App\Models\User::class;
+
+        if ($paymentTransaction->payable_id !== $authUser->id || $paymentTransaction->payable_type !== $authClass) {
+            abort(403);
+        }
+
+        $paymentTransaction->load(['approver']);
+
         return view('pages.payment.show', compact('paymentTransaction'));
     }
+
 
     /**
      * Create payment transaction form
