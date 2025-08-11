@@ -144,6 +144,7 @@ return [
             'reviewed_at' => 'Reviewed At',
             'observation' => 'Observation',
             'no_observation' => 'No observation',
+            'auto_rejected' => 'Auto-rejected after 48 hours',
         ],
     ],
 

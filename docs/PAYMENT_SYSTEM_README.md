@@ -233,6 +233,7 @@ const CLEANUP_PROTECTION_RULES = [
 #### Scheduled Cleanup:
 - **Daily cleanup**: 2 AM automatic cleanup
 - **Auto-expire offers**: Daily at 1 AM
+- **Auto-reject expired reviews**: Daily at 3 AM (NEW)
 - **Audit logs archiving**: Daily at 4 AM (planned)
 - **Cache refresh**: Every 6 hours (planned)
 
@@ -724,7 +725,7 @@ public/
 ---
 
 ### Step 5.1: Auto-Expire Offers Command
-**Status**: Planned
+**Status**: ✅ COMPLETED
 **Priority**: Medium
 **Estimated Time**: 0.5 day
 
@@ -782,6 +783,57 @@ php artisan schedule:list
 # Test command
 php artisan payment:expire-offers --dry-run
 ```
+
+---
+
+### Step 5.2: Auto-Reject Expired Payment Reviews
+**Status**: ✅ COMPLETED
+**Priority**: Medium
+**Estimated Time**: 0.5 day
+
+#### Tasks:
+- ✅ Create auto-reject expired reviews command
+- ✅ Implement scheduled job for daily execution
+- ✅ Add command to console routes
+- ✅ Add comprehensive logging
+- ✅ Test auto-reject functionality
+
+#### Command Features:
+```php
+// Auto-reject command logic
+public function autoRejectExpiredPaymentReviews(): void
+{
+    $expiredReviews = PaymentReviewRequest::where('status', 'pending')
+        ->where('created_at', '<', now()->subHours(48))
+        ->update([
+            'status' => 'rejected',
+            'reviewed_at' => now()
+        ]);
+}
+```
+
+#### Scheduled Execution:
+- **Daily at 3 AM**: Automatic review expiration check
+- **48-hour rule**: Reviews older than 48 hours are auto-rejected
+- **System action**: Marked as system-reviewed with clear observation
+
+#### Business Rules:
+- ✅ Only reject reviews with `status = 'pending'`
+- ✅ Only reject reviews older than 48 hours
+- ✅ Bulk update using single SQL query for efficiency
+- ✅ Set `reviewed_at` timestamp for audit trail
+- ✅ Log operation start and completion
+
+#### Files Modified:
+- ✅ `app/Console/Commands.php` - Added autoRejectExpiredPaymentReviews method
+- ✅ `routes/console.php` - Scheduled daily at 3 AM
+
+#### Benefits:
+- **Enforces 48-hour rule**: Automatic compliance with review deadlines
+- **Clean data**: No stuck pending reviews
+- **High performance**: Single SQL query for bulk updates
+- **Simple logging**: Minimal overhead with essential information
+- **Admin efficiency**: No manual cleanup needed
 
 ---
 
@@ -1033,12 +1085,14 @@ $statusCounts = $this->paymentService->getUserTransactionStatusCounts();
 14. ✅ **Step 5.4: Payment Cache Events System** - Fully implemented (event-driven cache invalidation)
 15. ✅ **Step 5.5: Pagination System Enhancement** - Fixed filter preservation across pagination
 16. ✅ **Step 5.1: Auto-Expire Offers Command** - Fully completed (scheduled command for offer expiration)
+17. ✅ **Step 5.2: Auto-Reject Expired Payment Reviews** - Fully completed (48-hour rule enforcement)
 17. ✅ **Step 3: Payment Cleanup System** - Fully completed (automated cleanup commands with configuration)
 
 ### **🔄 Next Steps:**
 1. **Step 5.1: Auto-Expire Offers Command** - ✅ COMPLETED (scheduled command for offer expiration)
-2. **Step 3: Payment Cleanup System** - ✅ COMPLETED (automated cleanup commands)
-3. **Step 4: Payment Review System** - 🚧 IN PROGRESS (review request functionality)
+2. **Step 5.2: Auto-Reject Expired Payment Reviews** - ✅ COMPLETED (48-hour rule enforcement)
+3. **Step 3: Payment Cleanup System** - ✅ COMPLETED (automated cleanup commands)
+4. **Step 4: Payment Review System** - 🚧 IN PROGRESS (review request functionality)
 
 ### **🎯 Current Status:**
 - **Core Payment System**: ✅ Production Ready

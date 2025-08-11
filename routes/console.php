@@ -27,6 +27,11 @@ Schedule::call(function () {
     app(\App\Console\Commands::class)->cleanupPaymentData();
 })->dailyAt('02:00');
 
+// Auto-reject expired payment reviews daily at 3 AM
+Schedule::call(function () {
+    app(\App\Console\Commands::class)->autoRejectExpiredPaymentReviews();
+})->dailyAt('03:00');
+
 // Archive old payment audit logs daily at 4 AM
 Schedule::call(function () {
     app(\App\Console\Commands::class)->archivePaymentAuditLogs();

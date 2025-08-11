@@ -3,13 +3,17 @@
 namespace App\Console;
 
 use Carbon\Carbon;
-use App\Models\Admin\AdminApproval;
+use App\Traits\RegisterLogs;
 use App\Models\Payment\CoinOffer;
-use App\Services\Payment\PaymentCleanupService;
+use App\Models\Admin\AdminApproval;
 use Illuminate\Support\Facades\Log;
+use App\Models\Payment\PaymentReviewRequest;
+use App\Services\Payment\PaymentCleanupService;
 
 class Commands
 {
+    use RegisterLogs;
+
     public function __construct(
         private PaymentCleanupService $paymentCleanupService
     ) {}
@@ -28,17 +32,17 @@ class Commands
         $count = $expiredApprovals->count();
         
         if ($count === 0) {
-            Log::info('No expired approvals found for cleanup');
+            $this->registerLogs('Commands::cleanupExpiredApprovals: No expired approvals found for cleanup', new \Exception('INFO'));
             return;
         }
         
         // Log what will be deleted
-        Log::info("Cleaning up {$count} expired approvals (all statuses) older than 24 hours");
+        $this->registerLogs('Commands::cleanupExpiredApprovals: Cleaning up ' . $count . ' expired approvals (all statuses) older than 24 hours', new \Exception('INFO'));
         
         // Delete all expired approvals (pending, approved, rejected)
         $deletedCount = $expiredApprovals->delete();
         
-        Log::info("Successfully cleaned up {$deletedCount} expired approvals - giving fresh opportunities");
+        $this->registerLogs('Commands::cleanupExpiredApprovals: Successfully cleaned up ' . $deletedCount . ' expired approvals - giving fresh opportunities', new \Exception('SUCCESS'));
     }
 
     /**
@@ -116,4 +120,25 @@ class Commands
         }
     }
 
+    /**
+     * Auto-reject payment reviews that have passed 48 hours
+     */
+    public function autoRejectExpiredPaymentReviews(): void
+    {
+        try {
+            Log::info([
+                'Commands::autoRejectExpiredPaymentReviews: Starting auto-reject of expired payment reviews'
+            ]);
+            
+            // Find pending reviews older than 48 hours
+            $expiredReviews = PaymentReviewRequest::where('status', 'pending')
+                ->where('created_at', '<', now()->subHours(48))
+                ->update(["status" => "rejected", "reviewed_at" => now()]);
+            
+            Log::info(['Commands::autoRejectExpiredPaymentReviews: Successfully auto-rejected ' . $expiredReviews]);
+            
+        } catch (\Exception $e) {
+            $this->registerLogs('Commands::autoRejectExpiredPaymentReviews: Auto-reject payment reviews failed', $e);
+        }
+    }
 } 

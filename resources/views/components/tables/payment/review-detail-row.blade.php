@@ -13,9 +13,25 @@
                 <span class="text-base font-medium">{{ __('payment.review.detail.status') }}:</span> 
                 {{ __('payment.review.status.' . $row->status) }}
             </p>
-            <p><span class="text-base font-medium">{{ __('payment.review.detail.request_reason') }}:</span> {{ $row->request_reason }}</p>
-            <p><span class="text-base font-medium">{{ __('payment.review.detail.reviewed_by') }}:</span> {{ $row->reviewer?->name ?? '—' }}</p>
-            <p><span class="text-base font-medium">{{ __('payment.review.detail.reviewed_at') }}:</span> {{ optional($row->reviewed_at)->format('Y-m-d H:i') ?? '—' }}</p>
+            <p>
+                <span class="text-base font-medium">{{ __('payment.review.detail.request_reason') }}:</span> 
+                {{ $row->request_reason }}
+            </p>
+            <p>
+                @php
+                    $name = $row->reviewer?->name;
+                @endphp
+                <span class="text-base font-medium">{{ __('payment.review.detail.reviewed_by') }}:</span> 
+                @if(!$name && $row->status === 'rejected')
+                    {{ __('payment.review.detail.auto_rejected') }}
+                @else
+                    {{ $name ?? '—' }}
+                @endif
+            </p>
+            <p>
+                <span class="text-base font-medium">{{ __('payment.review.detail.reviewed_at') }}:</span> 
+                {{ optional($row->reviewed_at)->format('Y-m-d H:i') ?? '—' }}
+            </p>
         </div>
         <div>
             <h4 class="text-lg mb-2">{{ __('payment.review.detail.observation') }}</h4>

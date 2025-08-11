@@ -134,9 +134,22 @@
                         <p><span class="font-medium">{{ __('payment.review.detail.request_reason') }}:</span> {{ $review->request_reason }}</p>
                     </div>
                     <div class="space-y-2">
-                        <p><span class="font-medium">{{ __('payment.review.detail.reviewed_by') }}:</span> {{ $review->reviewer?->name ?? '—' }}</p>
-                        <p><span class="font-medium">{{ __('payment.review.detail.reviewed_at') }}:</span> {{ $review->reviewed_at ? \App\Helpers\DateTimeHelper::toLocalString($review->reviewed_at) : '—' }}</p>
-                        <p><span class="font-medium">{{ __('payment.review.detail.observation') }}:</span> {{ $review->review_observation ?? __('payment.review.detail.no_observation') }}</p>
+                        <p>
+                            <span class="font-medium">{{ __('payment.review.detail.reviewed_by') }}:</span> 
+                            @if(!$review->reviewer?->name && $review->status === 'rejected')
+                                {{ __('payment.review.detail.auto_rejected') }}
+                            @else
+                                {{ $review->reviewer?->name ?? '—' }}
+                            @endif
+                        </p>
+                        <p>
+                            <span class="font-medium">{{ __('payment.review.detail.reviewed_at') }}:</span> 
+                            {{ $review->reviewed_at ? \App\Helpers\DateTimeHelper::toLocalString($review->reviewed_at) : '—' }}
+                        </p>
+                        <p>
+                            <span class="font-medium">{{ __('payment.review.detail.observation') }}:</span> 
+                            {{ $review->review_observation ?? __('payment.review.detail.no_observation') }}
+                        </p>
                     </div>
                 </div>
             </div>

@@ -155,6 +155,7 @@ return [
             'reviewed_at' => 'تاريخ المراجعة',
             'observation' => 'الملاحظة',
             'no_observation' => 'لا توجد ملاحظة',
+            'auto_rejected' => 'تم الرفض تلقائياً بعد 48 ساعة',
         ],
     ],
 
