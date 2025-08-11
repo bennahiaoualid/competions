@@ -28,15 +28,15 @@ class CollapsibleCard extends Component
             case 'info':
                 return 'bg-blue-500';
             case 'primary':
-                return 'bg-indigo-600';
+                return 'bg-primary';
             case 'danger':
-                return 'bg-red-600';
+                return 'bg-danger';
             case 'success':
-                return 'bg-green-500';
+                return 'bg-success';
             case 'warning':
-                return 'bg-yellow-500';
+                return 'bg-warning';
             default:
-                return 'bg-indigo-600';
+                return 'bg-primary';
         }
     }
 
@@ -46,15 +46,15 @@ class CollapsibleCard extends Component
             case 'info':
                 return 'border-blue-500';
             case 'primary':
-                return 'border-indigo-600';
+                return 'border-primary';
             case 'danger':
-                return 'border-red-600';
+                return 'border-danger';
             case 'success':
-                return 'border-green-500';
+                return 'border-success';
             case 'warning':
-                return 'border-yellow-500';
+                return 'border-warning';
             default:
-                return 'border-indigo-600';
+                return 'border-primary';
         }
     }
 

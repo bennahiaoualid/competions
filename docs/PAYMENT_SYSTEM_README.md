@@ -751,6 +751,50 @@ php artisan payment:expire-offers --dry-run
 - ✅ **Status Filtering**: Filter by payment status
 - ✅ **PowerGrid Integration**: Uses TailwindStriped theme
 
+### **User Transaction Cards with Server-Side Filtering**
+**Status**: ✅ COMPLETED
+
+#### Components Updated:
+- ✅ `resources/views/pages/payment/transactions.blade.php` - Converted to card-based layout with server-side filtering
+- ✅ `app/Services/Payment/PaymentService.php` - Enhanced with filtering methods
+- ✅ `app/Http/Controllers/Payment/PaymentTransactionController.php` - Updated to use service layer
+
+#### Features Implemented:
+- ✅ **Card-Based Layout**: Replaced PowerGrid table with responsive collapsible cards
+- ✅ **Server-Side Filtering**: Search and status filters processed on server for better performance
+- ✅ **Form-Based Filters**: GET form submission maintains filter state in URL
+- ✅ **Mobile-First Design**: Collapsible filter container with mobile toggle
+- ✅ **Filter Persistence**: Filter state maintained across pagination
+- ✅ **Clean Architecture**: Controller delegates filtering to PaymentService
+- ✅ **Pagination Support**: Laravel pagination with filter state preservation
+- ✅ **Responsive Stats**: Real-time status counts from database
+
+#### Filter Implementation:
+```php
+// PaymentService methods
+public function getTransactionsForUser(array $filters = [], int $perPage = 10)
+public function getUserTransactionStatusCounts(): array
+
+// Controller usage
+$filters = ['search' => $request->get('search'), 'status' => $request->get('status')];
+$transactions = $this->paymentService->getTransactionsForUser($filters, 10);
+$statusCounts = $this->paymentService->getUserTransactionStatusCounts();
+```
+
+#### Filter Features:
+- **Search Filter**: Searches across UUID, amount, and coins_credited fields
+- **Status Filter**: Filter by pending, approved, rejected, or cancelled status
+- **URL State**: Filter parameters preserved in URL for sharing/bookmarking
+- **Mobile Optimization**: Filters collapse on mobile with toggle button
+- **Real-Time Updates**: Stats cards show accurate counts regardless of filters
+
+#### Architecture Benefits:
+- ✅ **Separation of Concerns**: Business logic in service, HTTP logic in controller
+- ✅ **Reusability**: Service methods can be used by other parts of application
+- ✅ **Testability**: Service methods can be unit tested independently
+- ✅ **Performance**: Server-side filtering handles large datasets efficiently
+- ✅ **Scalability**: Easy to add new filters without changing architecture
+
 ### **Transaction Detail Access**
 **Status**: ✅ COMPLETED
 
@@ -882,15 +926,16 @@ php artisan payment:expire-offers --dry-run
 2. ✅ **Step 2: Payment Database Schema** - Fully implemented with UUID support
 3. ✅ **Dedicated Payment Layout System** - Complete layout with navigation
 4. ✅ **User-Specific Payment Table** - PowerGrid table for user transactions
-5. ✅ **Modern Payment Form** - Alpine.js integration with form components
-6. ✅ **Form Requests** - Clean validation with proper separation
-7. ✅ **Controllers & Routes** - Web-based responses with role protection
-8. ✅ **Testing Infrastructure** - Factories and seeders with cleanup
-9. ✅ **Translation System** - Complete English and Arabic support
-10. ✅ **Step 5: Dynamic Coin Pricing System** - Fully completed (pricing + offers management with detail rows)
-11. ✅ **Step 5.2: Enhanced Coin Pricing System with Names and "Both" User Type** - Fully completed (name fields, display names, 'both' user type, consistent UI pattern)
-12. ✅ **Step 5.3: Enhanced Image Processing System with Security** - Fully completed (secure image processing, configuration system, memory management)
-13. 📋 **Step 5.1: Auto-Expire Offers Command** - Planned (scheduled command for offer expiration)
+5. ✅ **User Transaction Cards with Server-Side Filtering** - Card-based layout with server-side filtering
+6. ✅ **Modern Payment Form** - Alpine.js integration with form components
+7. ✅ **Form Requests** - Clean validation with proper separation
+8. ✅ **Controllers & Routes** - Web-based responses with role protection
+9. ✅ **Testing Infrastructure** - Factories and seeders with cleanup
+10. ✅ **Translation System** - Complete English and Arabic support
+11. ✅ **Step 5: Dynamic Coin Pricing System** - Fully completed (pricing + offers management with detail rows)
+12. ✅ **Step 5.2: Enhanced Coin Pricing System with Names and "Both" User Type** - Fully completed (name fields, display names, 'both' user type, consistent UI pattern)
+13. ✅ **Step 5.3: Enhanced Image Processing System with Security** - Fully completed (secure image processing, configuration system, memory management)
+14. 📋 **Step 5.1: Auto-Expire Offers Command** - Planned (scheduled command for offer expiration)
 
 ### **🔄 Next Steps:**
 1. **Step 5.1: Auto-Expire Offers Command** - Scheduled command to automatically expire offers

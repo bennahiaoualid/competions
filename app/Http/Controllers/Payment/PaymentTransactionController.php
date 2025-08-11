@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
+use App\Enums\PaymentStatusEnum;
 
 class PaymentTransactionController extends Controller
 {
@@ -25,9 +26,21 @@ class PaymentTransactionController extends Controller
     /**
      * Display payment transactions for the authenticated user
      */
-    public function index(): View
+    public function index(Request $request): View
     {
-        return view('pages.payment.transactions');
+        // Get filters from request
+        $filters = [
+            'search' => $request->get('search'),
+            'status' => $request->get('status'),
+        ];
+        
+        // Get filtered transactions from service
+        $transactions = $this->paymentService->getTransactionsForUser($filters, 10);
+        
+        // Get status counts from service
+        $statusCounts = $this->paymentService->getUserTransactionStatusCounts();
+
+        return view('pages.payment.transactions', compact('transactions', 'statusCounts'));
     }
 
     /**

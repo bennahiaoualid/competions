@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\Payment\PaymentTransaction;
 use App\Services\Payment\CoinPricingService;
 use App\Contracts\TransactionManagerInterface;
+use App\Helpers\PaginationHelper;
 
 class PaymentService
 {
@@ -25,6 +26,58 @@ class PaymentService
         protected FlasherInterface $flasher,
         protected CoinPricingService $coinPricingService
     ) {}
+
+    public function getTransactionsForUser(array $filters = [], int $perPage = 10)
+    {
+        $user = Auth::user();
+        
+        $query = PaymentTransaction::query()
+            ->where('payable_id', $user->id)
+            ->where('payable_type', get_class($user));
+        
+        // Apply search filter
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function($q) use ($search) {
+                $q->where('uuid', 'like', "%{$search}%")
+                  ->orWhere('amount', 'like', "%{$search}%")
+                  ->orWhere('coins_credited', 'like', "%{$search}%");
+            });
+        }
+        
+        // Apply status filter
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+        
+        // Order and paginate
+        return $query->orderBy('created_at', 'desc')->paginate($perPage);
+    }
+
+    /**
+     * Get status counts for user transactions
+     */
+    public function getUserTransactionStatusCounts(): array
+    {
+        $user = Auth::user();
+        
+        $statusCounts = PaymentTransaction::where('payable_id', $user->id)
+            ->where('payable_type', get_class($user))
+            ->selectRaw('status, count(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
+        
+        // Ensure all statuses are represented
+        $allStatuses = ['pending', 'approved', 'rejected', 'cancelled'];
+        foreach ($allStatuses as $status) {
+            if (!isset($statusCounts[$status])) {
+                $statusCounts[$status] = 0;
+            }
+        }
+        
+        return $statusCounts;
+    }
 
     /**
      * Create a new payment transaction

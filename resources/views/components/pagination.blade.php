@@ -4,18 +4,20 @@
     {{-- Laravel Pagination --}}
     {{ $paginator->appends(['perPage' => request('perPage', $defaultPerPage)])->links() }}
 
-    {{-- Per Page Dropdown --}}
-    <form method="GET">
-        <x-form.select-box 
-            name="perPage" 
-            onchange="this.form.submit()" 
-            :options="collect($perPageOptions)->map(function($value) use ($defaultPerPage) {
-                return [
-                    'value' => $value,
-                    'text' => __('pagination.show') . ' ' . $value,
-                    'selected' => request('perPage', $defaultPerPage) == $value
-                ];
-            })->toArray()"
-        />
-    </form>
+    @if($paginator->hasPages())
+        {{-- Per Page Dropdown --}}
+        <form method="GET">
+            <x-form.select-box 
+                name="perPage" 
+                onchange="this.form.submit()" 
+                :options="collect($perPageOptions)->map(function($value) use ($defaultPerPage) {
+                    return [
+                        'value' => $value,
+                        'text' => __('pagination.show') . ' ' . $value,
+                        'selected' => request('perPage', $defaultPerPage) == $value
+                    ];
+                })->toArray()"
+            />
+        </form>
+    @endif
 </div> 

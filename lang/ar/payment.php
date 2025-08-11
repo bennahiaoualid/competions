@@ -103,6 +103,7 @@ return [
             'created_at' => 'تاريخ الإنشاء',
             'actions' => 'الإجراءات',
             'proof_image' => 'إثبات الدفع',
+            'view_details' => 'عرض التفاصيل',
         ],
         'actions' => [
             'approve' => 'الموافقة على الدفع',
@@ -253,6 +254,26 @@ return [
     'created_at' => 'تاريخ الإنشاء',
     'actions' => 'الإجراءات',
     'coins' => 'العملات',
+    
+    // Filters
+    'filters' => [
+        'title' => 'فلترة',
+        'show_filters' => 'إظهار المرشحات',
+        'search' => 'البحث',
+        'search_placeholder' => 'البحث برقم المعاملة، المبلغ...',
+        'status' => 'الحالة',
+        'all_statuses' => 'جميع الحالات',
+        'apply' => 'تطبيق الفلترة',
+        'clear' => 'مسح الفلترة',
+    ],
+    
+    // No transactions state
+    'no_transactions' => [
+        'title' => 'لا توجد معاملات بعد',
+        'description' => 'لم تقم بأي معاملات دفع بعد. ابدأ بشراء بعض العملات.',
+    ],
+    
+    'create_first_transaction' => 'اشترِ أول عملاتك',
     
     // Success messages
     'approved_successfully' => 'تمت الموافقة على الدفع بنجاح',

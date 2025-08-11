@@ -103,6 +103,7 @@ return [
             'created_at' => 'Created At',
             'actions' => 'Actions',
             'proof_image' => 'Proof Image',
+            'view_details' => 'View Details',
         ],
     ],
 
@@ -254,6 +255,26 @@ return [
     'created_at' => 'Created At',
     'actions' => 'Actions',
     'coins' => 'Coins',
+    
+    // Filters
+    'filters' => [
+        'title' => 'Filters',
+        'show_filters' => 'Show Filters',
+        'search' => 'Search',
+        'search_placeholder' => 'Search by transaction ID, amount...',
+        'status' => 'Status',
+        'all_statuses' => 'All Statuses',
+        'apply' => 'Apply Filters',
+        'clear' => 'Clear Filters',
+    ],
+    
+    // No transactions state
+    'no_transactions' => [
+        'title' => 'No Transactions Yet',
+        'description' => 'You haven\'t made any payment transactions yet. Start by purchasing some coins.',
+    ],
+    
+    'create_first_transaction' => 'Buy Your First Coins',
     
     // Success messages
     'approved_successfully' => 'Payment approved successfully',
