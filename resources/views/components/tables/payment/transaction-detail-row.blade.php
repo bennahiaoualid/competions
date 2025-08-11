@@ -46,6 +46,17 @@
                         class="max-w-full max-h-48 object-contain rounded-lg shadow-sm border border-gray-200">
                 </div>
             </div>
+        @else
+            <div class="bg-white p-3 rounded-lg shadow-sm md:col-span-2 lg:col-span-3">
+                <h4 class="text-sm font-semibold text-gray-700 mb-2">{{ __('payment.payment_transaction.fields.proof_image') }}</h4>
+                <div class="flex items-center justify-center p-4 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300">
+                    <div class="text-center">
+                        <i class="fas fa-image text-gray-400 text-2xl mb-2"></i>
+                        <p class="text-sm text-gray-600 font-medium">{{ __('payment.payment_transaction.proof_image_removed.title') }}</p>
+                        <p class="text-xs text-gray-500 mt-1">{{ __('payment.payment_transaction.proof_image_removed.description') }}</p>
+                    </div>
+                </div>
+            </div>
         @endif
     </div>
 </div> 

@@ -105,6 +105,10 @@ return [
             'proof_image' => 'إثبات الدفع',
             'view_details' => 'عرض التفاصيل',
         ],
+        'proof_image_removed' => [
+            'title' => 'تم إزالة إثبات الدفع',
+            'description' => 'تم إزالة هذه الصورة تلقائياً أثناء تنظيف النظام',
+        ],
         'actions' => [
             'approve' => 'الموافقة على الدفع',
             'reject' => 'رفض الدفع',

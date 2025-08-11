@@ -14,3 +14,21 @@ Schedule::command('app:update-user-leaderboard-results')->everyMinute();
 Schedule::call(function () {
     app(\App\Console\Commands::class)->cleanupExpiredApprovals();
 })->everySixHours();
+
+// 🆕 Payment System Scheduled Commands
+
+// Auto-expire coin offers daily at 1 AM
+Schedule::call(function () {
+    app(\App\Console\Commands::class)->expireCoinOffers();
+})->dailyAt('01:00');
+
+// Clean up expired payment data and proof images daily at 2 AM
+Schedule::call(function () {
+    app(\App\Console\Commands::class)->cleanupPaymentData();
+})->dailyAt('02:00');
+
+// Archive old payment audit logs daily at 4 AM
+Schedule::call(function () {
+    app(\App\Console\Commands::class)->archivePaymentAuditLogs();
+})->dailyAt('04:00');
+

@@ -44,7 +44,11 @@ final class PaymentTransactionTable extends PowerGridComponent
 
     public function relationSearch(): array
     {
-        return [];
+        return [
+            'payable' => [
+                'name',
+            ],
+        ];
     }
 
     public function fields(): PowerGridFields
@@ -96,18 +100,13 @@ final class PaymentTransactionTable extends PowerGridComponent
     {
         return [
             Column::make(__('payment.payment_transaction.fields.transaction_id'), 'uuid')
-                ->sortable()
                 ->searchable(),
 
-            Column::make(__('payment.payment_transaction.fields.payer'), 'payer_name', 'payable.name')
-                ->sortable()
-                ->searchable(),
+            Column::make(__('payment.payment_transaction.fields.payer'), 'payer_name', 'payable.name'),
 
-            Column::make(__('payment.payment_transaction.fields.amount'), 'amount_formatted', 'amount')
-                ->sortable(),
+            Column::make(__('payment.payment_transaction.fields.amount'), 'amount_formatted', 'amount'),
 
-            Column::make(__('payment.payment_transaction.fields.status'), 'status')
-                ->sortable(),
+            Column::make(__('payment.payment_transaction.fields.status'), 'status'),
 
             Column::make(__('payment.payment_transaction.fields.created_at'), 'created_at_formatted', 'created_at')
                 ->sortable(),

@@ -98,13 +98,17 @@ return [
             'status' => 'Status',
             'approver' => 'Auditor',
             'approved_at' => 'Action Date',
-            'observation' => 'Observation',
-            'accountant_observation' => 'Auditor Observation',
-            'created_at' => 'Created At',
-            'actions' => 'Actions',
             'proof_image' => 'Proof Image',
-            'view_details' => 'View Details',
         ],
+        'proof_image_removed' => [
+            'title' => 'Proof Image Removed',
+            'description' => 'This image has been automatically removed during system cleanup',
+        ],
+        'observation' => 'Observation',
+        'accountant_observation' => 'Auditor Observation',
+        'created_at' => 'Created At',
+        'actions' => 'Actions',
+        'view_details' => 'View Details',
     ],
 
     // Coin Offers translations
