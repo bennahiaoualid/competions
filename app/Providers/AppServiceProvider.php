@@ -159,6 +159,13 @@ class AppServiceProvider extends ServiceProvider
             }
             return new DatabaseJobTrackingStrategy();
         });
+
+        // payment cache management
+        $this->app->bind(\App\Services\CashManagment\PaymentCacheManagement::class, function ($app) {
+            return new \App\Services\CashManagment\PaymentCacheManagement(
+                $app->make(\App\Services\Payment\PaymentService::class)
+            );
+        });
     }
 
     /**

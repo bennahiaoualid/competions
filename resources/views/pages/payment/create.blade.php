@@ -37,10 +37,10 @@
                 <x-selected-card-hover name="coin_pricing_id" :value="old('coin_pricing_id')" model="selectedCoinPricingId">
                     @foreach($coinPricing as $pricing)
                         <div class="relative">
-                            @if($pricing->activeOffer->count() > 0)
-                                @php
-                                    $offer = $pricing->activeOffer->first();
-                                @endphp
+                            @php
+                                $offer = $pricing->activeOffer->first();
+                            @endphp
+                            @if($offer && $offer->isCurrentlyValid())
                                 <!-- Discount Ribbon -->
                                 <div class="absolute top-[2%] -start-2 bg-primary text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg transform rotate-45 z-10">
                                     + {{ $offer->discount_percentage }}%
@@ -55,7 +55,7 @@
                                     <h3 class="md:text-xl text-center font-bold text-primary">{{ $pricing->display_name }}</h3>
                                     <span class="block text-sm md:text-base font-medium text-gray-900">{{ number_format($pricing->base_amount, 2) }} DZD</span>
                                     <span class="mt-1 flex items-center text-sm md:text-base text-gray-500">{{ __('payment.get_coins', ['coins' => $pricing->base_coins]) }}</span>
-                                    @if($offer)
+                                    @if($offer && $offer->isCurrentlyValid())
                                         <span class="mt-1 flex items-center text-sm md:text-base text-primary">
                                             {{ __('payment.extra_coins') .' : ' . $offer->calculateExtraCoins($pricing->base_coins) }} 
                                             <i class="fa-solid fa-coins ms-2 text-yellow-500"></i>

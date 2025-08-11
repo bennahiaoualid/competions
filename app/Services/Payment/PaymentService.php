@@ -16,6 +16,7 @@ use App\Models\Payment\PaymentTransaction;
 use App\Services\Payment\CoinPricingService;
 use App\Contracts\TransactionManagerInterface;
 use App\Helpers\PaginationHelper;
+use App\Events\Payment\PaymentCacheInvalidationEvent;
 
 class PaymentService
 {
@@ -27,7 +28,7 @@ class PaymentService
         protected CoinPricingService $coinPricingService
     ) {}
 
-    public function getTransactionsForUser(array $filters = [], int $perPage = 10)
+    public function getTransactionsForUser(array $filters = [], $page = 1, int $perPage = 5)
     {
         $user = Auth::user();
         
@@ -51,7 +52,8 @@ class PaymentService
         }
         
         // Order and paginate
-        return $query->orderBy('created_at', 'desc')->paginate($perPage);
+        return $query->orderBy('created_at', 'desc')
+                ->paginate($perPage, page: $page);
     }
 
     /**
@@ -90,6 +92,9 @@ class PaymentService
             // Log the creation
             $this->logPaymentAction($payment, 'created', null, $data);
             
+            // Fire cache invalidation event
+            $this->fireCacheInvalidationEvent($payment);
+            
             return $payment;
         });
     }
@@ -117,6 +122,9 @@ class PaymentService
                 
                 // Log the approval
                 $this->logPaymentAction($payment, 'approved', $oldValues, $payment->toArray(), $adminId);
+                
+                // Fire cache invalidation event
+                $this->fireCacheInvalidationEvent($payment);
                 
                 $this->flasher->crudSuccess('payment.approved');
                 return true;
@@ -149,6 +157,10 @@ class PaymentService
                 
                 // Log the rejection
                 $this->logPaymentAction($payment, 'rejected', $oldValues, $payment->toArray(), $adminId);
+                
+                // Fire cache invalidation event
+                $this->fireCacheInvalidationEvent($payment);
+                
                 $this->flasher->crudSuccess('payment.rejected');
                 return true;
             });
@@ -179,6 +191,10 @@ class PaymentService
                 
                 // Log the cancellation
                 $this->logPaymentAction($payment, 'cancelled', $oldValues, $payment->toArray(), $adminId);
+                
+                // Fire cache invalidation event
+                $this->fireCacheInvalidationEvent($payment);
+                
                 $this->flasher->crudSuccess('payment.cancelled');
                 return true;
             });
@@ -225,6 +241,17 @@ class PaymentService
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent()
         ]);
+    }
+
+    /**
+     * Fire cache invalidation event for a payment
+     */
+    private function fireCacheInvalidationEvent(PaymentTransaction $payment, string $eventType = 'invalidateAllUserPaymentCaches'): void
+    {
+        PaymentCacheInvalidationEvent::dispatch(
+            $eventType,
+            ['userId' => $payment->payable_id]
+        );
     }
 
     /**

@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers\Payment;
 
-use App\Http\Controllers\Controller;
-use App\Models\Payment\PaymentTransaction;
-use App\Services\Payment\PaymentService;
-use App\Services\Payment\PaymentReviewService;
-use App\Contracts\FlasherInterface;
-use App\Http\Requests\Payment\StorePaymentTransactionRequest;
-use App\Http\Requests\Payment\OrderReviewRequest;
-use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use App\Enums\PaymentStatusEnum;
+use App\Helpers\PaginationHelper;
+use App\Contracts\FlasherInterface;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\RedirectResponse;
+use App\Services\Payment\PaymentService;
+use App\Models\Payment\PaymentTransaction;
+use App\Services\Payment\PaymentReviewService;
+use App\Http\Requests\Payment\OrderReviewRequest;
+use App\Services\CashManagment\PaymentCacheManagement;
+use App\Http\Requests\Payment\StorePaymentTransactionRequest;
 
 class PaymentTransactionController extends Controller
 {
@@ -21,6 +23,7 @@ class PaymentTransactionController extends Controller
         protected PaymentService $paymentService,
         protected FlasherInterface $flasher,
         protected PaymentReviewService $paymentReviewService,
+        protected PaymentCacheManagement $paymentCacheManagement
     ) {}
 
     /**
@@ -28,17 +31,22 @@ class PaymentTransactionController extends Controller
      */
     public function index(Request $request): View
     {
+        $user = Auth::user();
         // Get filters from request
         $filters = [
             'search' => $request->get('search'),
             'status' => $request->get('status'),
         ];
+
+        // Get page from request
+        $page = $request->get('page', 1);
+        $perPage = PaginationHelper::perPage(10);
         
         // Get filtered transactions from service
-        $transactions = $this->paymentService->getTransactionsForUser($filters, 10);
+        $transactions = $this->paymentCacheManagement->getUserTransactions($user->id, $filters, $page, $perPage);
         
         // Get status counts from service
-        $statusCounts = $this->paymentService->getUserTransactionStatusCounts();
+        $statusCounts = $this->paymentCacheManagement->getUserTransactionStatusCounts($user->id);
 
         return view('pages.payment.transactions', compact('transactions', 'statusCounts'));
     }

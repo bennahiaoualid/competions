@@ -2,11 +2,16 @@
 
 <div class="flex justify-end items-center gap-4 mt-4 flex-wrap">
     {{-- Laravel Pagination --}}
-    {{ $paginator->appends(['perPage' => request('perPage', $defaultPerPage)])->links() }}
+    {{ $paginator->appends(request()->query())->links() }}
 
     @if($paginator->hasPages())
         {{-- Per Page Dropdown --}}
         <form method="GET">
+            @foreach(request()->query() as $key => $value)
+                @if($key !== 'perPage')
+                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                @endif
+            @endforeach
             <x-form.select-box 
                 name="perPage" 
                 onchange="this.form.submit()" 

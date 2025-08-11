@@ -17,7 +17,7 @@
 
 @endphp
 
-<div class="relative flex cursor-pointer rounded-lg border border-gray-300 bg-white p-4 shadow-sm focus:outline-none hover:border-blue-500 transition-all duration-200"
+<div class="relative flex h-full cursor-pointer rounded-lg border border-gray-300 bg-white p-4 shadow-sm focus:outline-none hover:border-blue-500 transition-all duration-200"
      :class="{ '{{ $borderClasses }}': {{ $model }} === '{{ $value }}' }"
      @click="{{ $model }} = '{{ $value }}'">
     

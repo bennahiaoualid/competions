@@ -628,6 +628,94 @@ public/
 
 ---
 
+### **Step 5.4: Payment Cache Events System**
+**Status**: ✅ COMPLETED
+**Priority**: Medium
+**Estimated Time**: 1 day
+
+#### Tasks:
+- ✅ Create PaymentCacheInvalidationEvent class
+- ✅ Implement InvalidatePaymentCacheListener
+- ✅ Register event listener in AppServiceProvider
+- ✅ Update PaymentService to fire events automatically
+- ✅ Create helper method for consistent event firing
+- ✅ Document system usage and scalability
+
+#### System Architecture:
+1. **PaymentService** automatically fires events on payment operations
+2. **PaymentCacheInvalidationEvent** carries invalidation type and parameters
+3. **InvalidatePaymentCacheListener** processes events and calls cache methods
+4. **PaymentCacheManagement** handles actual cache invalidation
+
+#### Event Types Implemented:
+- **`invalidateAllUserPaymentCaches`**: Fired on payment create/approve/reject/cancel
+- **`invalidateGetUserTransactions`**: Fired on transaction data changes
+- **`invalidatePaymentStats`**: Fired on global payment statistics changes
+- **`invalidateGlobalPaymentCaches`**: Fired on system-wide payment changes
+
+#### Automatic Event Firing:
+- ✅ `createPayment()` - Fires `invalidateAllUserPaymentCaches`
+- ✅ `approvePayment()` - Fires `invalidateAllUserPaymentCaches`
+- ✅ `rejectPayment()` - Fires `invalidateAllUserPaymentCaches`
+- ✅ `cancelPayment()` - Fires `invalidateAllUserPaymentCaches`
+
+#### Files Created/Modified:
+- ✅ `app/Events/Payment/PaymentCacheInvalidationEvent.php` - Event class with type and parameters
+- ✅ `app/Listeners/Payment/InvalidatePaymentCacheListener.php` - Event listener with switch-based handling
+- ✅ `app/Providers/AppServiceProvider.php` - Event listener registration and service binding
+- ✅ `app/Services/Payment/PaymentService.php` - Added event firing and helper method
+- ✅ `docs/PAYMENT_CACHE_EVENTS_README.md` - Comprehensive usage documentation
+
+#### Benefits:
+- **Automatic**: No need to manually invalidate caches
+- **Scalable**: Easy to add new cache invalidation types
+- **Consistent**: All payment operations follow the same pattern
+- **Maintainable**: Centralized cache invalidation logic
+- **Queued**: Events processed asynchronously for better performance
+- **Comprehensive Logging**: All operations logged for monitoring
+
+#### Scalability Features:
+- **Easy to Add New Types**: Just add new cases in the listener switch statement
+- **Flexible Parameters**: Events can carry any data needed for cache invalidation
+- **Centralized Logic**: All cache invalidation happens in one place
+- **Queued Processing**: Events processed asynchronously for better performance
+- **Comprehensive Logging**: All operations logged for monitoring
+
+---
+
+### **Step 5.5: Pagination System Enhancement**
+**Status**: ✅ COMPLETED
+**Priority**: Low
+**Estimated Time**: 0.5 day
+
+#### Tasks:
+- ✅ Fix pagination component to preserve filter parameters
+- ✅ Update pagination to maintain search and status filters across pages
+- ✅ Ensure filter state persistence in URL parameters
+- ✅ Test pagination with various filter combinations
+
+#### Problem Solved:
+- **Before**: Pagination lost filter parameters (search, status) when navigating pages
+- **After**: Pagination maintains all filter parameters across page navigation
+
+#### Technical Implementation:
+- **Event Registration**: Added event listener registration in AppServiceProvider
+- **Service Binding**: Bound PaymentCacheManagement service in service provider
+- **Pagination Component**: Updated to preserve all query parameters
+- **Filter Persistence**: Added hidden inputs to maintain filter state
+
+#### Files Modified:
+- ✅ `resources/views/components/pagination.blade.php` - Updated to preserve query parameters
+- ✅ `app/Providers/AppServiceProvider.php` - Added event listener and service binding
+
+#### Benefits:
+- **User Experience**: Filters persist across pagination navigation
+- **URL State**: Filter parameters maintained in URL for sharing/bookmarking
+- **Consistency**: All filter combinations work correctly with pagination
+- **Performance**: Server-side filtering maintained across all pages
+
+---
+
 ### Step 5.1: Auto-Expire Offers Command
 **Status**: Planned
 **Priority**: Medium
@@ -935,7 +1023,9 @@ $statusCounts = $this->paymentService->getUserTransactionStatusCounts();
 11. ✅ **Step 5: Dynamic Coin Pricing System** - Fully completed (pricing + offers management with detail rows)
 12. ✅ **Step 5.2: Enhanced Coin Pricing System with Names and "Both" User Type** - Fully completed (name fields, display names, 'both' user type, consistent UI pattern)
 13. ✅ **Step 5.3: Enhanced Image Processing System with Security** - Fully completed (secure image processing, configuration system, memory management)
-14. 📋 **Step 5.1: Auto-Expire Offers Command** - Planned (scheduled command for offer expiration)
+14. ✅ **Step 5.4: Payment Cache Events System** - Fully implemented (event-driven cache invalidation)
+15. ✅ **Step 5.5: Pagination System Enhancement** - Fixed filter preservation across pagination
+16. 📋 **Step 5.1: Auto-Expire Offers Command** - Planned (scheduled command for offer expiration)
 
 ### **🔄 Next Steps:**
 1. **Step 5.1: Auto-Expire Offers Command** - Scheduled command to automatically expire offers
@@ -952,6 +1042,8 @@ $statusCounts = $this->paymentService->getUserTransactionStatusCounts();
 - **Enhanced Pricing System**: ✅ Fully complete (names, display names, 'both' user type, consistent UI pattern)
 - **Enhanced Image Processing**: ✅ Fully complete (secure processing, configuration system, memory management)
 - **UI Pattern Consistency**: ✅ All PowerGrid tables follow same detail row pattern
+- **Payment Cache Events System**: ✅ Fully implemented (event-driven cache invalidation)
+- **Pagination System**: ✅ Fixed filter preservation across pagination
 - **Auto-Expire System**: 📋 Planned (Step 5.1)
 - **Security Features**: ✅ Implemented (including secure image storage)
 - **Testing Infrastructure**: ✅ Comprehensive
@@ -971,45 +1063,36 @@ $statusCounts = $this->paymentService->getUserTransactionStatusCounts();
 
 ### **Current Commit Message:**
 
-#### **Latest Commit: Payment review system (service, UI, routes), order review in detail page, sidebar link, translations; README update**
+#### **Latest Commit: Payment cache events system and pagination enhancement**
 ```
-feat(payment-review): implement review requests (service, UI, routes) and admin management
+feat(payment-cache): implement event-driven cache invalidation system and fix pagination
 
-- db: add payment_review_requests table migration
-- model: create PaymentReviewRequest with relations and scopes
-- service: PaymentReviewService (request, approve, reject) using transactions + flasher
-- user: add orderReview in PaymentTransactionController (transaction_id + reason; ownership + status checks)
-- admin: add ReviewManagementController (index, approve, reject)
-- requests: add OrderReviewRequest, ApproveReviewRequest, RejectReviewRequest
-- routes: POST /payment/reviews/order (web); admin reviews routes (index/approve/reject)
-- ui(admin): PaymentReviewRequestTable (PowerGrid) with detail rows and approve/reject actions
-- ui(admin): reviews page with modals
-- ui(user): show.blade.php – order review button + modal; review info block if exists
-- nav: add “Reviews” link under Payment in admin sidebar
-- i18n: add review translations (en/ar), sidebar link labels; add messages.already_exists
-- docs: update README Step 4 to In Progress with implemented items and rules
+- events: create PaymentCacheInvalidationEvent with type and parameters
+- listener: implement InvalidatePaymentCacheListener with switch-based handling
+- provider: register event listener and bind PaymentCacheManagement in AppServiceProvider
+- service: update PaymentService to fire cache invalidation events automatically
+- helper: add fireCacheInvalidationEvent method for consistent event firing
+- pagination: fix filter parameter preservation across pagination navigation
+- component: update pagination component to maintain query parameters
+- docs: create comprehensive PAYMENT_CACHE_EVENTS_README.md with usage examples
+- docs: update PAYMENT_SYSTEM_README.md with new completed steps
 
 Files modified/added:
-- database/migrations/2025_01_01_000001_create_payment_review_requests_table.php
-- app/Models/Payment/PaymentReviewRequest.php
-- app/Services/Payment/PaymentReviewService.php
-- app/Http/Controllers/Payment/PaymentTransactionController.php
-- app/Http/Controllers/Payment/Admin/ReviewManagementController.php
-- app/Http/Requests/Payment/OrderReviewRequest.php
-- app/Http/Requests/Payment/ApproveReviewRequest.php
-- app/Http/Requests/Payment/RejectReviewRequest.php
-- app/Livewire/PaymentReviewRequestTable.php
-- resources/views/components/tables/payment/review-detail-row.blade.php
-- resources/views/pages/admin/payment/reviews.blade.php
-- resources/views/pages/payment/show.blade.php
-- resources/views/layouts/admin/sidebar.blade.php
-- routes/web.php
-- routes/admin.php
-- lang/en/payment.php
-- lang/ar/payment.php
-- lang/en/links.php
-- lang/ar/links.php
+- app/Events/Payment/PaymentCacheInvalidationEvent.php
+- app/Listeners/Payment/InvalidatePaymentCacheListener.php
+- app/Providers/AppServiceProvider.php
+- app/Services/Payment/PaymentService.php
+- resources/views/components/pagination.blade.php
+- docs/PAYMENT_CACHE_EVENTS_README.md
 - docs/PAYMENT_SYSTEM_README.md
+
+Features:
+- Automatic cache invalidation on payment operations (create/approve/reject/cancel)
+- Scalable event system with easy addition of new invalidation types
+- Queued event processing for better performance
+- Comprehensive logging and monitoring
+- Fixed pagination to preserve search and status filters
+- Event-driven architecture for maintainable cache management
 ```
 
 ### **Commit Message Generation Rules:**

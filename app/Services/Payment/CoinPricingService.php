@@ -27,8 +27,8 @@ class CoinPricingService
     {
         try {
             $coins = $coinPricing->base_coins;
-            if($coinPricing->activeOffer){
-                $offer = $coinPricing->activeOffer->first();
+            $offer = $coinPricing->activeOffer->first();
+            if($offer && $offer->isCurrentlyValid()){
                 $coins = $offer->calculateTotalCoins($coins);
             }
             return $coins;
