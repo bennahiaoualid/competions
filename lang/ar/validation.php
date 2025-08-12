@@ -16,8 +16,8 @@ return [
     'accepted' => 'The :attribute must be accepted.',
     'accepted_if' => 'The :attribute must be accepted when :other is :value.',
     'active_url' => 'The :attribute is not a valid URL.',
-    'after' => 'The :attribute must be a date after :date.',
-    'after_or_equal' => 'The :attribute must be a date after or equal to :date.',
+    'after' => ':attribute يجب ان يكون بعد :date.',
+    'after_or_equal' => ':attribute يجب ان يكون بعد او يساوي :date.',
     'alpha' => 'The :attribute must only contain letters.',
     'alpha_dash' => 'The :attribute must only contain letters, numbers, dashes and underscores.',
     'alpha_num' => 'The :attribute must only contain letters and numbers.',
@@ -61,7 +61,7 @@ return [
         'numeric' => ':attribute يجب ان يكون اكبر او يساوي من :value.',
         'string' => 'The :attribute must be greater than or equal to :value characters.',
     ],
-    'image' => 'The :attribute must be an image.',
+    'image' => ':attribute يجب ان يكون صورة.',
     'in' => ':attribute المختار غير صحيح',
     'in_array' => 'The :attribute field does not exist in :other.',
     'integer' => ' :attribute يجب ان بكون صحيح',
@@ -88,7 +88,7 @@ return [
         'numeric' => ':attribute يجب ان لا يكون اكبر من  :max',
         'string' => ':attribute يجب ان لا يحتوي على اكثر من  :max احرف',
     ],
-    'mimes' => 'The :attribute must be a file of type: :values.',
+    'mimes' => ':attribute يجب ان يكون من نوع :values.',
     'mimetypes' => 'The :attribute must be a file of type: :values.',
     'min' => [
         'array' => ':attribute يجب ان يحتوي على الاقل على :min عناصر.',
@@ -154,6 +154,7 @@ return [
         'age_minmax_validation' => ':attribute يجب ان يكون اكبر او يساوي :other.',
         'start_date' => [
             'after_or_equal' => 'وقت الانطلاق يجب أن لا يكون قبل الوقت الحالي.',
+            'after' => 'وقت الانطلاق يجب أن لا يكون قبل الوقت الحالي.',
         ],
         'start_date_gt_competition' => "وقت انطلاق المرحلة يجب أن لا يكون قبل وقت انطلاق المسابقة"
     ],
@@ -190,12 +191,24 @@ return [
         'role' => 'الوظيفة',
         'response_text' => 'نص الاجابة',
         'start_date' => 'تاريخ الانطلاق',
+        'end_date' => 'تاريخ الانتهاء',
         'scores.*' => 'العلامة',
         'title' => 'العنوان',
-
-
-
-
+        'transaction_id' => 'رقم المعاملة',
+        'observation' => 'الملاحظة',
+        'status' => 'الحالة',
+        'pricing_id' => 'رقم التسعير',
+        'user_type' => 'نوع المستخدم',
+        'base_amount' => 'المبلغ الأساسي',
+        'base_coins' => 'العملات الأساسية',
+        'reason' => 'السبب',
+        'name' => 'الاسم',
+        'description' => 'الوصف',
+        'discount_percentage' => 'نسبة الخصم',
+        'coin_pricing_id' => 'رقم التسعير',
+        'payment_method' => 'طريقة الدفع',
+        'proof_image' => 'صورة اثبات الدفع',
+        'now' => 'الآن',
     ],
 
 ];

@@ -1,21 +1,17 @@
 <?php
 
-use App\Http\Controllers\User\UserController;
-use App\Http\Controllers\User\UserProfileController;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Models\Payment\PaymentTransaction;
+use App\Http\Controllers\User\UserController;
+use App\Http\Controllers\User\UserProfileController;
+use App\Http\Controllers\Payment\PaymentProofController;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
-Route::get('/test-email', function () {
-    try {
-        Mail::raw('Test email from Laravel', function ($message) {
-            $message->to('oualidbennahia@gmail.com')
-                   ->subject('Test Email');
-        });
-        
-        return 'Email sent successfully!';
-    } catch (Exception $e) {
-        return 'Error: ' . $e->getMessage();
-    }
+Route::get('/test', function () {
+    $s = PaymentTransaction::all()->first();
+    $g = explode('\\', $s->payable_type);
+    dd($g[count($g) - 1], $s->payable_type, User::class);
 });
 
 
@@ -69,6 +65,22 @@ Route::group(
     // global questions
     Route::get('/questions',[\App\Http\Controllers\GuestUsers\UserGuestController::class, 'index'])->name('global_questions.index');
     Route::get('/global-order', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'globalUsersOrder'])->name('global_questions.global_order');
+
+
+    
+    // Payment routes for users
+    Route::middleware('either.auth')->group(function () {
+        Route::get('/payment/create', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'create'])->name('payment.create');
+        Route::post('/payment/store', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'store'])->name('payment.store');
+        Route::get('/payment/transactions', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'index'])->name('payment.transactions');
+        Route::get('/payment/transactions/{paymentTransaction}', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'show'])->name('payment.transactions.show');
+        Route::get('/payment/coin-balance', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'getCoinBalance'])->name('payment.coin-balance');
+        
+        Route::post('/payment/reviews/order', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'orderReview'])->name('payment.reviews.order');
+    
+        Route::get('/transactions/{transaction}/proof', [PaymentProofController::class, 'show'])
+        ->name('transactions.proof');
+    });
 
     // Include notification routes inside localization middleware
     require __DIR__.'/notification.php';

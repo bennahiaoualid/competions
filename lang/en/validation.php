@@ -182,13 +182,26 @@ return [
         'max_score.*' => 'max score',
         'score' => 'score',
         'start_date' => 'start date',
+        'end_date' => 'end date',
         'question_text' => 'question text',
         'question_text.*' => 'question text',
         'questions_number' => 'questions number',
         'response_text' => 'response text',
         'scores.*' => 'score',
-
-
+        'transaction_id' => 'transaction id',
+        'observation' => 'observation',
+        'status' => 'status',
+        'pricing_id' => 'pricing id',
+        'user_type' => 'user type',
+        'base_amount' => 'base amount',
+        'base_coins' => 'base coins',
+        'reason' => 'reason',
+        'name' => 'name',
+        'description' => 'description',
+        'discount_percentage' => 'discount percentage',
+        'coin_pricing_id' => 'coin pricing id',
+        'payment_method' => 'payment method',
+        'proof_image' => 'proof image',
     ],
 
 ];

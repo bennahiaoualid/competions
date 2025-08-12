@@ -22,7 +22,7 @@
         <!-- Main Content -->
         <div class="flex-1 flex flex-col">
             <!-- Header -->
-        @include("layouts.admin.main-header")
+            @include("layouts.admin.main-header")
 
             <!-- Main -->
             <main class="flex-1 p-4">
@@ -51,7 +51,7 @@
         </script>
     @endauth
     @include('layouts.admin.footer-scripts')
-    @include('layouts.admin.session_notifications_taoster')
+    @include('layouts.session_notifications_taoster')
     {{-- Include notification scripts --}}
     @vite(['resources/js/notifications/NotificationManager.js', 'resources/js/notifications/init.js'])
     @yield("custom_js")

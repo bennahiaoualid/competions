@@ -8,11 +8,14 @@ use App\Services\User\UserService;
 use App\Contracts\FlasherInterface;
 use App\Services\Admin\AdminService;
 use App\Services\Notification\Flasher;
+use App\Services\SystemSettingService;
 use Illuminate\Support\ServiceProvider;
+use App\Services\Payment\PaymentService;
 use Illuminate\Validation\Rules\Password;
 use App\Services\Competition\AuditService;
 use App\Services\Competition\LevelService;
 use App\Services\Admin\AdminProfileService;
+use App\Services\Payment\CoinPricingService;
 use App\Services\Competition\QuestionService;
 use App\Services\Database\TransactionManager;
 use App\Services\GuestUsers\UserGuestService;
@@ -31,6 +34,7 @@ use App\Repository\Competition\CompetitionRepository;
 use App\Interface\Competition\AuditRepositoryInterface;
 use App\Interface\Competition\LevelRepositoryInterface;
 use App\Interface\Admin\AdminProfileRepositoryInterface;
+use App\Services\Notification\PaymentNotificationService;
 use App\Interface\GuestUsers\UserGuestRepositoryInterface;
 use App\Interface\Monitoring\JobTrackingStrategyInterface;
 use App\Interface\User\UserCompetitionRepositoryInterface;
@@ -158,6 +162,29 @@ class AppServiceProvider extends ServiceProvider
                 return new InMemoryJobTrackingStrategy();
             }
             return new DatabaseJobTrackingStrategy();
+        });
+
+        // payment cache management
+        $this->app->bind(\App\Services\CashManagment\PaymentCacheManagement::class, function ($app) {
+            return new \App\Services\CashManagment\PaymentCacheManagement(
+                $app->make(\App\Services\Payment\PaymentService::class)
+            );
+        });
+
+        // system settings service (singleton for performance)
+        $this->app->singleton(SystemSettingService::class, function ($app) {
+            return new SystemSettingService();
+        });
+
+        // payment service
+        $this->app->bind(PaymentService::class, function ($app) {
+            return new PaymentService(
+                $app->make(TransactionManagerInterface::class),
+                $app->make(FlasherInterface::class),
+                $app->make(CoinPricingService ::class),
+                $app->make(PaymentNotificationService::class),
+                $app->make(SystemSettingService::class)
+            );
         });
     }
 

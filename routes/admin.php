@@ -4,8 +4,11 @@ use Livewire\Livewire;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Competition\AuditController;
 use App\Http\Controllers\Monitoring\MonitoringController;
+use App\Http\Controllers\Payment\Admin\PaymentController;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use App\Http\Controllers\GuestUsers\GlobalQuestionController;
+use App\Http\Controllers\Payment\Admin\CoinPricingController;
+use App\Http\Controllers\Payment\Admin\CoinOfferController;
 use App\Http\Controllers\Monitoring\DeletionRecordsController;
 
 /*
@@ -134,6 +137,64 @@ Route::group(
             Route::post('/approvals/approve', [\App\Http\Controllers\Admin\AdminApprovalController::class, 'approve'])->name('approvals.approve');
             Route::post('/approvals/reject', [\App\Http\Controllers\Admin\AdminApprovalController::class, 'reject'])->name('approvals.reject');
             Route::delete('/approvals/delete', [\App\Http\Controllers\Admin\AdminApprovalController::class, 'destroy'])->name('approvals.destroy');
+
+            // System Settings routes (Owner only)
+            Route::prefix('system')->name('system.')->group(function () {
+                Route::middleware(['role:owner'])->group(function () {
+                    Route::get('/settings', [\App\Http\Controllers\Admin\SystemSettingController::class, 'index'])->name('settings.index');
+                    Route::put('/settings/{key}', [\App\Http\Controllers\Admin\SystemSettingController::class, 'update'])->name('settings.update');
+                    Route::post('/settings/refresh-cache', [\App\Http\Controllers\Admin\SystemSettingController::class, 'refreshCache'])->name('settings.refresh-cache');
+                });
+            });
+
+            // Payment routes (Owner and Accountant only)
+            Route::prefix('payment')->name('payment.')->group(function () {
+                Route::middleware(['permission:view payment'])->group(function () {
+                    Route::get('/transactions', [PaymentController::class, 'transactions'])->name('transactions');
+                });
+                Route::middleware(['permission:manage payment'])->group(function () {
+                    Route::post('/approve', [PaymentController::class, 'approve'])->name('approve');
+                    Route::post('/reject', [PaymentController::class, 'reject'])->name('reject');
+                    Route::post('/cancel', [PaymentController::class, 'cancel'])->name('cancel');
+                });
+
+                // Audit logs
+                Route::middleware(['permission:view payment_audit'])->group(function () {
+                    Route::get('/audit-logs', [\App\Http\Controllers\Payment\Admin\PaymentAuditController::class, 'index'])->name('audit_logs');
+                });
+                Route::middleware(['role:owner'])->group(function () {
+                    Route::post('/audit-logs/delete', [\App\Http\Controllers\Payment\Admin\PaymentAuditController::class, 'delete'])->name('audit_logs.delete');
+                });
+                
+                Route::prefix('coin-pricing')->middleware(['role:owner|accountant'])->name('coin_pricing.')->group(function () {
+                    Route::get('/', [CoinPricingController::class, 'index'])->name('index');
+                    Route::middleware('permission:manage coin_pricing')->group(function () {
+                        Route::post('/store', [CoinPricingController::class, 'store'])->name('store');
+                        Route::delete('/delete', [CoinPricingController::class, 'destroy'])->name('destroy');
+                        Route::patch('/activate', [CoinPricingController::class, 'activate'])->name('activate');
+                        Route::patch('/deactivate', [CoinPricingController::class, 'deactivate'])->name('deactivate');
+                    });
+                });
+                
+                Route::prefix('coin-offers')->middleware(['role:owner|accountant'])->name('coin_offers.')->group(function () {
+                    Route::get('/', [CoinOfferController::class, 'index'])->name('index');
+                    Route::middleware('permission:manage payment_offer')->group(function () {
+                        Route::post('/store', [CoinOfferController::class, 'store'])->name('store');
+                        Route::delete('/delete', [CoinOfferController::class, 'destroy'])->name('destroy');
+                    });
+                });
+
+                // Payment review management (no UI yet)
+                Route::prefix('reviews')->middleware(['role:owner|accountant'])->name('reviews.')->group(function () {
+                    Route::middleware('permission:view payment')->group(function () {
+                        Route::get('/', [\App\Http\Controllers\Payment\Admin\ReviewManagementController::class, 'index'])->name('index');
+                    });
+                    Route::middleware('permission:manage payment')->group(function () {
+                        Route::post('/approve', [\App\Http\Controllers\Payment\Admin\ReviewManagementController::class, 'approve'])->name('approve');
+                        Route::post('/reject', [\App\Http\Controllers\Payment\Admin\ReviewManagementController::class, 'reject'])->name('reject');
+                    });
+                });
+            });
         });
 
         require __DIR__.'/auth_admin.php';

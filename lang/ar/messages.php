@@ -24,6 +24,11 @@ return [
             'hard_deleted' => 'تم حذف الكيان بشكل نهائي',
             'level_manager_requested' => 'تم ارسال طلب للمشرف :admin ليكون مدير هذا المستوى',
             'auditor_assignment_requested' => 'تم ارسال طلب للمصحيحين :admins ليكونوا مصححين هذه المسابقة',
+            'payment' => [
+                'approved' => 'تم الموافقة على المعاملة',
+                'rejected' => 'تم رفض المعاملة',
+                'cancelled' => 'تم الإلغاء',
+            ],
         ],
         'fail' =>[
             'saved' => 'حدث خطأ أثناء الحفظ',
@@ -35,6 +40,11 @@ return [
             'finish' => 'فشلت عملية الإنهاء',
             'approved' => 'فشل الاعتماد',
             'hard_deleted' => 'حدث خطأ أثناء الحذف النهائي',
+            'payment' => [
+                'approved' => 'فشل الموافقة على المعاملة',
+                'rejected' => 'فشل رفض المعاملة',
+                'cancelled' => 'فشل الإلغاء',
+            ],
         ],
         'info' => [
             'saved' => 'عملية الحفظ قيد التنفيذ',
@@ -79,10 +89,25 @@ return [
             'remove_auditor_only_one' => 'لا يمكنك ازالة المصحح الوحيد في المسابقة',
             'global_question_choices' => 'عدد الخيارات يجب ان يكون بين 2 الى 5 خيارات',
             'not_authorized' => 'ليس لديك الصلاحيات لتنفيذ هذا الإجراء',
+            // payment
+            'max_daily_transactions_reached' => 'لقد وصلت الحد الاقصى لعدد المعاملات المسموح بها لهذا اليوم :number',
+            'only_one_active_offer' => 'هنالك عرض دفع نشط لهذا التسعير, يجب ان يكون لديك عرض دفع نشط واحد فقط',
+            'transcation_incorrect_user_type' => 'هذا الإجراء غير مسموح به لنوع حسابك.',
         ],
         'invalid_deletion_type' => 'نوع الحذف غير صحيح. هذه العملية غير مسموحة لهذا النوع من الكيانات.',
         'insufficient_permissions' => 'ليس لديك الصلاحيات الكافية لتنفيذ هذا الإجراء.',
         'contact' => 'تواصل مع الدعم الفني',
+    ],
+    'images' => [
+        'file_size_exceeded' => 'يجب ألا يتجاوز حجم الملف :max_size ميجابايت',
+        'file_type_not_allowed' => 'نوع الملف غير مسموح به. الأنواع المسموحة: :allowed_types',
+        'width_out_of_range' => 'عرض الصورة يجب أن يكون بين :min_width و :max_width بكسل',
+        'height_out_of_range' => 'ارتفاع الصورة يجب أن يكون بين :min_height و :max_height بكسل',
+        'invalid_image_file' => 'ملف صورة غير صحيح',
+        'upload_failed' => 'فشل في رفع الصورة',
+        'processing_failed' => 'فشل في معالجة الصورة',
+        'thumbnail_generation_failed' => 'فشل في إنشاء الصورة المصغرة',
+        'deletion_failed' => 'فشل في حذف الصورة',
     ],
     'alert'=>[
         'type' =>[

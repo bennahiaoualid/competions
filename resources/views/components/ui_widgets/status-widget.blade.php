@@ -11,15 +11,19 @@
             break;
         case 'rejected':
         case 'failed':
+        case 'expired':
             $color = $outline ? 'bg-red-100' : 'bg-red-300';
             $color_border = 'border-red-300';
             break;
         case 'finished':
         case 'completed':
+        case 'scheduled':
             $color = $outline ? 'bg-sky-100' : 'bg-sky-300';
             $color_border = 'border-sky-300';
             break;
         case 'pending':
+        case 'disabled':
+        case 'cancelled':
             $color = $outline ? 'bg-yellow-100' : 'bg-yellow-300';
             $color_border = 'border-yellow-300';
             break;

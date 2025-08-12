@@ -94,4 +94,38 @@ return [
             'message' => ':admin_name رفض طلبك :approval_type لـ ":competition_title"',
         ],
     ],
+    // Payment notifications
+    'payment' => [
+        // Admin Notifications (minimal data)
+        'transaction_created' => [
+            'title' => 'تم إرسال دفعة جديدة',
+            'message' => ':payer_name (:payer_type) أرسل دفعة بقيمة :amount. المعاملة: :transaction_uuid'
+        ],
+        'review_requested' => [
+            'title' => 'تم طلب مراجعة الدفعة',
+            'message' => ':payer_name (:payer_type) طلب مراجعة للمعاملة :transaction_uuid'
+        ],
+        
+        // User Notifications (minimal data)
+        'transaction_approved' => [
+            'title' => 'تمت الموافقة على الدفعة',
+            'message' => 'تمت الموافقة على دفعتك بقيمة :amount! تم إضافة :coins_credited عملة.'
+        ],
+        'transaction_rejected' => [
+            'title' => 'تم رفض الدفعة',
+            'message' => 'تم رفض دفعتك بقيمة :amount. يرجى التحقق من التفاصيل.'
+        ],
+        'transaction_cancelled' => [
+            'title' => 'تم إلغاء الدفعة',
+            'message' => 'تم إلغاء دفعتك بقيمة :amount.'
+        ],
+        'review_approved' => [
+            'title' => 'تمت الموافقة على المراجعة',
+            'message' => 'تمت الموافقة على طلب المراجعة الخاص بك. تم إضافة :coins_credited عملة.'
+        ],
+        'review_rejected' => [
+            'title' => 'تم رفض المراجعة',
+            'message' => 'تم رفض طلب المراجعة الخاص بك. يرجى التواصل مع الدعم.'
+        ]
+    ],
 ]; 

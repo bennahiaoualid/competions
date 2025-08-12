@@ -10,5 +10,6 @@ return [
     'super_admin' => 'مسؤول',
     'manager' => 'مدير',
     'auditor' => 'مصحح',
+    'accountant' => 'محاسب',
 
 ];

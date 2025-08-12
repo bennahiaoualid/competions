@@ -36,6 +36,8 @@
             case "secondary":
                 $color_classes = "bg-transparent text-gray-600 border-gray-600 hover:bg-gray-600 hover:text-white focus:bg-gray-600 focus:text-white active:bg-gray-600 active:text-white focus:ring-gray-600";
                 break;
+            default:
+                $color_classes = "bg-transparent text-{$color_type} border-{$color_type} hover:bg-{$color_type} hover:text-white focus:bg-{$color_type} focus:text-white active:bg-{$color_type} active:text-white focus:ring-{$color_type}";
         }
     } else {
         $color_classes = "bg-primary text-white border-transparent hover:bg-primary-dark focus:bg-primary-dark active:bg-primary-dark focus:ring-primary";
@@ -55,6 +57,8 @@
             case "secondary":
                 $color_classes = "bg-gray-600 text-white border-transparent hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-700 focus:ring-gray-600";
                 break;
+            default:
+                $color_classes = "bg-{$color_type} text-white border-transparent hover:bg-{$color_type}-dark focus:bg-{$color_type}-dark active:bg-{$color_type}-dark focus:ring-{$color_type}";
         }
     }
 

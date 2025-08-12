@@ -136,6 +136,12 @@
                                 {{__('links.global_user.global_responses')}}
                             </a>
                         </li>
+                        <li>
+                            <a href="{{route('user.payment.create')}}" class="{{request()->routeIs('user.payment.*') ? $active_class : $inactive_classes}}">
+                                <i class="fas fa-credit-card mr-1"></i>
+                                {{__('payment.nav.create')}}
+                            </a>
+                        </li>
                     @endif
                     <li>
                         <a href="{{route('global_questions.global_order')}}" class="{{request()->routeIs('global_questions.global_order') ? $active_class : $inactive_classes}}">

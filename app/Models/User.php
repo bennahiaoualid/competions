@@ -3,16 +3,19 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use App\Enums\UserTypeEnum;
 use App\Models\Admin\Admin;
 use Illuminate\Support\Str;
 use App\Models\Competition\Level;
 use Spatie\Activitylog\LogOptions;
+use App\Models\Payment\CoinBalance;
 use App\Models\Competition\Response;
 use App\Models\Competition\Competition;
 use Illuminate\Notifications\Notifiable;
 use App\Models\GuestUsers\GlobalResponse;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\Monitoring\DeletionRequest;
+use App\Models\Payment\PaymentTransaction;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -151,6 +154,14 @@ class User extends Authenticatable implements MustVerifyEmail
         return Carbon::parse($this->attributes['birthdate'])->age;
     }
 
+    /**
+     * Get the user type
+     */
+    public function getUserType(): UserTypeEnum
+    {
+        return UserTypeEnum::USER;
+    }
+
 
     /**
      * The roles that belong to the user.
@@ -199,6 +210,22 @@ class User extends Authenticatable implements MustVerifyEmail
     public function deletionRequests()
     {
         return $this->morphMany(DeletionRequest::class, 'deletable');
+    }
+
+    /**
+     * The payment transactions that this user has made.
+     */
+    public function paymentTransactions()
+    {
+        return $this->morphMany(PaymentTransaction::class, 'payable');
+    }
+
+    /**
+     * The coin balance for this user.
+     */
+    public function coinBalance()
+    {
+        return $this->morphOne(CoinBalance::class, 'balanceable');
     }
 
 

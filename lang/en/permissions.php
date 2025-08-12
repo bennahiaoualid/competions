@@ -63,13 +63,12 @@ return [
     'add competition' => 'Add Competition',
     
     // Payment Permissions
-    'approve payment' => 'Approve Payment',
     'view payment' => 'View Payment',
     'manage payment' => 'Manage Payment',
     'export payment' => 'Export Payment',
     'view payment_audit' => 'View Payment Audit',
     'manage coin_pricing' => 'Manage Coin Pricing',
-    'create payment_offer' => 'Create Payment Offer',
+    'manage payment_offer' => 'Manage Payment Offer',
     
     // Page Titles
     'manage_permissions_for' => 'Manage Permissions for',

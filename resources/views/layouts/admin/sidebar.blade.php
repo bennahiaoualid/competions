@@ -127,6 +127,49 @@
                 </x-nav-link>
             </li>
 
+            {{-- Regular Admin Payment (Buy Coins) --}}
+            <li class="mb-2">
+                <x-nav-link href="{{route('payment.create')}}" :active="request()->routeIs('payment.*')" :sub="false">
+                    <x-slot:icon>
+                        <i class="fas fa-coins me-3"></i>
+                    </x-slot:icon>
+                    <span class="sidebar-text">{{__('links.payment.buy_coins')}}</span>
+                </x-nav-link>
+            </li>
+
+            {{-- Accountant Payment Management --}}
+            @can('manage payment')
+                <x-nav-dropdown :title="__('links.payment.accountant_payments')"
+                                :active="request()->is(App::currentLocale() . '/admin/payment/*')
+                                        or request()->is(App::currentLocale() . '/admin/payment')" :sub="false"
+                                :links="[
+                        ['url' => route('admin.payment.transactions'), 'title' => __('links.payment.transactions') , 'active' => request()->routeIs('admin.payment.transactions'), 'subnav' => true],
+                        ['url' => route('admin.payment.coin_pricing.index'), 'title' => __('links.payment.pricing') , 'active' => request()->routeIs('admin.payment.coin_pricing.index'), 'subnav' => true],
+                        ['url' => route('admin.payment.coin_offers.index'), 'title' => __('links.payment.offers') , 'active' => request()->routeIs('admin.payment.coin_offers.index'), 'subnav' => true],
+                        ['url' => route('admin.payment.audit_logs'), 'title' => __('links.payment.audit_logs') , 'active' => request()->routeIs('admin.payment.audit_logs'), 'subnav' => true],
+                        ['url' => route('admin.payment.reviews.index'), 'title' => __('links.payment.reviews') , 'active' => request()->routeIs('admin.payment.reviews.*'), 'subnav' => true],
+                    ]">
+                    <x-slot:icon>
+                        <i class="fas fa-credit-card me-3"></i>
+                    </x-slot:icon>
+                    <x-slot:titleUi>
+                        <span class="sidebar-text">{{__('links.payment.accountant_payments')}}</span>
+                    </x-slot:titleUi>
+                </x-nav-dropdown>
+            @endrole
+
+            {{-- System Settings --}}
+            @role('owner')
+                <li class="mb-2">
+                    <x-nav-link href="{{route('admin.system.settings.index')}}" :active="request()->routeIs('admin.system.settings.*')" :sub="false">
+                        <x-slot:icon>
+                            <i class="fas fa-cogs me-3"></i>
+                        </x-slot:icon>
+                        <span class="sidebar-text">{{__('links.system.settings')}}</span>
+                    </x-nav-link>
+                </li>
+            @endrole
+
 
         </ul>
     </nav>

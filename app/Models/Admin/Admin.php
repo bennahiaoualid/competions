@@ -2,6 +2,7 @@
 
 namespace App\Models\Admin;
 
+use App\Enums\UserTypeEnum;
 use App\Observers\AdminObserver;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Permission\Traits\HasRoles;
@@ -117,6 +118,14 @@ class Admin extends Authenticatable
         'password' => 'hashed',
     ];
 
+    /**
+     * Get the user type
+     */
+    public function getUserType(): UserTypeEnum
+    {
+        return UserTypeEnum::ADMIN;
+    }
+
     // Define the scope
     public function scopeWithoutRoles($query, array $roles)
     {
@@ -191,7 +200,29 @@ class Admin extends Authenticatable
         return $this->hasOne(AdminAvailability::class);
     } 
 
-    
+    /**
+     * The payment transactions that this admin has made.
+     */
+    public function paymentTransactions()
+    {
+        return $this->morphMany(\App\Models\Payment\PaymentTransaction::class, 'payable');
+    }
+
+    /**
+     * The coin balance for this admin.
+     */
+    public function coinBalance()
+    {
+        return $this->morphOne(\App\Models\Payment\CoinBalance::class, 'balanceable');
+    }
+
+    /**
+     * The payments that this admin has approved.
+     */
+    public function approvedPayments()
+    {
+        return $this->hasMany(\App\Models\Payment\PaymentTransaction::class, 'approver_admin_id');
+    }
 
     /**
      * override methode for storing log activity
