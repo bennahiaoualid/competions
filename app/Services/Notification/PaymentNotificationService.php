@@ -160,7 +160,7 @@ class PaymentNotificationService
                 'transaction_uuid' => $transaction->uuid
             ],
             'notification_priority_type' => $this->getPriorityType($eventType),
-            'link' => route('admin.payment.transactions'),
+            'link' => $this->getNotificationLink($transaction, $eventType),
             'payment_transaction_id' => $transaction->id,
             'event_type' => $eventType,
             'type' => 'payment_event'
@@ -175,7 +175,7 @@ class PaymentNotificationService
         $baseData = [
             'translation_key' => "notifications.payment.{$eventType}",
             'notification_priority_type' => $this->getPriorityType($eventType),
-            'link' => route('payment.transactions.show', $transaction->uuid),
+            'link' => $this->getNotificationLink($transaction, $eventType),
             'payment_transaction_id' => $transaction->id,
             'event_type' => $eventType,
             'type' => 'payment_event'
@@ -238,6 +238,24 @@ class PaymentNotificationService
             'review_rejected' => false,      // No broadcast for review rejection (just database)
             default => false
         };
+    }
+
+    private function getNotificationLink(PaymentTransaction $transaction, string $eventType): string
+    {
+        switch($eventType) {
+            case 'transaction_approved':
+            case 'transaction_rejected':
+            case 'transaction_cancelled':
+            case 'review_approved':
+            case 'review_rejected':
+                return route('payment.transactions.show', $transaction->uuid);
+            case 'transaction_created':
+                return route('admin.payment.transactions');
+            case 'review_requested':
+                return route('admin.payment.reviews.index');
+            default:
+                return route('payment.transactions.show', $transaction->uuid);
+        }
     }
 
 } 
