@@ -138,6 +138,15 @@ Route::group(
             Route::post('/approvals/reject', [\App\Http\Controllers\Admin\AdminApprovalController::class, 'reject'])->name('approvals.reject');
             Route::delete('/approvals/delete', [\App\Http\Controllers\Admin\AdminApprovalController::class, 'destroy'])->name('approvals.destroy');
 
+            // System Settings routes (Owner only)
+            Route::prefix('system')->name('system.')->group(function () {
+                Route::middleware(['role:owner'])->group(function () {
+                    Route::get('/settings', [\App\Http\Controllers\Admin\SystemSettingController::class, 'index'])->name('settings.index');
+                    Route::put('/settings/{key}', [\App\Http\Controllers\Admin\SystemSettingController::class, 'update'])->name('settings.update');
+                    Route::post('/settings/refresh-cache', [\App\Http\Controllers\Admin\SystemSettingController::class, 'refreshCache'])->name('settings.refresh-cache');
+                });
+            });
+
             // Payment routes (Owner and Accountant only)
             Route::prefix('payment')->name('payment.')->group(function () {
                 Route::middleware(['permission:view payment'])->group(function () {

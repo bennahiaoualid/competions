@@ -39,6 +39,9 @@ return [
         'audit_logs' => 'Audit Logs',
             'reviews' => 'Reviews',
     ],
+    'system' => [
+        'settings' => 'System Settings',
+    ],
     'home' => 'home',
     'log_out' => 'Sign out',
 

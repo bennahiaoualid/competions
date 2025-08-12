@@ -158,6 +158,18 @@
                 </x-nav-dropdown>
             @endrole
 
+            {{-- System Settings --}}
+            @role('owner')
+                <li class="mb-2">
+                    <x-nav-link href="{{route('admin.system.settings.index')}}" :active="request()->routeIs('admin.system.settings.*')" :sub="false">
+                        <x-slot:icon>
+                            <i class="fas fa-cogs me-3"></i>
+                        </x-slot:icon>
+                        <span class="sidebar-text">{{__('links.system.settings')}}</span>
+                    </x-nav-link>
+                </li>
+            @endrole
+
 
         </ul>
     </nav>
