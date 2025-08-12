@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\SystemSetting;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 
 class SystemSettingService
@@ -17,6 +18,16 @@ class SystemSettingService
      * Cache TTL in seconds (1 hour)
      */
     private const CACHE_TTL = 3600;
+
+    /**
+     * get all settings
+     */
+    private $allSettings;
+
+    public function __construct()
+    {
+        $this->allSettings = $this->getAllSettingsFromCache();
+    }
 
     /**
      * Get a system setting value
@@ -92,18 +103,23 @@ class SystemSettingService
      */
     public function getSetting(string $key): ?SystemSetting
     {
-        $settings = $this->getAllSettings();
+        $settings = $this->allSettings;
         return $settings->firstWhere('setting_key', $key);
     }
 
     /**
      * Get all system settings
      */
-    public function getAllSettings(): Collection
+    public function getAllSettingsFromCache(): Collection
     {
         return Cache::remember(self::CACHE_KEY, self::CACHE_TTL, function () {
             return SystemSetting::all();
         });
+    }
+
+    public function getAllSettings(): Collection
+    {
+        return $this->allSettings;
     }
 
     /**
@@ -111,7 +127,7 @@ class SystemSettingService
      */
     public function getSettingsByCategory(string $category): Collection
     {
-        return $this->getAllSettings()->filter(function ($setting) use ($category) {
+        return $this->allSettings->filter(function ($setting) use ($category) {
             return str_starts_with($setting->setting_trans_key, "settings.{$category}.");
         });
     }
@@ -190,6 +206,7 @@ class SystemSettingService
     public function clearCache(): void
     {
         Cache::forget(self::CACHE_KEY);
+        $this->allSettings = null;
     }
 
     /**
@@ -198,7 +215,7 @@ class SystemSettingService
     public function refreshCache(): void
     {
         $this->clearCache();
-        $this->getAllSettings(); // This will rebuild the cache
+        $this->allSettings = $this->getAllSettingsFromCache(); // This will rebuild the cache
     }
 
     /**
