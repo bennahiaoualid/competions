@@ -1,22 +1,17 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Models\Payment\PaymentTransaction;
 use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\User\UserProfileController;
 use App\Http\Controllers\Payment\PaymentProofController;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
-Route::get('/test-email', function () {
-    try {
-        Mail::raw('Test email from Laravel', function ($message) {
-            $message->to('oualidbennahia@gmail.com')
-                   ->subject('Test Email');
-        });
-        
-        return 'Email sent successfully!';
-    } catch (Exception $e) {
-        return 'Error: ' . $e->getMessage();
-    }
+Route::get('/test', function () {
+    $s = PaymentTransaction::all()->first();
+    $g = explode('\\', $s->payable_type);
+    dd($g[count($g) - 1], $s->payable_type, User::class);
 });
 
 

@@ -6,6 +6,7 @@ use App\Contracts\FlasherInterface;
 use App\Contracts\TransactionManagerInterface;
 use App\Models\Payment\PaymentReviewRequest;
 use App\Models\Payment\PaymentTransaction;
+use App\Services\Notification\PaymentNotificationService;
 use App\Traits\RegisterLogs;
 use Illuminate\Support\Facades\Auth;
 
@@ -15,7 +16,8 @@ class PaymentReviewService
     public function __construct(
         private TransactionManagerInterface $transactionManager,
         private FlasherInterface $flasher,
-        private PaymentService $paymentService
+        private PaymentService $paymentService,
+        private PaymentNotificationService $notificationService
     ) {}
 
     public function requestReview(PaymentTransaction $transaction, string $reason): bool
@@ -35,6 +37,9 @@ class PaymentReviewService
                     'request_reason' => $reason,
                     'status' => 'pending',
                 ]);
+
+                // Send notification to accountants
+                $this->notificationService->reviewRequested($transaction);
 
                 $this->flasher->crudSuccess('saved');
                 return true;
@@ -67,6 +72,9 @@ class PaymentReviewService
                 // Delegate to PaymentService to handle coin credit + status change
                 $this->paymentService->approvePayment($transaction, $observation);
 
+                // Send notification to payment owner about review approval
+                $this->notificationService->reviewApproved($transaction);
+
                 $this->flasher->crudSuccess('updated');
                 return true;
             });
@@ -92,6 +100,12 @@ class PaymentReviewService
                     'reviewed_at' => now(),
                     'review_observation' => $observation,
                 ]);
+
+                // Get transaction for notification
+                $transaction = $review->paymentTransaction;
+
+                // Send notification to payment owner about review rejection
+                $this->notificationService->reviewRejected($transaction);
 
                 $this->flasher->crudSuccess('updated');
                 return true;

@@ -14,6 +14,7 @@ use App\Models\Payment\PaymentAuditLog;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Payment\PaymentTransaction;
 use App\Services\Payment\CoinPricingService;
+use App\Services\Notification\PaymentNotificationService;
 use App\Contracts\TransactionManagerInterface;
 use App\Helpers\PaginationHelper;
 use App\Events\Payment\PaymentCacheInvalidationEvent;
@@ -25,7 +26,8 @@ class PaymentService
     public function __construct(
         protected TransactionManagerInterface $transactionManager,
         protected FlasherInterface $flasher,
-        protected CoinPricingService $coinPricingService
+        protected CoinPricingService $coinPricingService,
+        protected PaymentNotificationService $notificationService
     ) {}
 
     public function getTransactionsForUser(array $filters = [], $page = 1, int $perPage = 5)
@@ -95,6 +97,9 @@ class PaymentService
             // Fire cache invalidation event
             $this->fireCacheInvalidationEvent($payment);
             
+            // Send notification to accountants
+            $this->notificationService->transactionCreated($payment);
+            
             return $payment;
         });
     }
@@ -125,6 +130,9 @@ class PaymentService
                 
                 // Fire cache invalidation event
                 $this->fireCacheInvalidationEvent($payment);
+                
+                // Send notification to payment owner
+                $this->notificationService->transactionApproved($payment);
                 
                 $this->flasher->crudSuccess('payment.approved');
                 return true;
@@ -161,6 +169,9 @@ class PaymentService
                 // Fire cache invalidation event
                 $this->fireCacheInvalidationEvent($payment);
                 
+                // Send notification to payment owner
+                $this->notificationService->transactionRejected($payment);
+                
                 $this->flasher->crudSuccess('payment.rejected');
                 return true;
             });
@@ -194,6 +205,9 @@ class PaymentService
                 
                 // Fire cache invalidation event
                 $this->fireCacheInvalidationEvent($payment);
+                
+                // Send notification to payment owner
+                $this->notificationService->transactionCancelled($payment);
                 
                 $this->flasher->crudSuccess('payment.cancelled');
                 return true;

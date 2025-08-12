@@ -94,4 +94,38 @@ return [
             'message' => ':admin_name rejected your :approval_type request for ":competition_title"',
         ],
     ],
+    // Payment notifications
+    'payment' => [
+        // Admin Notifications (minimal data)
+        'transaction_created' => [
+            'title' => 'New Payment Submitted',
+            'message' => ':payer_name (:payer_type) submitted a payment of :amount. Transaction: :transaction_uuid'
+        ],
+        'review_requested' => [
+            'title' => 'Payment Review Requested',
+            'message' => ':payer_name (:payer_type) requested a review for transaction :transaction_uuid'
+        ],
+        
+        // User Notifications (minimal data)
+        'transaction_approved' => [
+            'title' => 'Payment Approved',
+            'message' => 'Your payment of :amount has been approved! :coins_credited coins credited.'
+        ],
+        'transaction_rejected' => [
+            'title' => 'Payment Rejected',
+            'message' => 'Your payment of :amount has been rejected. Please check the details.'
+        ],
+        'transaction_cancelled' => [
+            'title' => 'Payment Cancelled',
+            'message' => 'Your payment of :amount has been cancelled.'
+        ],
+        'review_approved' => [
+            'title' => 'Review Approved',
+            'message' => 'Your review request has been approved. :coins_credited coins credited.'
+        ],
+        'review_rejected' => [
+            'title' => 'Review Rejected',
+            'message' => 'Your review request has been rejected. Please contact support.'
+        ]
+    ],
 ]; 

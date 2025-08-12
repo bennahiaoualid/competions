@@ -49,8 +49,9 @@
     @endauth
     
     @include('layouts.payment.footer-scripts')
-    @include('components.notification')
     @include('layouts.session_notifications_taoster')
+    {{-- Include notification scripts --}}
+    @vite(['resources/js/notifications/NotificationManager.js', 'resources/js/notifications/init.js'])
     @yield("custom_js")
 </body>
 </html> 

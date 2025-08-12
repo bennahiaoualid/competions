@@ -45,8 +45,14 @@ class NotificationIconHelper
             return self::getIconByCompetitionEventType($eventType);
         }
 
+        // For payment events, check the specific event type for more precise icons
+        if ($type === 'payment_event' && $eventType) {
+            return self::getIconByPaymentEventType($eventType);
+        }
+
         return match($type) {
             'competition_event' => 'fas fa-trophy',
+            'payment_event' => 'fas fa-credit-card',
             'auditor_required' => 'fas fa-user-shield',
             'admin_deletion_failed' => 'fas fa-user-times',
             'job_completed' => 'fas fa-check-circle',
@@ -72,6 +78,26 @@ class NotificationIconHelper
             'updated' => 'fas fa-edit',
             'activated' => 'fas fa-play',
             default => 'fas fa-trophy'
+        };
+    }
+
+    /**
+     * Get icon based on payment event type
+     *
+     * @param string $eventType
+     * @return string
+     */
+    private static function getIconByPaymentEventType(string $eventType): string
+    {
+        return match($eventType) {
+            'transaction_created' => 'fas fa-plus-circle',
+            'transaction_approved' => 'fas fa-check-circle',
+            'transaction_rejected' => 'fas fa-times-circle',
+            'transaction_cancelled' => 'fas fa-ban',
+            'review_requested' => 'fas fa-question-circle',
+            'review_approved' => 'fas fa-thumbs-up',
+            'review_rejected' => 'fas fa-thumbs-down',
+            default => 'fas fa-credit-card'
         };
     }
 
@@ -109,6 +135,32 @@ class NotificationIconHelper
                 return 'fas fa-flag';
             }
             return 'fas fa-trophy';
+        }
+
+        // Payment-related notifications
+        if (str_contains($translationKey, 'payment')) {
+            if (str_contains($translationKey, 'transaction')) {
+                if (str_contains($translationKey, 'approved')) {
+                    return 'fas fa-check-circle';
+                }
+                if (str_contains($translationKey, 'rejected')) {
+                    return 'fas fa-times-circle';
+                }
+                if (str_contains($translationKey, 'cancelled')) {
+                    return 'fas fa-ban';
+                }
+                return 'fas fa-credit-card';
+            }
+            if (str_contains($translationKey, 'review')) {
+                if (str_contains($translationKey, 'approved')) {
+                    return 'fas fa-thumbs-up';
+                }
+                if (str_contains($translationKey, 'rejected')) {
+                    return 'fas fa-thumbs-down';
+                }
+                return 'fas fa-question-circle';
+            }
+            return 'fas fa-credit-card';
         }
 
         // Auditor-related notifications

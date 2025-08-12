@@ -136,7 +136,7 @@ class NotificationManager {
     /**
      * Handle incoming real-time notification
      */
-    handleNewNotification(notification) {
+    handleNewNotification(notification) {      
         console.log('New notification received:', notification);
         
         // Add to notifications array (stack behavior)
