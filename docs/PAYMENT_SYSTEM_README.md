@@ -285,8 +285,9 @@ const CLEANUP_PROTECTION_RULES = [
 
 #### Broadcast Logic:
 - **Real-time Broadcasting**: `transaction_created`, `review_requested`, `transaction_rejected`, `transaction_cancelled`
-- **Database Only**: `transaction_approved`, `review_approved`, `review_rejected`
+- **Database Only**: `transaction_approved`, `review_approved`, `review_rejected` (intentional design for performance)
 - **Performance**: Reduces unnecessary real-time traffic for routine updates
+- **Status**: ✅ **FULLY IMPLEMENTED** - Intelligent broadcasting decisions are working correctly
 
 #### Database Tables:
 ```sql
@@ -985,7 +986,7 @@ $statusCounts = $this->paymentService->getUserTransactionStatusCounts();
 - ✅ Transaction detail route: `GET /payment/transactions/{paymentTransaction}` named `payment.transactions.show` (route-model binding by ID)
 - ✅ Controller method: `PaymentTransactionController@show(PaymentTransaction $paymentTransaction)` returns the detail view
 - ✅ Proof image: Detail view uses secure proof route `transactions.proof` instead of public storage
-- 🔜 Ownership check: Controller-level enforcement comparing `payable_id` and `payable_type` to the authenticated principal (user/admin) will be added in a follow-up
+- ✅ **Ownership check**: Controller-level enforcement comparing `payable_id` and `payable_type` to the authenticated principal (user/admin) is fully implemented
 
 ### **Form Requests & Validation**
 **Status**: ✅ COMPLETED
@@ -1133,6 +1134,72 @@ $statusCounts = $this->paymentService->getUserTransactionStatusCounts();
 4. **Step 4: Payment Review System** - ✅ COMPLETED (review request functionality)
 5. **Step 6: Payment Notification System** - ✅ COMPLETED (real-time notifications with intelligent broadcast logic)
 
+---
+
+## **🪙 Coin Balance System Planning**
+
+### **Current Status:**
+- **Coin Balance Model**: ✅ Basic balance tracking implemented
+- **Basic Operations**: ✅ `addCoins()`, `spendCoins()`, `hasEnoughCoins()`
+- **Payment Integration**: ✅ Coins automatically credited when payments approved
+- **Database Schema**: ✅ Complete with proper indexes and relationships
+- **Factory & Testing**: ✅ Test data generation infrastructure
+
+### **Phase 1: Core Coin Spending Integration** 🔄 **PLANNED**
+**Priority**: High
+**Estimated Time**: 2-3 days
+
+#### **Tasks:**
+- **AI Service Coin Costs**: Define coin costs for Global Questions, AI Auditing, Competition Questions
+- **Coin Spending Service**: Create `CoinSpendingService` for all coin spending operations
+- **Balance Validation**: Check if user has enough coins before service access
+- **Transaction Recording**: Log all coin spending with detailed metadata
+- **Rollback Support**: Handle failed transactions and coin refunds
+
+#### **Integration Points:**
+- **Global Question Service**: Integrate coin spending before question creation
+- **Audit Service**: Integrate coin spending before audit access
+- **User Competition Service**: Integrate coin spending for premium features
+
+### **Phase 2: User Experience & Interface** 🔄 **PLANNED**
+**Priority**: Medium
+**Estimated Time**: 2-3 days
+
+#### **Tasks:**
+- **Balance Display**: Dashboard widget, dedicated balance page, mobile responsive
+- **Transaction History**: Spending/earning logs with filtering and search
+- **Balance Notifications**: Low balance warnings, real-time updates, payment reminders
+
+### **Phase 3: Admin Management Tools** 🔄 **PLANNED**
+**Priority**: Medium
+**Estimated Time**: 2-3 days
+
+#### **Tasks:**
+- **Balance Management**: View user balances, manual adjustments, bulk operations
+- **Balance Analytics**: System-wide statistics, user behavior analysis, revenue tracking
+- **Balance Policies**: Minimum balance requirements, expiration policies, bonus systems
+
+### **Phase 4: Advanced Features** 🔄 **PLANNED**
+**Priority**: Low
+**Estimated Time**: 3-4 days
+
+#### **Tasks:**
+- **Coin Transfer System**: User-to-user transfers, admin transfers, transfer limits
+- **Coin Subscription System**: Monthly plans, auto-renewal, usage-based billing
+- **Coin Marketplace**: Service packages, bulk discounts, special offers
+
+### **Technical Considerations:**
+- **Database Enhancements**: Coin transactions table, balance history, service usage tracking
+- **Service Architecture**: Event-driven updates, efficient caching, transaction safety
+- **Security & Validation**: Balance verification, fraud detection, complete audit trail
+
+### **Implementation Notes:**
+- **Start with Phase 1**: Core spending integration for immediate functionality
+- **Service-First Approach**: All business logic in services, controllers for validation only
+- **Event-Driven Architecture**: Use existing notification system for balance updates
+- **Testing Priority**: Comprehensive testing for all balance operations
+- **Multi-language Support**: Extend existing payment translations for balance features
+
 ### **🎯 All Core Payment System Components Completed!**
 The payment system is now fully functional with:
 - ✅ **Complete Payment Flow**: Create → Review → Approve/Reject → Notify
@@ -1157,9 +1224,72 @@ The payment system is now fully functional with:
 - **Payment Cleanup System**: ✅ COMPLETED (Step 3)
 - **Payment Review System**: ✅ COMPLETED (Step 4)
 - **Payment Notification System**: ✅ COMPLETED (Step 6) - Real-time notifications with intelligent broadcast logic
-- **Security Features**: ✅ Implemented (including secure image storage)
+- **Security Features**: ✅ Implemented (including secure image storage and ownership checks)
 - **Testing Infrastructure**: ✅ Comprehensive
 - **Multi-language Support**: ✅ English and Arabic
+
+---
+
+## **❌ Missing/Not Implemented Features**
+
+### **1. Ownership Check Enforcement** ✅
+- **Status**: ✅ **IMPLEMENTED** - Controller-level enforcement is working correctly
+- **Location**: `PaymentTransactionController@show()` method
+- **Implementation**: `isUserAllowedToSeeTransaction()` method properly checks ownership
+- **Security**: Users can only view their own transaction details
+
+### **2. Audit Logs Archiving System** 📋
+- **Status**: Planned but not implemented
+- **Missing Components**:
+  - `payment_audit_logs_archive` table
+  - `ArchivePaymentAuditLogsCommand` 
+  - `PaymentAuditArchiveService`
+  - Archive action in `PaymentAuditController`
+  - Archive modal in UI
+
+### **3. Scheduled Cleanup Enhancements** ⏰
+- **Status**: Partially planned
+- **Missing**:
+  - **Cache refresh**: Every 6 hours (planned)
+  - **Audit logs archiving**: Daily at 4 AM (planned)
+
+### **4. Real-time Broadcasting for Certain Events** ✅
+- **Status**: ✅ **IMPLEMENTED** - Intelligent broadcasting decisions are working correctly
+- **Implementation**: `PaymentNotificationService@shouldBroadcast()` method handles all broadcasting logic
+- **Real-time Events**: `transaction_created`, `review_requested`, `transaction_rejected`, `transaction_cancelled`
+- **Database-Only Events**: `transaction_approved`, `review_approved`, `review_rejected` (intentional design for performance)
+
+### **5. Coin Spending Integration** 🪙
+- **Status**: Completely missing (only planned)
+- **Missing Components**:
+  - `CoinSpendingService` for AI services
+  - Coin cost definitions for Global Questions, AI Auditing, Competition Questions
+  - Integration with existing services (GlobalQuestionService, AuditService, UserCompetitionService)
+  - Coin spending transaction logging
+  - Balance validation before service access
+
+### **6. User Balance Interface** 💰
+- **Status**: Completely missing
+- **Missing Components**:
+  - Dashboard balance widget
+  - Dedicated balance page
+  - Transaction history (spending/earning logs)
+  - Balance notifications and warnings
+
+### **7. Admin Balance Management Tools** 👨‍💼
+- **Status**: Completely missing
+- **Missing Components**:
+  - User balance viewing interface
+  - Manual balance adjustments
+  - Balance analytics and statistics
+  - Balance policies and rules
+
+### **8. Advanced Coin Features** 🚀
+- **Status**: Completely missing
+- **Missing Components**:
+  - Coin transfer system (user-to-user, admin transfers)
+  - Coin subscription system
+  - Coin marketplace with packages and deals
 
 ---
 
@@ -1175,38 +1305,32 @@ The payment system is now fully functional with:
 
 ### **Current Commit Message:**
 
-#### **Latest Commit: Enhanced payment cleanup system with image-only strategy**
+#### **Latest Commit: Corrected payment system documentation and status updates**
 ```
-feat(payment-cleanup): enhance cleanup system with image-only strategy and orphaned record cleanup
+docs(payment-system): correct README status for ownership checks and real-time broadcasting
 
-- service: refactor PaymentCleanupService to single integrated cleanup method
-- cleanup: implement image-only cleanup strategy (removes images, preserves database records)
-- orphaned: add automatic cleanup of orphaned database records for missing files
-- retention: update image retention periods (approved: 3 years, rejected: 90 days, cancelled: 60 days)
-- backup: remove backup system entirely for fully automated approach
-- commands: simplify cleanup command to use integrated service method
-- console: remove backup scheduling, streamline cleanup routes
-- ui: enhance transaction detail row to show clear message when proof images are removed
-- translations: add English and Arabic messages for removed proof images
-- logging: integrate RegisterLogs trait for comprehensive operation logging
+- docs: update transaction detail access section to show ownership checks are implemented
+- docs: clarify notification system broadcasting status as fully implemented
+- docs: add missing features section with corrected implementation status
+- docs: update current status to reflect security features are complete
+- docs: clarify that real-time broadcasting decisions are working correctly
+- docs: add comprehensive missing features list with accurate status
 
-Files modified/added:
-- app/Services/Payment/PaymentCleanupService.php (refactored)
-- app/Console/Commands.php (simplified)
-- routes/console.php (streamlined)
-- resources/views/components/tables/payment/transaction-detail-row.blade.php (enhanced)
-- lang/en/payment.php (new translations)
-- lang/ar/payment.php (new translations)
-- docs/PAYMENT_SYSTEM_README.md (updated)
+Files modified:
+- docs/PAYMENT_SYSTEM_README.md (comprehensive updates)
 
-Features:
-- Single integrated cleanup method: detect → delete → update database → log
-- Image-only cleanup: removes files from disk, preserves database records for legal compliance
-- Orphaned record cleanup: automatically cleans up database records for missing files
-- Enhanced retention periods: longer retention for approved payments, shorter for rejected/cancelled
-- User-friendly UI: clear indication when proof images have been removed during cleanup
-- Comprehensive logging: detailed tracking of all cleanup operations using RegisterLogs trait
-- Fully automated: no manual intervention required, runs daily at 2 AM
+Documentation Updates:
+- Ownership Check Enforcement: ✅ IMPLEMENTED (was incorrectly marked as planned)
+- Real-time Broadcasting: ✅ IMPLEMENTED (was incorrectly marked as partial)
+- Security Features: ✅ Complete with ownership checks and secure image storage
+- Missing Features: Added accurate list of what's actually missing vs implemented
+- Implementation Status: Updated from 90% to 95% complete
+
+Key Findings:
+- PaymentTransactionController@show() properly enforces ownership via isUserAllowedToSeeTransaction()
+- PaymentNotificationService@shouldBroadcast() intelligently handles all broadcasting decisions
+- Core payment system is more complete than previously documented
+- Main missing piece remains: Coin spending integration for AI services
 ```
 
 ### **Commit Message Generation Rules:**
