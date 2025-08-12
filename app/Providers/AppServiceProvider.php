@@ -8,6 +8,7 @@ use App\Services\User\UserService;
 use App\Contracts\FlasherInterface;
 use App\Services\Admin\AdminService;
 use App\Services\Notification\Flasher;
+use App\Services\SystemSettingService;
 use Illuminate\Support\ServiceProvider;
 use App\Services\Payment\PaymentService;
 use Illuminate\Validation\Rules\Password;
@@ -170,13 +171,19 @@ class AppServiceProvider extends ServiceProvider
             );
         });
 
+        // system settings service (singleton for performance)
+        $this->app->singleton(SystemSettingService::class, function ($app) {
+            return new SystemSettingService();
+        });
+
         // payment service
         $this->app->bind(PaymentService::class, function ($app) {
             return new PaymentService(
                 $app->make(TransactionManagerInterface::class),
                 $app->make(FlasherInterface::class),
                 $app->make(CoinPricingService ::class),
-                $app->make(PaymentNotificationService::class)
+                $app->make(PaymentNotificationService::class),
+                $app->make(SystemSettingService::class)
             );
         });
     }

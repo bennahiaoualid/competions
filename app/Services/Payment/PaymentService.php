@@ -3,21 +3,18 @@
 namespace App\Services\Payment;
 
 use Exception;
-use App\Enums\UserTypeEnum;
 use App\Traits\RegisterLogs;
 use App\Traits\ImageManipulation;
 use App\Contracts\FlasherInterface;
-use App\Models\Payment\CoinBalance;
 use App\Models\Payment\CoinPricing;
 use Illuminate\Support\Facades\Auth;
+use App\Services\SystemSettingService;
 use App\Models\Payment\PaymentAuditLog;
-use Illuminate\Support\Facades\Storage;
 use App\Models\Payment\PaymentTransaction;
 use App\Services\Payment\CoinPricingService;
-use App\Services\Notification\PaymentNotificationService;
 use App\Contracts\TransactionManagerInterface;
-use App\Helpers\PaginationHelper;
 use App\Events\Payment\PaymentCacheInvalidationEvent;
+use App\Services\Notification\PaymentNotificationService;
 
 class PaymentService
 {
@@ -27,8 +24,18 @@ class PaymentService
         protected TransactionManagerInterface $transactionManager,
         protected FlasherInterface $flasher,
         protected CoinPricingService $coinPricingService,
-        protected PaymentNotificationService $notificationService
+        protected PaymentNotificationService $notificationService,
     ) {}
+
+    public function getUserTransactionCountForDay(): int
+    {
+        $user = Auth::user();
+        $count = PaymentTransaction::where('payable_id', $user->id)
+            ->where('payable_type', get_class($user))
+            ->whereDate('created_at', now()->toDateString())
+            ->count();
+        return $count;
+    }
 
     public function getTransactionsForUser(array $filters = [], $page = 1, int $perPage = 5)
     {

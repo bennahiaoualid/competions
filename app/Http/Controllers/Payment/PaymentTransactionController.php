@@ -10,6 +10,7 @@ use App\Contracts\FlasherInterface;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
+use App\Services\SystemSettingService;
 use App\Services\Payment\PaymentService;
 use App\Models\Payment\PaymentTransaction;
 use App\Services\Payment\PaymentReviewService;
@@ -23,7 +24,8 @@ class PaymentTransactionController extends Controller
         protected PaymentService $paymentService,
         protected FlasherInterface $flasher,
         protected PaymentReviewService $paymentReviewService,
-        protected PaymentCacheManagement $paymentCacheManagement
+        protected PaymentCacheManagement $paymentCacheManagement,
+        protected SystemSettingService $systemSettingService
     ) {}
 
     /**
@@ -92,6 +94,14 @@ class PaymentTransactionController extends Controller
      */
     public function store(StorePaymentTransactionRequest $request): RedirectResponse
     {
+        $user = Auth::user();
+        $maxTransactionAllowed = $this->systemSettingService->getValueAsInt('max_daily_transactions');
+        $userTransactionCountForDay = $this->paymentCacheManagement->getUserTransactionCountForDay($user->id);
+
+        if($userTransactionCountForDay >= $maxTransactionAllowed) {
+            $this->flasher->error(__('messages.validation.not_allow.max_daily_transactions_reached', ['number' => $maxTransactionAllowed]));
+            return redirect()->back();
+        }
         $this->paymentService->createPaymentFromRequest($request);
         
         return redirect()->back();

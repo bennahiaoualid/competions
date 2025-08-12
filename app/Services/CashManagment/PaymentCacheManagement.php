@@ -56,6 +56,21 @@ class PaymentCacheManagement
             });
     }
 
+    public function getUserTransactionCountForDay($userId): int
+    {
+        $cacheKey = $this->buildCacheKey('getUserTransactionCountForDay', [
+            'userId' => $userId,
+        ]);
+        
+        $cacheTags = $this->getCacheTags('user_transaction_count_for_day', $userId);
+        $cacheDuration = $this->getCacheDuration('getUserTransactionCountForDay');
+
+        return Cache::tags($cacheTags)
+            ->remember($cacheKey, $cacheDuration, function () {
+                return $this->paymentService->getUserTransactionCountForDay();
+            });
+    }
+
     /**
      * Invalidate user transactions cache and also invalidate status counts
      */
@@ -68,6 +83,10 @@ class PaymentCacheManagement
         // Also invalidate user transaction status counts cache
         $statusTags = $this->getCacheTags('user_transaction_status', $userId);
         Cache::tags($statusTags)->flush();
+
+        // Also invalidate user transaction count for day cache
+        $countTags = $this->getCacheTags('user_transaction_count_for_day', $userId);
+        Cache::tags($countTags)->flush();
 
         // Optional: Log cache invalidation for debugging
         \Log::info("Cache invalidated for user {$userId}: transactions and status counts");
@@ -120,6 +139,7 @@ class PaymentCacheManagement
     {
         $cacheDurations = [
             'getUserTransactions' => 43200 , // 12 hours
+            'getUserTransactionCountForDay' => 43200 , // 12 hours
             'getUserTransactionStatusCounts' => 43200 , // 12 hours
         ];
 
@@ -135,6 +155,7 @@ class PaymentCacheManagement
         $allUserTags = [
             'user_transactions_' . $userId,
             'user_transaction_status_' . $userId,
+            'user_transaction_count_for_day_' . $userId,
         ];
 
         foreach ($allUserTags as $tag) {
@@ -169,6 +190,10 @@ class PaymentCacheManagement
                 'userId' => $userId,
                 'filters' => [],
                 'page' => 1
+            ]),
+            'transaction_count_for_day' => $this->buildCacheKey('getUserTransactionCountForDay', [
+                'userId' => $userId,
+                'filters' => []
             ]),
             'status_counts' => $this->buildCacheKey('getUserTransactionStatusCounts', [
                 'userId' => $userId,

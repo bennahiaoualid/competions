@@ -89,6 +89,8 @@ return [
             'remove_auditor_only_one' => 'لا يمكنك ازالة المصحح الوحيد في المسابقة',
             'global_question_choices' => 'عدد الخيارات يجب ان يكون بين 2 الى 5 خيارات',
             'not_authorized' => 'ليس لديك الصلاحيات لتنفيذ هذا الإجراء',
+            // payment
+            'max_daily_transactions_reached' => 'لقد وصلت الحد الاقصى لعدد المعاملات المسموح بها لهذا اليوم :number',
             'only_one_active_offer' => 'هنالك عرض دفع نشط لهذا التسعير, يجب ان يكون لديك عرض دفع نشط واحد فقط',
             'transcation_incorrect_user_type' => 'هذا الإجراء غير مسموح به لنوع حسابك.',
         ],

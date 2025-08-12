@@ -23,9 +23,11 @@ class SystemSettingController extends Controller
     public function index(): View
     {
         $allSettings = $this->systemSettingService->getAllSettings();
-        $paymentSettings = $this->systemSettingService->getPaymentSettings();
-        $systemSettings = $this->systemSettingService->getSystemSettings();
-        $notificationSettings = $this->systemSettingService->getNotificationSettings();
+        
+        // Filter locally instead of calling separate methods
+        $paymentSettings = $this->systemSettingService->filterSettingsByCategory($allSettings, 'payment');
+        $systemSettings = $this->systemSettingService->filterSettingsByCategory($allSettings, 'system');
+        $notificationSettings = $this->systemSettingService->filterSettingsByCategory($allSettings, 'notifications');
         
         return view('pages.admin.system.settings.index', compact('allSettings', 'paymentSettings', 'systemSettings', 'notificationSettings'));
     }

@@ -20,13 +20,12 @@ class SystemSettingService
     private const CACHE_TTL = 3600;
 
     /**
-     * get all settings
+     * get all settings (static for singleton performance)
      */
-    private $allSettings;
+    private static $allSettings = null;
 
     public function __construct()
     {
-        $this->allSettings = $this->getAllSettingsFromCache();
     }
 
     /**
@@ -103,7 +102,7 @@ class SystemSettingService
      */
     public function getSetting(string $key): ?SystemSetting
     {
-        $settings = $this->allSettings;
+        $settings = self::$allSettings ?? $this->getAllSettings();
         return $settings->firstWhere('setting_key', $key);
     }
 
@@ -117,9 +116,20 @@ class SystemSettingService
         });
     }
 
+    /**
+     * Check if settings are already loaded in memory
+     */
+    public function isSettingsLoaded(): bool
+    {
+        return self::$allSettings !== null;
+    }
+
     public function getAllSettings(): Collection
     {
-        return $this->allSettings;
+        if (self::$allSettings === null) {
+            self::$allSettings = $this->getAllSettingsFromCache();
+        }
+        return self::$allSettings;
     }
 
     /**
@@ -206,7 +216,7 @@ class SystemSettingService
     public function clearCache(): void
     {
         Cache::forget(self::CACHE_KEY);
-        $this->allSettings = null;
+        self::$allSettings = null;
     }
 
     /**
@@ -256,5 +266,15 @@ class SystemSettingService
     public function getNotificationSettings(): Collection
     {
         return $this->getSettingsByCategory('notifications');
+    }
+
+    /**
+     * Filter settings by category from existing collection (no cache hit)
+     */
+    public function filterSettingsByCategory(Collection $settings, string $category): Collection
+    {
+        return $settings->filter(function ($setting) use ($category) {
+            return str_starts_with($setting->setting_trans_key, "settings.{$category}.");
+        });
     }
 } 

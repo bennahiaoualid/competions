@@ -90,6 +90,8 @@ return [
             'remove_auditor_only_one' => 'you cant delete the only auditor in a competition',
             'global_question_choices' => 'choices number should be at between 2 or 5 choices',
             'not_authorized' => 'you are not authorized to proceed this action',
+            // payment
+            'max_daily_transactions_reached' => 'You have reached the maximum number :number of transactions allowed for today.',
             'transcation_incorrect_user_type' => 'This action is not allowed for your account type.',
             'only_one_active_offer' => 'There is active offer for this coin pricing, only one active offer is allowed',
         ],
