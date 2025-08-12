@@ -65,6 +65,13 @@ class PaymentTransactionController extends Controller
         $paymentTransaction->load(['approver']);
         $canOrderReview = in_array($paymentTransaction->status, ['rejected', 'cancelled']);
 
+        if($paymentTransaction->approved_at && 
+            $paymentTransaction->approved_at < now()->subHours(48) &&
+            $canOrderReview) {
+
+            $canOrderReview = false;
+        }
+
         $review = $paymentTransaction->reviewRequests()->latest()->first();
 
         return view('pages.payment.show', compact('paymentTransaction', 'canOrderReview', 'review'));

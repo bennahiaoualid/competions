@@ -146,6 +146,7 @@ return [
             'approve_confirmation' => 'هل تريد الموافقة على طلب المراجعة؟',
             'reject_confirmation' => 'هل تريد رفض طلب المراجعة؟',
             'already_exists' => 'لقد تم طلب مراجعة هذه المعاملة بالفعل',
+            'review_period_passed' => 'لا يمكنك طلب مراجعة بعد 48 ساعة من تدقيق المعاملة',
         ],
         'detail' => [
             'review_info' => 'معلومات المراجعة',

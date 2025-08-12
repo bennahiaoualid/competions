@@ -24,6 +24,12 @@ class PaymentReviewService
     {
         try {
             return $this->transactionManager->run(function () use ($transaction, $reason) {
+
+                if($transaction->approved_at < now()->subHours(48)) {
+                    $this->flasher->error(__('payment.review.messages.review_period_passed'));
+                    return false;
+                }
+
                 // Ensure no pending review exists for this transaction
                 $existing = PaymentReviewRequest::where('payment_transaction_id', $transaction->id)
                     ->first();

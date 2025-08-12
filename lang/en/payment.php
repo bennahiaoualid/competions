@@ -135,6 +135,7 @@ return [
             'approve_confirmation' => 'Approve this review request?',
             'reject_confirmation' => 'Reject this review request?',
             'already_exists' => 'A review request already exists for this transaction',
+            'review_period_passed' => 'You cannot request a review after 48 hours of transaction audit',
         ],
         'detail' => [
             'review_info' => 'Review Information',
