@@ -99,15 +99,30 @@ return [
             'approver' => 'Auditor',
             'approved_at' => 'Action Date',
             'proof_image' => 'Proof Image',
+            'created_at' => 'Created At',
+            'actions' => 'Actions',
+            'observation' => 'Observation',
+            'accountant_observation' => 'Auditor Observation',
+            'view_details' => 'View Details',
         ],
         'proof_image_removed' => [
             'title' => 'Proof Image Removed',
             'description' => 'This image has been automatically removed during system cleanup',
         ],
+        'actions' => [
+            'approve' => 'Approve Payment',
+            'reject' => 'Reject Payment',
+            'cancel' => 'Cancel Payment',
+        ],
+        'messages' => [
+            'approve_confirmation' => 'Are you sure you want to approve this payment?',
+            'reject_confirmation' => 'Are you sure you want to reject this payment?',
+            'cancel_confirmation' => 'Are you sure you want to cancel this payment?',
+            'optional_observation' => 'Optional observation (optional)',
+            'required_observation' => 'Please provide a reason for rejection',
+        ],
         'observation' => 'Observation',
         'accountant_observation' => 'Auditor Observation',
-        'created_at' => 'Created At',
-        'actions' => 'Actions',
         'view_details' => 'View Details',
     ],
 
@@ -205,6 +220,7 @@ return [
         'active_offers' => 'Active Offers',
     ],
 
+    // Actions and messages
     'actions' => [
         'approve' => 'Approve Payment',
         'reject' => 'Reject Payment',
@@ -329,6 +345,59 @@ return [
             'changes' => 'Changes',
             'old_values' => 'Old Values',
             'new_values' => 'New Values',
+        ],
+    ],
+
+    // Transaction History
+    'transaction_history' => [
+        'title' => 'Transaction History',
+        'description' => 'View your complete coin transaction history',
+        'filters' => [
+            'title' => 'Filters',
+            'type' => 'Transaction Type',
+            'detail' => 'Transaction Detail',
+            'date_from' => 'From Date',
+            'date_to' => 'To Date',
+            'apply_filters' => 'Apply Filters',
+            'clear_filters' => 'Clear Filters',
+        ],
+        'summary' => [
+            'total_earned' => 'Total Earned',
+            'total_spent' => 'Total Spent',
+            'total_transactions' => 'Total Transactions',
+            'earn_transactions' => 'Earn Transactions',
+            'spend_transactions' => 'Spend Transactions',
+        ],
+        'table' => [
+            'date' => 'Date',
+            'type' => 'Type',
+            'detail' => 'Detail',
+            'amount' => 'Amount',
+            'balance_after' => 'Balance After',
+            'coins' => 'Coins',
+        ],
+        'pagination' => [
+            'showing' => 'Showing',
+            'to' => 'to',
+            'of' => 'of',
+            'results' => 'results',
+        ],
+        // Coin Transaction Types
+        'coin_transaction_types' => [
+            'all' => 'All Details',
+            'purchased' => 'Purchased',
+            'competition_gift' => 'Competition Gift',
+            'question_generate' => 'Question Generation',
+        ],
+        'transaction_types' => [
+            'all' => 'All Types',
+            'earn' => 'Earn',
+            'spend' => 'Spend',
+        ],
+        'empty_state' => [
+            'no_transactions' => 'No transactions found',
+            'no_transactions_description' => 'No transactions match your current filters.',
+            'clear_all_filters' => 'Clear all filters',
         ],
     ],
 ]; 

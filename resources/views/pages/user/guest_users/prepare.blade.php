@@ -33,10 +33,16 @@
             </li>
             <li class="flex justify-center">
                 @if(\Illuminate\Support\Facades\Auth::guard('web')->check())
-                    <x-button form="add-form" color_type="success"
-                              :islink="true" href="{{route('user.global_questions.response')}}">
-                        {{ __('form.actions.start') }}
-                    </x-button>
+                    <div class="flex gap-2">
+                        <x-button color_type="primary"
+                                :islink="true" href="{{route('user.global_questions.ai_question_generation')}}">
+                            {{__('competition.ai.use_ai')}}
+                        </x-button>
+                        <x-button form="add-form" color_type="success"
+                                :islink="true" href="{{route('user.global_questions.response')}}">
+                            {{ __('form.actions.start') }}
+                        </x-button>
+                    </div>
                 @else
                     <x-button color_type="primary"
                               :islink="true" href="{{route('login')}}">

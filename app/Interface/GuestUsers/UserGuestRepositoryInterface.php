@@ -10,4 +10,7 @@ interface UserGuestRepositoryInterface
     public function getLatestPendingResponse($questionId, $userId);
     public function getUserRespondedQuestionsPaginated($userId);
     public function findQuestion($questionId);
+    public function getRandomEligibleQuestionForUser($userId);
+    public function getRandomAIQuestionForUser($userId);
+    public function getRandomPremiumQuestionForUser($userId);
 }

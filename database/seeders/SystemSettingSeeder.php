@@ -57,6 +57,28 @@ class SystemSettingSeeder extends Seeder
                 'setting_key' => 'push_notifications_enabled',
                 'setting_value' => 'true',
                 'setting_trans_key' => 'settings.notifications.push_enabled'
+            ],
+            
+            // AI Question Generation Settings
+            [
+                'setting_key' => 'global_question_generating_cost',
+                'setting_value' => config('settings.defaults.global_question_generating_cost'),
+                'setting_trans_key' => 'settings.ai.global_question_generating_cost'
+            ],
+            [
+                'setting_key' => 'global_question_custom_difficulty_cost',
+                'setting_value' => config('settings.defaults.global_question_custom_difficulty_cost'),
+                'setting_trans_key' => 'settings.ai.global_question_custom_difficulty_cost'
+            ],
+            [
+                'setting_key' => 'global_question_custom_subject_cost',
+                'setting_value' => config('settings.defaults.global_question_custom_subject_cost'),
+                'setting_trans_key' => 'settings.ai.global_question_custom_subject_cost'
+            ],
+            [
+                'setting_key' => 'global_question_max_output_tokens',
+                'setting_value' => config('settings.defaults.global_question_max_output_tokens'),
+                'setting_trans_key' => 'settings.ai.global_question_max_output_tokens'
             ]
         ];
 

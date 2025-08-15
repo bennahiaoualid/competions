@@ -20,8 +20,16 @@ return new class extends Migration
             $table->foreignId('admin_id')->nullable()->references('id')->on('admins')->onDelete('set null');
             $table->foreignId('approved')->nullable()->references('id')->on('admins')->onDelete('set null');
             $table->string('deleted_admin_name')->nullable()->index();
+            
+            // AI Question Generation Fields
+            $table->boolean('ai')->default(false)->index(); // Whether question was AI-generated
+            $table->foreignId('user_id')->nullable()->references('id')->on('users')->onDelete('set null'); // User who generated the AI question
+            
             $table->timestamps();
 
+            // Performance Indexes
+            $table->index(['approved', 'ai', 'user_id'], 'idx_approved_ai_user'); // For AI questions by user
+            $table->index(['ai', 'created_at'], 'idx_ai_created'); // For premium questions (after 48h)
         });
     }
 

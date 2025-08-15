@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use App\Models\Competition\Level;
 use Spatie\Activitylog\LogOptions;
 use App\Models\Payment\CoinBalance;
+use App\Models\Payment\CoinTransaction;
 use App\Models\Competition\Response;
 use App\Models\Competition\Competition;
 use Illuminate\Notifications\Notifiable;
@@ -226,6 +227,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function coinBalance()
     {
         return $this->morphOne(CoinBalance::class, 'balanceable');
+    }
+
+    /**
+     * The coin transactions for this user.
+     */
+    public function coinTransactions()
+    {
+        return $this->morphMany(CoinTransaction::class, 'transactionable');
     }
 
 

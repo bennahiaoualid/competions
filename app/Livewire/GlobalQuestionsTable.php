@@ -150,7 +150,7 @@ final class GlobalQuestionsTable extends PowerGridComponent
         ];
     }
 
-    public function template(): ?string
+    public function customThemeClass(): ?string
     {
         return TailwindStriped::class;
     }

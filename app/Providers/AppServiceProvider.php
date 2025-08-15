@@ -21,20 +21,28 @@ use App\Services\Database\TransactionManager;
 use App\Services\GuestUsers\UserGuestService;
 use App\Services\User\UserCompetitionService;
 use App\Contracts\TransactionManagerInterface;
+use App\Services\Payment\PaymentReviewService;
 use App\Repository\Competition\AuditRepository;
 use App\Repository\Competition\LevelRepository;
 use App\Services\Monitoring\JobTrackingService;
 use App\Repository\Admin\AdminProfileRepository;
 use App\Services\Competition\CompetitionService;
+use App\Services\Monitoring\DuplicateJobChecker;
+use App\Services\Payment\CoinTransactionService;
 use Illuminate\Auth\Notifications\ResetPassword;
 use App\Repository\GuestUsers\UserGuestRepository;
 use App\Repository\User\UserCompetitionRepository;
 use App\Services\GuestUsers\GlobalQuestionService;
+use App\Factories\Monitoring\RestoreHandlerFactory;
+use App\Services\Monitoring\DeletionRecordsService;
 use App\Repository\Competition\CompetitionRepository;
+use App\Factories\Monitoring\HardDeleteHandlerFactory;
+use App\Services\CashManagment\PaymentCacheManagement;
 use App\Interface\Competition\AuditRepositoryInterface;
 use App\Interface\Competition\LevelRepositoryInterface;
 use App\Interface\Admin\AdminProfileRepositoryInterface;
 use App\Services\Notification\PaymentNotificationService;
+use App\Services\ProcessManagement\DelayedProcessService;
 use App\Interface\GuestUsers\UserGuestRepositoryInterface;
 use App\Interface\Monitoring\JobTrackingStrategyInterface;
 use App\Interface\User\UserCompetitionRepositoryInterface;
@@ -164,16 +172,17 @@ class AppServiceProvider extends ServiceProvider
             return new DatabaseJobTrackingStrategy();
         });
 
-        // payment cache management
-        $this->app->bind(\App\Services\CashManagment\PaymentCacheManagement::class, function ($app) {
-            return new \App\Services\CashManagment\PaymentCacheManagement(
-                $app->make(\App\Services\Payment\PaymentService::class)
-            );
-        });
-
         // system settings service (singleton for performance)
         $this->app->singleton(SystemSettingService::class, function ($app) {
             return new SystemSettingService();
+        });
+
+        // coin pricing service (singleton for performance - expensive DB queries, no user state)
+        $this->app->singleton(CoinPricingService::class, function ($app) {
+            return new CoinPricingService(
+                $app->make(TransactionManagerInterface::class),
+                $app->make(FlasherInterface::class)
+            );
         });
 
         // payment service
@@ -181,11 +190,54 @@ class AppServiceProvider extends ServiceProvider
             return new PaymentService(
                 $app->make(TransactionManagerInterface::class),
                 $app->make(FlasherInterface::class),
-                $app->make(CoinPricingService ::class),
+                $app->make(CoinPricingService::class),
                 $app->make(PaymentNotificationService::class),
-                $app->make(SystemSettingService::class)
+                $app->make(CoinTransactionService::class)
             );
         });
+
+        // payment review service (singleton for performance - heavy dependencies, no user state)
+        $this->app->singleton(PaymentReviewService::class, function ($app) {
+            return new PaymentReviewService(
+                $app->make(TransactionManagerInterface::class),
+                $app->make(FlasherInterface::class),
+                $app->make(PaymentService::class),
+                $app->make(PaymentNotificationService::class)
+            );
+        });
+
+        // optimized competition notification service (singleton for performance - batch operations, no user state)
+        $this->app->singleton(OptimizedCompetitionNotificationService::class, function ($app) {
+            return new OptimizedCompetitionNotificationService();
+        });
+
+        // payment cache management (after PaymentService is registered)
+        $this->app->bind(PaymentCacheManagement::class, function ($app) {
+            return new PaymentCacheManagement(
+                $app->make(PaymentService::class),
+                $app->make(CoinTransactionService::class)
+            );
+        });
+
+        // delayed process service (bind - lightweight, no dependencies)
+        $this->app->bind(DelayedProcessService::class);
+
+        // duplicate job checker (bind - used by JobTrackingService)
+        $this->app->bind(DuplicateJobChecker::class);
+
+        // deletion records service (bind - has dependencies)
+        $this->app->bind(DeletionRecordsService::class, function ($app) {
+            return new DeletionRecordsService(
+                $app->make(TransactionManagerInterface::class),
+                $app->make(JobTrackingService::class),
+                $app->make(FlasherInterface::class),
+                $app->make(RestoreHandlerFactory::class),
+                $app->make(HardDeleteHandlerFactory::class)
+            );
+        });
+
+        // approval assignment service (bind - system integration)
+        $this->app->bind(\App\Services\Approval\ApprovalAssignmentService::class);
     }
 
     /**

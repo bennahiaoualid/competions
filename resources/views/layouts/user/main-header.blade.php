@@ -137,7 +137,7 @@
                             </a>
                         </li>
                         <li>
-                            <a href="{{route('user.payment.create')}}" class="{{request()->routeIs('user.payment.*') ? $active_class : $inactive_classes}}">
+                            <a href="{{route('payment.create')}}" class="{{request()->routeIs('user.payment.*') ? $active_class : $inactive_classes}}">
                                 <i class="fas fa-credit-card mr-1"></i>
                                 {{__('payment.nav.create')}}
                             </a>

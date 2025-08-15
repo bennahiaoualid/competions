@@ -1,0 +1,24 @@
+<?php
+
+namespace App\Events\PaidServices;
+
+use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Queue\SerializesModels;
+
+class AIQuestionGenerationFailed
+{
+    use Dispatchable, InteractsWithSockets, SerializesModels;
+
+    /**
+     * Create a new event instance.
+     */
+    public function __construct(
+        public int $userId,
+        public float $cost,
+        public string $error,
+        public array $params
+    ) {
+        //
+    }
+} 

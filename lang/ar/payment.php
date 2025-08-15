@@ -121,6 +121,22 @@ return [
             'optional_observation' => 'ملاحظة اختيارية (اختياري)',
             'required_observation' => 'يرجى تقديم سبب للرفض',
         ],
+        'proof_image_removed' => [
+            'title' => 'تم إزالة إثبات الدفع',
+            'description' => 'تم إزالة هذه الصورة تلقائياً أثناء تنظيف النظام',
+        ],
+        'actions' => [
+            'approve' => 'الموافقة على الدفع',
+            'reject' => 'رفض الدفع',
+            'cancel' => 'إلغاء الدفع',
+        ],
+        'messages' => [
+            'approve_confirmation' => 'هل أنت متأكد من الموافقة على هذا الدفع؟',
+            'reject_confirmation' => 'هل أنت متأكد من رفض هذا الدفع؟',
+            'cancel_confirmation' => 'هل أنت متأكد من إلغاء هذا الدفع؟',
+            'optional_observation' => 'ملاحظة اختيارية (اختياري)',
+            'required_observation' => 'يرجى تقديم سبب للرفض',
+        ],
     ],
 
     'review' => [
@@ -198,6 +214,44 @@ return [
         ],
     ],
 
+    // Review system translations
+    'review' => [
+        'page_title' => 'مراجعات الدفع',
+        'columns' => [
+            'transaction_uuid' => 'معرّف المعاملة',
+            'payer' => 'المدفوع له',
+            'status' => 'الحالة',
+            'created_at' => 'تاريخ الإنشاء',
+            'actions' => 'الإجراءات',
+        ],
+        'status' => [
+            'pending' => 'قيد الانتظار',
+            'approved' => 'تمت الموافقة',
+            'rejected' => 'تم الرفض',
+        ],
+        'actions' => [
+            'approve' => 'الموافقة على المراجعة',
+            'reject' => 'رفض المراجعة',
+            'order' => 'طلب مراجعة',
+        ],
+        'messages' => [
+            'approve_confirmation' => 'هل تريد الموافقة على طلب المراجعة؟',
+            'reject_confirmation' => 'هل تريد رفض طلب المراجعة؟',
+            'already_exists' => 'لقد تم طلب مراجعة هذه المعاملة بالفعل',
+            'review_period_passed' => 'لا يمكنك طلب مراجعة بعد 48 ساعة من تدقيق المعاملة',
+        ],
+        'detail' => [
+            'review_info' => 'معلومات المراجعة',
+            'status' => 'الحالة',
+            'request_reason' => 'سبب الطلب',
+            'reviewed_by' => 'تمت المراجعة بواسطة',
+            'reviewed_at' => 'تاريخ المراجعة',
+            'observation' => 'الملاحظة',
+            'no_observation' => 'لا توجد ملاحظة',
+            'auto_rejected' => 'تم الرفض تلقائياً بعد 48 ساعة',
+        ],
+    ],
+
     // Coin Offers translations
     'offers' => [
         'title' => 'إدارة عروض العملات',
@@ -255,10 +309,21 @@ return [
         'active_offers' => 'العروض النشطة',
     ],
 
+    // Actions and messages
+    'actions' => [
+        'approve' => 'الموافقة على الدفع',
+        'reject' => 'رفض الدفع',
+        'cancel' => 'إلغاء الدفع',
+    ],
+    'messages' => [
+        'approve_confirmation' => 'هل أنت متأكد من الموافقة على هذا الدفع؟',
+        'reject_confirmation' => 'هل أنت متأكد من رفض هذا الدفع؟',
+        'cancel_confirmation' => 'هل أنت متأكد من إلغاء هذا الدفع؟',
+        'optional_observation' => 'ملاحظة اختيارية (اختياري)',
+        'required_observation' => 'يرجى تقديم سبب للرفض',
+    ],
+
     // Additional payment fields
-    'proof_image' => 'إثبات الدفع',
-    'created_at' => 'تاريخ الإنشاء',
-    'actions' => 'الإجراءات',
     'coins' => 'العملات',
     
     // Filters
@@ -329,5 +394,57 @@ return [
             'old_values' => 'القيم القديمة',
             'new_values' => 'القيم الجديدة',
         ],
+    ],
+
+    'transaction_history' => [
+        'title' => 'تاريخ المعاملات',
+        'description' => 'عرض تاريخ معاملات العملات الكامل',
+        'filters' => [
+            'title' => 'فلترة',
+            'type' => 'نوع المعاملة',
+            'detail' => 'تفاصيل المعاملة',
+            'date_from' => 'من تاريخ',
+            'date_to' => 'إلى تاريخ',
+            'apply_filters' => 'تطبيق المرشحات',
+            'clear_filters' => 'مسح المرشحات',
+        ],
+        'summary' => [
+            'total_earned' => 'إجمالي المكتسب',
+            'total_spent' => 'إجمالي المنفق',
+            'total_transactions' => 'إجمالي المعاملات',
+            'earn_transactions' => 'معاملات الكسب',
+            'spend_transactions' => 'معاملات الإنفاق',
+        ],
+        'table' => [
+            'date' => 'التاريخ',
+            'type' => 'النوع',
+            'detail' => 'التفاصيل',
+            'amount' => 'المبلغ',
+            'balance_after' => 'الرصيد بعد',
+            'coins' => 'العملات',
+        ],
+        'pagination' => [
+            'showing' => 'عرض',
+            'to' => 'إلى',
+            'of' => 'من',
+            'results' => 'نتيجة',
+        ],
+        'coin_transaction_types' => [
+            'all' => 'جميع التفاصيل',
+            'purchased' => 'تم الشراء',
+            'competition_gift' => 'هدية المسابقة',
+            'question_generate' => 'إنشاء السؤال',
+        ],
+        'transaction_types' => [
+            'all' => 'جميع الأنواع',
+            'earn' => 'كسب',
+            'spend' => 'إنفاق',
+        ],
+        'empty_state' => [
+            'no_transactions' => 'لا توجد معاملات',
+            'no_transactions_description' => 'لا توجد معاملات تطابق المرشحات الحالية.',
+            'clear_all_filters' => 'مسح المرشحات',
+        ],
+        
     ],
 ]; 

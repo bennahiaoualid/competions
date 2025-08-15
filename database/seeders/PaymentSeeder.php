@@ -36,7 +36,6 @@ class PaymentSeeder extends Seeder
 
         // Clean up any existing payment data first
         $this->cleanup();
-
         // Create test data
         $this->createAccountantAdmin();
         $this->createTestUsers();
@@ -58,7 +57,7 @@ class PaymentSeeder extends Seeder
 
         $accountant = Admin::create([
             'name' => 'Ahmed Accountant',
-            'email' => 'accountant@test.com',
+            'email' => 'accountant@payment.test',
             'password' => Hash::make('12345678'),
             'birthdate' => '1990-05-15',
             'gender' => 'male',
@@ -85,21 +84,21 @@ class PaymentSeeder extends Seeder
         $users = [
             [
                 'name' => 'John User',
-                'email' => 'john.user@test.com',
+                'email' => 'john.user@payment.test',
                 'password' => Hash::make('12345678'),
                 'birthdate' => '1995-03-20',
                 'gender' => 'male',
             ],
             [
                 'name' => 'Sarah User',
-                'email' => 'sarah.user@test.com',
+                'email' => 'sarah.user@payment.test',
                 'password' => Hash::make('12345678'),
                 'birthdate' => '1992-08-10',
                 'gender' => 'female',
             ],
             [
                 'name' => 'Mike User',
-                'email' => 'mike.user@test.com',
+                'email' => 'mike.user@payment.test',
                 'password' => Hash::make('12345678'),
                 'birthdate' => '1988-12-05',
                 'gender' => 'male',
@@ -123,14 +122,14 @@ class PaymentSeeder extends Seeder
         $admins = [
             [
                 'name' => 'Manager Admin',
-                'email' => 'manager@test.com',
+                'email' => 'manager@payment.test',
                 'password' => bcrypt('password123'),
                 'birthdate' => '1985-07-12',
                 'gender' => 'male',
             ],
             [
                 'name' => 'Super Admin',
-                'email' => 'super@test.com',
+                'email' => 'super@payment.test',
                 'password' => bcrypt('password123'),
                 'birthdate' => '1980-11-25',
                 'gender' => 'male',
@@ -153,7 +152,7 @@ class PaymentSeeder extends Seeder
 
         $users = User::whereIn('id', $this->createdRecords['users'])->get();
         $admins = Admin::whereIn('id', $this->createdRecords['admins'])->get();
-        $accountant = Admin::where('email', 'accountant@test.com')->first();
+        $accountant = Admin::where('email', 'accountant@payment.test')->first();
 
         // Create user payments
         foreach ($users as $user) {
@@ -225,7 +224,7 @@ class PaymentSeeder extends Seeder
     {
         $this->command->info('💰 Creating Coin Pricing...');
 
-        $accountant = Admin::where('email', 'accountant@test.com')->first();
+        $accountant = Admin::where('email', 'accountant@payment.test')->first();
 
         // Create standard user pricing (100 DZD = 50 coins)
         $userPricing = CoinPricing::create([
@@ -285,7 +284,7 @@ class PaymentSeeder extends Seeder
     {
         $this->command->info('🎁 Creating Coin Offers...');
 
-        $accountant = Admin::where('email', 'accountant@test.com')->first();
+        $accountant = Admin::where('email', 'accountant@payment.test')->first();
         
         // Get the pricing rules we created
         $userPricing = CoinPricing::where('name', 'Standard User Package')->first();
@@ -372,10 +371,10 @@ class PaymentSeeder extends Seeder
         PaymentTransaction::query()->delete();
 
         // Delete test admins (except owner)
-        Admin::where('email', 'like', '%@test.com')->delete();
+        Admin::where('email', 'like', '%@payment.test')->forceDelete();
 
         // Delete test users
-        User::where('email', 'like', '%@test.com')->delete();
+        User::where('email', 'like', '%@payment.test')->forceDelete();
 
         // Clean up proof images (skip if disk not configured)
         try {

@@ -256,6 +256,76 @@
         </div>
     </div>
 
+    {{-- AI Question Generation Settings Section --}}
+    <div class="mb-8 border-t-4 border-orange-500 pt-4 rounded-md">
+        <div class="flex items-center mb-4 p-4 gap-2">
+            <div class="p-2 bg-orange-100 rounded-lg">
+                <i class="fas fa-robot text-orange-600 text-xl"></i>
+            </div>
+            <div class="ml-3 space-y-2">
+                <h2 class="text-xl font-semibold text-gray-900">{{__('settings.categories.ai.title')}}</h2>
+                <p class="text-sm text-gray-600">{{ __('settings.categories.ai.description') }}</p>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            @foreach($aiSettings as $setting)
+                <div class="bg-white rounded-lg shadow-md p-2 md:p-6 border border-gray-200">
+                    <div class="flex items-center mb-4 gap-2">
+                        <div class="p-2 bg-orange-100 rounded-lg">
+                            <i class="fas fa-robot text-orange-600 text-xl"></i>
+                        </div>
+                        <div class="ml-3 flex-1 space-y-2">
+                            <h3 class="text-lg font-semibold text-gray-900">
+                                {{ __("settings.ai.{$setting->setting_key}.name") }}
+                            </h3>
+                            <p class="text-sm text-gray-600">
+                                {{ __("settings.ai.{$setting->setting_key}.description") }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <span class="text-sm font-medium text-gray-700">{{__('settings.common.current_value')}}:</span>
+                            <span class="font-semibold text-lg text-gray-900">{{ $setting->setting_value }}</span>
+                        </div>
+
+                        <div class="text-sm text-gray-600">
+                            <p><strong>{{__('settings.common.unit')}}:</strong> {{ __("settings.ai.{$setting->setting_key}.unit") }}</p>
+                            <p><strong>{{__('settings.common.help')}}:</strong> {{ __("settings.ai.{$setting->setting_key}.help") }}</p>
+                        </div>
+
+                        <form method="POST" action="{{ route('admin.system.settings.update', $setting->setting_key) }}" class="space-y-3">
+                            @csrf
+                            @method('PUT')
+
+                            <div>
+                                <x-input-label for="value_{{ $setting->setting_key }}" :value=" ucwords(__('settings.common.new_value'))" />
+                                <x-text-input 
+                                        id="value_{{ $setting->setting_key }}" 
+                                        type="text" class="mt-1 block w-full" 
+                                        :value="$setting->setting_value"
+                                        name="value"
+                                        />
+                                <x-input-error :messages="$errors->get($setting->setting_key)" class="mt-2" />
+                            </div>
+                            
+                            <div class="flex justify-end">
+                                <x-button type="submit" color_type="orange">
+                                    <x-slot:icon>
+                                        <i class="fas fa-save me-2"></i>
+                                    </x-slot:icon>
+                                    {{__('settings.common.update')}}
+                                </x-button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+
     @if($allSettings->isEmpty())
         <div class="text-center py-12">
             <i class="fas fa-cogs text-gray-400 text-6xl mb-4"></i>

@@ -30,7 +30,7 @@ class CustomTheme extends Tailwind
                 'tbody' => 'bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900',
                 'tbodyEmpty' => '',
                 'tr' => 'border border-slate-100 dark:border-slate-400 hover:bg-slate-50 dark:bg-slate-700 dark:odd:bg-slate-800 dark:odd:hover:bg-slate-900 dark:hover:bg-slate-700',
-                'td' => 'px-4 py-4 text-sm font-medium text-gray-700 dark:text-gray-200 whitespace-nowrap',
+                'td' => 'px-4 py-4 text-sm font-medium text-gray-700 dark:text-gray-200 bg-red-500',
                 'tdEmpty' => 'px-4 py-4 text-sm font-medium text-gray-700 dark:text-gray-200 whitespace-nowrap',
                 'tdSummarize' => 'px-3 py-2 whitespace-nowrap dark:text-slate-200 text-sm text-slate-600 text-right space-y-2',
                 'trSummarize' => '',

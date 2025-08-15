@@ -2,20 +2,21 @@
 
 namespace App\Http\Controllers\GuestUsers;
 
+use Illuminate\View\View;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\GuestUsers\StoreQuestionRequest;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Redirect;
 use App\Models\GuestUsers\GlobalQuestion;
 use App\Services\GuestUsers\GlobalQuestionService;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\View\View;
+use App\Http\Requests\GuestUsers\StoreQuestionRequest;
+use App\Services\Competition\GlobalQuestionGenerationService;
 
 class GlobalQuestionController extends Controller
 {
 
     public function __construct(
-        protected GlobalQuestionService $questionService
+        protected GlobalQuestionService $questionService,
     ) {
     }
 

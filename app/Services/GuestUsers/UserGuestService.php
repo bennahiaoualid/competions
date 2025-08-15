@@ -29,15 +29,22 @@ class UserGuestService
     }
 
     // All business logic for getting a random question
-    public function getRandomQuestion(): array
+    public function getRandomQuestion(string $type = 'regular'): array
     {
         try {
             $user = Auth::user();
-            // Optimized: Only fetch one eligible question with choices, filtered in SQL
-            $question = $this->userRepository->getRandomEligibleQuestionForUser($user->id);
+            
+            // Get question based on type
+            $question = match($type) {
+                'ai' => $this->userRepository->getRandomAIQuestionForUser($user->id),
+                'premium' => $this->userRepository->getRandomPremiumQuestionForUser($user->id),
+                default => $this->userRepository->getRandomEligibleQuestionForUser($user->id),
+            };
+            
             if (!$question) {
                 return ['status' => 'empty_question'];
             }
+            
             // Initialize response in a transaction
             $initSuccess = $this->transactionManager->run(function () use ($question, $user) {
                 $data = [
@@ -50,13 +57,17 @@ class UserGuestService
                 $this->userRepository->createResponse($data);
                 return true;
             });
+            
             if (!$initSuccess) {
                 throw new Exception('Failed to initialize response');
             }
+            
             // Shuffle choices in random order
             $question->choices = $question->choices->shuffle();
+            
             // Store the start time in the session
             session(['start_time' => now()]);
+            
             return ['status' => 'success' , 'question' => $question];
         } catch (Exception $exception) {
             $this->registerLogs('UserGuestSevice :: getRandomQuestion ',$exception);

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('payment_audit_logs', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('payment_transaction_id');
-            $table->unsignedBigInteger('admin_id');
+            $table->unsignedBigInteger('admin_id')->nullable();
             $table->string('action', 50); // 'created', 'approved', 'rejected', 'modified'
             $table->json('old_values')->nullable();
             $table->json('new_values')->nullable();
@@ -24,7 +24,7 @@ return new class extends Migration
             
             // Foreign keys (indexes created automatically)
             $table->foreign('payment_transaction_id')->references('id')->on('payment_transactions')->onDelete('cascade');
-            $table->foreign('admin_id')->references('id')->on('admins')->onDelete('cascade');
+            $table->foreign('admin_id')->references('id')->on('admins')->onDelete('set null');
         });
     }
 

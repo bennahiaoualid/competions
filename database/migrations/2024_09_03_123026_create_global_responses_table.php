@@ -19,6 +19,12 @@ return new class extends Migration
             $table->float('score')->default(0);
             $table->integer('response_duration')->default(0);
             $table->timestamps();
+
+            // Performance Indexes
+            $table->index(['user_id', 'question_id'], 'idx_user_question'); // For finding user responses to questions
+            $table->index(['user_id', 'question_id', 'score'], 'idx_user_question_score'); // For eligibility logic
+            $table->index(['question_id', 'user_id'], 'idx_question_user'); // For question-based queries
+            $table->index(['user_id', 'score'], 'idx_user_score'); // For user performance queries
         });
     }
 

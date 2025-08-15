@@ -18,6 +18,10 @@ return [
             'title' => 'Notification Settings',
             'description' => 'Manage notification settings and preferences',
         ],
+        'ai' => [
+            'title' => 'AI Question Generation',
+            'description' => 'Manage AI question generation costs and settings',
+        ],
     ],
     
     // Payment Rules
@@ -85,6 +89,38 @@ return [
             'message' => 'Push notifications are {value}',
             'unit' => 'status',
             'help' => 'Control whether push notifications are sent'
+        ],
+    ],
+    
+    // AI Question Generation Settings
+    'ai' => [
+        'global_question_generating_cost' => [
+            'name' => 'Question Generation Base Cost',
+            'description' => 'Base cost in coins for generating an AI question',
+            'message' => 'Base cost: {value} coins',
+            'unit' => 'coins',
+            'help' => 'Set the base cost for AI question generation'
+        ],
+        'global_question_custom_difficulty_cost' => [
+            'name' => 'Custom Difficulty Cost',
+            'description' => 'Additional cost for selecting a specific difficulty level',
+            'message' => 'Custom difficulty cost: {value} coins',
+            'unit' => 'coins',
+            'help' => 'Additional cost when user selects a specific difficulty instead of random'
+        ],
+        'global_question_custom_subject_cost' => [
+            'name' => 'Custom Subject Cost',
+            'description' => 'Additional cost for selecting a specific subject',
+            'message' => 'Custom subject cost: {value} coins',
+            'unit' => 'coins',
+            'help' => 'Additional cost when user selects a specific subject instead of random'
+        ],
+        'global_question_max_output_tokens' => [
+            'name' => 'Maximum Output Tokens',
+            'description' => 'Maximum number of tokens for AI question generation',
+            'message' => 'Maximum tokens: {value}',
+            'unit' => 'tokens',
+            'help' => 'Set the maximum token limit for AI responses'
         ],
     ],
     

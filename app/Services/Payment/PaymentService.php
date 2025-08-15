@@ -8,10 +8,10 @@ use App\Traits\ImageManipulation;
 use App\Contracts\FlasherInterface;
 use App\Models\Payment\CoinPricing;
 use Illuminate\Support\Facades\Auth;
-use App\Services\SystemSettingService;
 use App\Models\Payment\PaymentAuditLog;
 use App\Models\Payment\PaymentTransaction;
 use App\Services\Payment\CoinPricingService;
+use App\Services\Payment\CoinTransactionService;
 use App\Contracts\TransactionManagerInterface;
 use App\Events\Payment\PaymentCacheInvalidationEvent;
 use App\Services\Notification\PaymentNotificationService;
@@ -25,6 +25,7 @@ class PaymentService
         protected FlasherInterface $flasher,
         protected CoinPricingService $coinPricingService,
         protected PaymentNotificationService $notificationService,
+        protected CoinTransactionService $coinTransactionService,
     ) {}
 
     public function getUserTransactionCountForDay(): int
@@ -241,6 +242,9 @@ class PaymentService
         
         // Add coins
         $coinBalance->addCoins($payment->coins_credited);
+        
+        // Create earn transaction record
+        $this->coinTransactionService->createPurchasedTransaction($payable, $payment->coins_credited);
     }
 
     /**
@@ -255,7 +259,7 @@ class PaymentService
     ): void {
         PaymentAuditLog::create([
             'payment_transaction_id' => $payment->id,
-            'admin_id' => $adminId ?? (Auth::check() ? Auth::id() : null),
+            'admin_id' => $adminId ,
             'action' => $action,
             'old_values' => $oldValues,
             'new_values' => $newValues,
@@ -273,25 +277,6 @@ class PaymentService
             $eventType,
             ['userId' => $payment->payable_id]
         );
-    }
-
-    /**
-     * Delete payment proof image
-     */
-    public function deleteProofImage(PaymentTransaction $payment): bool
-    {
-        if ($payment->proof_image_path) {
-            // Get thumbnails from payment metadata if available
-            $thumbnails = $payment->metadata['thumbnails'] ?? [];
-            
-            /*return $this->deleteImage(
-                $payment->proof_image_path,
-                'payment_proofs',
-                $thumbnails
-            );*/
-        }
-        
-        return true;
     }
 
     /**

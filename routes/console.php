@@ -37,3 +37,16 @@ Schedule::call(function () {
     app(\App\Console\Commands::class)->archivePaymentAuditLogs();
 })->dailyAt('04:00');
 
+// 🆕 LLM System Commands
+
+// Test LLM connection
+Artisan::command('llm:test {provider=openai}', function ($provider) {
+    $this->call(\App\Console\Commands\TestLLMConnection::class, ['provider' => $provider]);
+})->purpose('Test LLM connection for a specific provider');
+
+// Check LLM health status
+Artisan::command('llm:health {provider=openai}', function ($provider) {
+    app(\App\Console\Commands::class)->checkLLMHealth($provider);
+    $this->info("Health check completed for provider: {$provider}");
+})->purpose('Check LLM provider health status');
+

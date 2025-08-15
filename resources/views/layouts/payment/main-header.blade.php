@@ -121,8 +121,13 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{route('payment.coin-balance')}}" class="{{request()->routeIs('payment.coin-balance') ? $active_class : $inactive_classes}}">
+                        <a href="">
                             {{__('payment.nav.balance')}}
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{route('payment.transactions.history')}}" class="{{request()->routeIs('payment.transactions.history') ? $active_class : $inactive_classes}}">
+                            {{__('payment.transaction_history.title')}}
                         </a>
                     </li>
 
