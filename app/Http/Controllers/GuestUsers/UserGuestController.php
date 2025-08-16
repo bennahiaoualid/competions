@@ -43,7 +43,7 @@ class UserGuestController extends Controller
         }
     }
 
-    public function getRandomAIQuestion():  View|RedirectResponse
+    public function getRandomAIQuestion($questionId = null):  View|RedirectResponse
     {
         $result =  $this->userGuestService->getRandomQuestion('ai');
 

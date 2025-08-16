@@ -68,6 +68,7 @@ class GenerateAIQuestionJob implements ShouldQueue
                 
                 // 5. Fire success event for coin deduction
                 DB::afterCommit(function () use ($question) {
+                    
                     event(new AIQuestionGenerated($question, $this->userId, $this->cost));
                     Log::info('AI question generated successfully', [
                         'question_id' => $question->id,
@@ -81,19 +82,19 @@ class GenerateAIQuestionJob implements ShouldQueue
         } catch (QuestionGenerationProcessException $e) {
             // Exception already logged itself! No manual logging needed.
             // Fire failure event
-            event(new AIQuestionGenerationFailed($this->userId, $this->cost, $e->getMessage(), $this->params));
+            event(new AIQuestionGenerationFailed($this->userId, $this->cost, $e->getMessage(), $this->params, 'question_generation_process'));
             
             throw $e;
         } catch (LLMCodeException $e) {
             // Exception already logged itself! No manual logging needed.
             // Fire failure event
-            event(new AIQuestionGenerationFailed($this->userId, $this->cost, $e->getMessage(), $this->params));
+            event(new AIQuestionGenerationFailed($this->userId, $this->cost, $e->getMessage(), $this->params, 'llm_code'));
             
             throw $e;
         } catch (LLMConnectionException $e) {
             // Exception already logged itself! No manual logging needed.
             // Fire failure event
-            event(new AIQuestionGenerationFailed($this->userId, $this->cost, $e->getUserMessage(), $this->params));
+            event(new AIQuestionGenerationFailed($this->userId, $this->cost, $e->getUserMessage(), $this->params, 'llm_connection'));
             
             throw $e;
         } catch (\Exception $e) {
@@ -105,7 +106,7 @@ class GenerateAIQuestionJob implements ShouldQueue
             ]);
             
             // Fire failure event
-            event(new AIQuestionGenerationFailed($this->userId, $this->cost, $e->getMessage(), $this->params));
+            event(new AIQuestionGenerationFailed($this->userId, $this->cost, $e->getMessage(), $this->params, 'general_error'));
             
             throw $e;
         }
@@ -148,8 +149,7 @@ class GenerateAIQuestionJob implements ShouldQueue
             $decoded = json_decode($jsonContent, true);
             
             if (json_last_error() === JSON_ERROR_NONE && 
-                isset($decoded['question']) && 
-                isset($decoded['choices'])) {
+                $this->validateParsedData($decoded)) {
                 return $decoded;
             }
         }
@@ -157,8 +157,7 @@ class GenerateAIQuestionJob implements ShouldQueue
         // Second: try to parse the entire content as JSON
         $decoded = json_decode($content, true);
         if (json_last_error() === JSON_ERROR_NONE && 
-            isset($decoded['question']) && 
-            isset($decoded['choices'])) {
+            $this->validateParsedData($decoded)) {
             return $decoded;
         }
         
@@ -166,19 +165,44 @@ class GenerateAIQuestionJob implements ShouldQueue
         $cleanedContent = preg_replace('/```(?:json)?\s*|\s*```/', '', $content);
         $decoded = json_decode($cleanedContent, true);
         if (json_last_error() === JSON_ERROR_NONE && 
-            isset($decoded['question']) && 
-            isset($decoded['choices'])) {
+            $this->validateParsedData($decoded)) {
             return $decoded;
         }
         
         // If all parsing attempts fail, throw a process exception
         throw QuestionGenerationProcessException::formatContentError(
-            'Failed to parse LLM response. Expected valid JSON with question and choices.',
+            'Failed to parse LLM response. Expected valid JSON with question, choices, correct_answer, explanation, and duration.',
             [
                 'content_preview' => substr($content, 0, 200) . '...',
                 'content_length' => strlen($content)
             ]
         );
+    }
+
+    /**
+     * Validate parsed data has all required fields
+     */
+    protected function validateParsedData(array $data): bool
+    {
+        $requiredFields = ['question', 'choices', 'correct_answer', 'explanation', 'duration'];
+        
+        foreach ($requiredFields as $field) {
+            if (!isset($data[$field])) {
+                return false;
+            }
+        }
+        
+        // Validate duration is numeric and within reasonable range
+        if (!is_numeric($data['duration'])) {
+            return false;
+        }
+        
+        // Validate explanation is not empty
+        if (empty(trim($data['explanation']))) {
+            return false;
+        }
+        
+        return true;
     }
 
     /**
@@ -225,11 +249,15 @@ class GenerateAIQuestionJob implements ShouldQueue
             \"question\": \"[Clear, specific question text]\",
             \"choices\": [\"Choice A\", \"Choice B\", \"Choice C\", \"Choice D\"],
             \"correct_answer\": \"[Exact match of one choice]\",
+            \"explanation\": \"[Clear explanation of why the correct answer is right. 2-3 sentences max]\",
+            \"duration\": [Estimated time in seconds for an average user to answer correctly]
         }
         Requirements:
         - Question: Clear, specific, tests understanding
         - Choices: {$choicesCount} distinct, plausible options
         - Correct answer: Must exactly match one choice text
+        - Explanation: Brief, educational explanation of the correct answer
+        - Duration: Realistic time estimate based on question complexity
         - No markdown, no explanations, just JSON
         Ensure all choices are distinct, plausible, and the question tests meaningful understanding.";
                 
@@ -242,8 +270,10 @@ class GenerateAIQuestionJob implements ShouldQueue
         try {
             $question = GlobalQuestion::create([
                 'question_text' => $questionData['question'],
+                'explanation' => $questionData['explanation'],
                 'score' => 10,
-                'duration' => 60,
+                'duration' => $questionData['duration'],
+                'explanation' => $questionData['explanation'],
                 'text_direction' => $this->getUserLocale()->getDirection(),
                 'admin_id' => null,
                 'approved' => null,
@@ -256,7 +286,7 @@ class GenerateAIQuestionJob implements ShouldQueue
                 $choices[] = [
                     'question_id' => $question->id,
                     'choice_text' => $choice,
-                    'corkrect' => $choice === $questionData['correct_answer']
+                    'correct' => $choice === $questionData['correct_answer']
                 ];
             }
 

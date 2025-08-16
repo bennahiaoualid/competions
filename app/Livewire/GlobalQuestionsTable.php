@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use PowerComponents\LivewirePowerGrid\Button;
 use PowerComponents\LivewirePowerGrid\Column;
-use PowerComponents\LivewirePowerGrid\Facades\Rule;
 use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
 use PowerComponents\LivewirePowerGrid\PowerGridFields;
 use PowerComponents\LivewirePowerGrid\PowerGridComponent;
@@ -65,6 +64,7 @@ final class GlobalQuestionsTable extends PowerGridComponent
             ->add('duration')
             ->add('admin_id')
             ->add('deleted_admin_name')
+            ->add('explanation')
             ->add('created_by', function ($question) {
                 $admin = $question->createdBy;
                 if ($admin){
@@ -75,7 +75,10 @@ final class GlobalQuestionsTable extends PowerGridComponent
                         route("admin.edit",["id" => e($admin->id)]),
                         e($admin->name)
                     );
-                }else{
+                }elseif($question->ai){
+                    return __('competition.question.ai_question');
+                }
+                else{
                     return e($question->deleted_admin_name);
                 }
             })
@@ -90,9 +93,10 @@ final class GlobalQuestionsTable extends PowerGridComponent
                         e($admin->name)
                     );
                 }else{
-                    return Blade::render(
-                        '<x-status-widget status="inactive" text="'.__('messages.global.not_approved'). '" />'
-                    );
+                    return view('components.ui_widgets.status-widget', [
+                        'status' => 'not_approved',
+                        'text' => __('messages.global.not_approved'),
+                    ]);
                 }
 
             });

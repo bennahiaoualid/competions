@@ -67,7 +67,8 @@ return [
         'start_solve' => 'إبدأ الاجابة',
         'no_question'=> 'لا يوجد أسئلة متاحة',
         'try_later' => 'أعد المحاولة لاحقا',
-
+        'explanation' => 'شرح الاجابة الصحيحة',
+        'ai_question' => 'سؤال مولد بالذكاء الاصطناعي',
     ],
     'response' =>[
         'info' => 'اجاباتك',
@@ -191,7 +192,9 @@ return [
         'add_coins_coming_soon' => 'ميزة إضافة العملات قريباً!',
         'required_coins' => 'العملات المطلوبة',
         'available_coins' => 'العملات المتوفرة',
-        
+        'generation_started' => 'تم بدء توليد السؤال',
+        'generation_failed_generic' => 'فشل في توليد السؤال بسبب مشكلة في الخادم. يرجى المحاولة مرة أخرى لاحقاً. إذا استمرت المشكلة، يرجى الاتصال بالدعم.',
+        'generation_question_success' => 'تم توليد سؤالك بالذكاء الاصطناعي بنجاح! يمكنك الآن مشاهدته والإجابة عليه.',
         // Validation error translations
         'validation_error_title' => 'خطأ في التحقق من صحة البيانات',
         'please_check_input_fields' => 'يرجى التحقق من حقول الإدخال',

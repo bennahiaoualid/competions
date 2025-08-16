@@ -8,64 +8,66 @@
 
 
 @section('content')
-    @if($data_result['correct'])
-        <div class="max-w-lg mx-auto mt-4 px-2 py-4 border border-success space-y-6">
-            <img class="max-w-16 mx-auto" src="{{asset("assets/images/win_emoji.png")}}">
-            <h1 class="text-2xl font-bold mb-2 text-center text-success capitalize">
-                {{__('competition.response.congratulation')}}
-            </h1>
-            <div class="mx-auto px-8 py-1 rounded-full border border-success max-w-fit text-green-800">
-                <span class="text-2xl font-bold">{{$data_result['response']['score']}}</span>
-                <sub>/ {{$data_result['question']['score']}}</sub>
-            </div>
-            <div class="space-y-2">
-                <h2 class="w-fit mx-auto px-8 py-1 rounded-full border border-primary text-primary text-xl capitalize">
-                    {{__('competition.question.the_question')}}
-                </h2>
-                <p class="text-center">
-                    {{$data_result['question']['question_text']}}
-                </p>
-
-                <p class="w-fit mx-auto px-2 py-1 rounded-md text-success border border-success">
-                    {{$data_result['choice']}}
-                </p>
-            </div>
-            <div class="flex justify-center">
-                <x-button color_type="success" :islink="true" href="{{route('user.global_questions.response')}}">
-                    {{__('competition.response.play_more')}}
-                </x-button>
-            </div>
-
+    @php
+        if($data_result['correct']){
+            $title = __('competition.response.congratulation');
+            $emoji = "win_emoji.png";
+            $border_color = "border-success";
+            $text_color = "text-success";
+            $button = [
+                'text' => __('competition.response.play_more'),
+                'color_type' => "success",
+                'islink' => true,
+                'href' => route('user.global_questions.response'),
+            ];
+        }else{
+            $title = __('competition.response.try_again');
+            $emoji = "cry_emoji.png";
+            $border_color = "border-danger";
+            $text_color = "text-danger";
+            $button = [
+                'text' => __('competition.response.try_again'),
+                'color_type' => "danger",
+                'islink' => true,
+                'href' => route('user.global_questions.response'),
+            ];
+        }
+    @endphp
+    <div class="max-w-lg mx-auto mt-4 px-2 py-4 border {{$border_color}} space-y-3 md:space-y-6 rounded-md">
+        <img class="max-w-16 mx-auto" src="{{asset("assets/images/".$emoji)}}">
+        <h1 class="text-2xl font-bold mb-2 text-center {{$text_color}} capitalize">
+            {{$title}}
+        </h1>
+        <div class="mx-auto px-8 py-1 rounded-full border {{$border_color}} max-w-fit {{$text_color}}">
+            <span class="text-2xl font-bold">{{$data_result['response']['score']}}</span>
+            <sub>/ {{$data_result['question']['score']}}</sub>
         </div>
-    @else
-        <div class="max-w-lg mx-auto mt-4 px-2 py-4 border border-danger space-y-6">
-            <img class="max-w-16 mx-auto" src="{{asset("assets/images/cry_emoji.png")}}">
-            <h1 class="text-2xl font-bold mb-2 text-center text-danger capitalize">
-                {{__('competition.response.try_again')}}
-            </h1>
-            <div class="mx-auto px-8 py-1 rounded-full border border-danger max-w-fit text-red-700">
-                <span class="text-2xl font-bold">{{$data_result['response']['score']}}</span>
-                <sub>/ {{$data_result['question']['score']}}</sub>
-            </div>
-            <div class="space-y-2">
-                <h2 class="w-fit mx-auto px-8 py-1 rounded-full border border-primary text-primary text-xl capitalize">
-                    {{__('competition.question.the_question')}}
-                </h2>
-                <p class="text-center">
-                    {{$data_result['question']['question_text']}}
-                </p>
+        <div class="space-y-2">
+            <h2 class="w-fit mx-auto px-8 py-1 rounded-full border border-primary text-primary text-xl capitalize">
+                {{__('competition.question.the_question')}}
+            </h2>
+            <p class="text-center leading-6">
+                {{$data_result['question']['question_text']}}
+            </p>
 
-                <p class="w-fit mx-auto px-2 py-1 rounded-md text-danger border border-danger">
-                    {{$data_result['choice']}}
+            <p class="w-fit mx-auto px-2 py-1 rounded-md {{$text_color}} border {{$border_color}}">
+                {{$data_result['choice']}}
+            </p>
+
+            @if($data_result['show_explanation'])
+                <p class="w-fit mx-auto px-8 py-1 rounded-md border {{$border_color}} leading-6">
+                    {{$data_result['question']['explanation']}}
                 </p>
-            </div>
-            <div class="flex justify-center">
-                <x-button color_type="danger" :islink="true" href="{{route('user.global_questions.response')}}">
-                    {{__('competition.response.try_again')}}
-                </x-button>
-            </div>
+            @endif
         </div>
-    @endif
+        <div class="flex justify-center">
+            <x-button color_type="{{$button['color_type']}}" :islink="true" href="{{$button['href']}}">
+                {{$button['text']}}
+            </x-button>
+        </div>
+
+    </div>
+
 
 @endsection
 

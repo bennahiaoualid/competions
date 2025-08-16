@@ -68,6 +68,8 @@ return [
         'start_solve' => 'start solve',
         'no_question'=> 'there is no available question',
         'try_later' => 'try later',
+        'explanation' => 'explain the correct answer',
+        'ai_question' => 'AI generated question',
 
     ],
     'response' =>[
@@ -192,6 +194,9 @@ return [
         'required_coins' => 'Required Coins',
         'available_coins' => 'Available Coins',
         
+        'generation_started' => 'Generation Started',
+        'generation_failed_generic' => 'The question generation failed due to a server problem. Please try again later. If the problem persists, contact support.',
+        'generation_question_success' => 'Your AI question has been generated successfully! You can now view and answer it.',
         // Validation error translations
         'validation_error_title' => 'Validation Error',
         'please_check_input_fields' => 'Please check your input fields',

@@ -211,6 +211,7 @@ return [
         'now' => 'الآن',
         'subject' => 'المادة',
         'difficulty' => 'المستوى',
+        'explanation' => 'التوضيح',
     ],
 
 ];

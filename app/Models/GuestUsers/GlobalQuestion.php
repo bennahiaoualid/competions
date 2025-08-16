@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
  *
  * @property int $id
  * @property string $question_text
+ * @property string $explanation
  * @property int $score
  * @property int $duration
  * @property string $text_direction
@@ -52,6 +53,7 @@ class GlobalQuestion extends Model
      */
     protected $fillable = [
         'question_text',
+        'explanation',
         'score',
         'duration',
         'text_direction',

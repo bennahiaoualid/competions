@@ -1,5 +1,5 @@
-<div class="block w-full overflow-x-auto bg-gray-200 px-8 py-2">
-    <table class="items-center bg-transparent w-full border-collapse ">
+<div class="block w-full overflow-x-auto px-8 py-4 border-t border-b border-gray-400">
+    <table class="items-center bg-transparent w-full border-collapse shadow-md">
         <thead>
         <tr>
             <th class="px-2 bg-slate-300 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l border-r  border-blueGray-100  whitespace-nowrap font-semibold text-center max-w-fit w-1">
@@ -13,7 +13,7 @@
 
         <tbody>
         @foreach($row->choices as $choice)
-            <tr>
+            <tr class="{{$choice->correct ? 'bg-green-200' : ''}}">
                 <td class="border-t-0 px-6 align-middle border-l border-r  border-blueGray-100 text-xs whitespace-nowrap p-4 text-center text-blueGray-700 w-1">
                     {{$loop->index + 1}}
                 </td>
@@ -23,8 +23,13 @@
             </tr>
         @endforeach
         </tbody>
-
     </table>
+    @if($row->explanation)
+        <div class="mt-4">
+            <h3 class="text-lg font-bold mb-2 text-primary">{{ __('competition.question.explanation') }}</h3>
+            <p class="leading-6">{{ $row->explanation }}</p>
+        </div>
+    @endif
 </div>
 
 

@@ -75,6 +75,83 @@ class AIQuestionGenerator {
     }
 
     /**
+     * Setup Pusher listener for real-time updates
+     */
+    setupPusherListener() {
+        // Listen for real-time updates using the same pattern as NotificationManager
+        if (window.Echo) {
+            const channel = `user.ai-question-generation.${this.config.user.id}`;
+            window.Echo.private(channel)
+                .listen('.ai-question-completed', (e) => {
+                    this.handleQuestionCompleted(e);
+                })
+                .listen('.ai-question-failed', (e) => {
+                    this.handleQuestionFailed(e);
+                });
+        }
+    }
+
+    /**
+     * Handle question completion from real-time event
+     */
+    handleQuestionCompleted(data) {
+        // Hide processing, show success
+        this.processingIndicator?.classList.add('hidden');
+        this.successResult?.classList.remove('hidden');
+        
+        // Update view question link
+        if (this.viewQuestionBtn) {
+            this.viewQuestionBtn.href = data.view_url;
+        }
+        
+        // Update modal title
+        if (this.modalTitle) {
+            this.modalTitle.textContent = this.config.i18n.question_generated;
+        }
+    }
+
+    /**
+     * Handle question failure from real-time event
+     */
+    handleQuestionFailed(data) {
+        // Hide processing, show error
+        this.processingIndicator?.classList.add('hidden');
+        this.errorResult?.classList.remove('hidden');
+        
+        // Handle different exception types
+        if (data.exception_type) {
+            this.handleExceptionByType(data.exception_type, {
+                message: this.config.i18n.generation_failed_generic,
+                exception_type: data.exception_type,
+                context: data
+            });
+        } else {
+            this.showErrorModal([data.error]);
+        }
+    }
+
+    /**
+     * Show processing started modal
+     */
+    showProcessingStartedModal() {
+        this.processingIndicator?.classList.remove('hidden');
+        this.successResult?.classList.add('hidden');
+        this.errorResult?.classList.add('hidden');
+        
+        if (this.modalTitle) {
+            this.modalTitle.textContent = this.config.i18n.generation_started;
+        }
+        
+        // Update processing message to indicate generation has started
+        const processingMessage = this.processingIndicator?.querySelector('#processing-message');
+        if (processingMessage) {
+            processingMessage.textContent = this.config.i18n.generation_started_message;
+        }
+
+        this.openModal();
+    }
+
+    /**
      * Attach event listeners
      */
     attachEventListeners() {
@@ -202,15 +279,15 @@ class AIQuestionGenerator {
             return;
         }
         
-        // Show processing modal
-        this.showProcessingModal();
+        // Show "processing started" modal instead of generic processing
+        this.showProcessingStartedModal();
         
         try {
             const response = await this.submitQuestion(subject, difficulty);
             const data = await response.json();
                         
             if (data.success) {
-                this.showSuccessModal(data);
+                this.setupPusherListener();
             } else {
                 // Handle different exception types
                 if (data.exception_type) {
@@ -400,25 +477,6 @@ class AIQuestionGenerator {
     }
 
     /**
-     * Show processing modal
-     */
-    showProcessingModal() {
-        // Reset modal state
-        this.processingIndicator?.classList.remove('hidden');
-        this.successResult?.classList.add('hidden');
-        this.errorResult?.classList.add('hidden');
-        this.balanceErrorModal?.classList.add('hidden');
-        
-        // Update modal title
-        if (this.modalTitle) {
-            this.modalTitle.textContent = this.config.i18n.generating_question;
-        }
-        
-        // Open modal
-        this.openModal();
-    }
-
-    /**
      * Show success modal
      */
     showSuccessModal(data = {}) {
@@ -564,22 +622,23 @@ class AIQuestionGenerator {
         return div.innerHTML;
     }
 }
-
-// Global function for modal close button
-function closeModal() {
-    if (window.aiQuestionGenerator) {
+/*
+// Listen for Alpine.js events
+document.addEventListener('close-modal', (event) => {
+    if (event.detail === 'ai-question-generation' && window.aiQuestionGenerator) {
         window.aiQuestionGenerator.closeModal();
     }
-}
+});
 
-// Global function for add coins button
-function addCoins() {
+document.addEventListener('add-coins', () => {
     if (window.aiQuestionGenerator) {
         window.aiQuestionGenerator.addCoins();
     }
-}
-
+});
+*/
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     window.aiQuestionGenerator = new AIQuestionGenerator();
 });
+
+

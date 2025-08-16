@@ -11,6 +11,6 @@ interface UserGuestRepositoryInterface
     public function getUserRespondedQuestionsPaginated($userId);
     public function findQuestion($questionId);
     public function getRandomEligibleQuestionForUser($userId);
-    public function getRandomAIQuestionForUser($userId);
+    public function getRandomAIQuestionForUser($userId, $questionId = null);
     public function getRandomPremiumQuestionForUser($userId);
 }

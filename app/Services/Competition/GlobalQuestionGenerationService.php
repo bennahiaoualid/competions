@@ -6,7 +6,6 @@ use App\Enums\AIDifficultyEnum;
 use App\Enums\AISubjectEnum;
 use App\Exceptions\AIQuestionGeneration\PaidServiceException;
 use App\Jobs\Ai\GenerateAIQuestionJob;
-use App\Models\User;
 use App\Services\Payment\CoinPricingService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -33,13 +32,14 @@ class GlobalQuestionGenerationService
             // 3. Dispatch background job
             $job = dispatch(new GenerateAIQuestionJob($params, $cost, Auth::id()));
             
-            // 4. Return unified success response
+            // 4. Return "processing started" response
             return [
                 'success' => true,
+                'status' => 'processing_started',
                 'data' => [
-                    'message' => __('competition.ai.question_generation_started'),
+                    'message' => __('competition.ai.generation_started'),
                     'cost' => $cost,
-                    'estimated_time' => '10-15 seconds'
+                    'estimated_time' => '10-15 seconds',
                 ]
             ];
             

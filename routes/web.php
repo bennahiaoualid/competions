@@ -75,7 +75,7 @@ Route::group(
         });
         // global questions
         Route::get('/questions/response/', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'getRandomQuestion'])->name('global_questions.response');
-        Route::get('/questions/response/ai', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'getRandomAIQuestion'])->name('global_questions.response.ai');
+        Route::get('/questions/response/ai/{questionId?}', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'getRandomAIQuestion'])->name('global_questions.response.ai');
         Route::get('/questions/response/premium', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'getRandomPremiumQuestion'])->name('global_questions.response.premium');
         Route::post('/questions/response/store', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'storeResponse'])->name('global_questions.response.store');
 

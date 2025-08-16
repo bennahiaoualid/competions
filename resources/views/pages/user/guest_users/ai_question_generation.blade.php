@@ -18,6 +18,7 @@
                 'difficulty' => $difficulty_cost,
             ],
             'user' => [
+                'id' => Auth::id(),
                 'balance' => Auth::user()->coinBalance->balance ?? 0
             ],
             'routes' => [
@@ -56,20 +57,19 @@
                 'total_cost' => __('competition.ai.total_cost'),
                 'your_balance' => __('competition.ai.your_balance'),
                 
+                'generation_started' => __('competition.ai.generation_started'),
+                'generation_started_message' => __('competition.ai.generation_started'),
                 'insufficient_balance_title' => __('competition.ai.insufficient_balance_title'),
                 'service_unavailable_title' => __('competition.ai.service_unavailable_title'),
                 'llm_error' => __('competition.ai.llm_error'),
                 'process_error' => __('competition.ai.process_error'),
-                'balance_options_text' => __('competition.ai.balance_options_text'),
-                'try_again_later' => __('competition.ai.try_again_later'),
-                'contact_support_if_persistent' => __('competition.ai.contact_support_if_persistent'),
                 'add_coins' => __('competition.ai.add_coins'),
                 'service_unavailable' => __('competition.ai.service_unavailable'),
                 'invalid_parameters' => __('competition.ai.invalid_parameters'),
                 'please_check_selections' => __('competition.ai.please_check_selections'),
                 'add_coins_coming_soon' => __('competition.ai.add_coins_coming_soon'),
-                'required_coins' => __('competition.ai.required_coins'),
-                'available_coins' => __('competition.ai.available_coins'),
+                'generation_failed_generic' => __('competition.ai.generation_failed_generic'),
+                'generation_question_success' => __('competition.ai.generation_question_success'),
                 
                 'validation_error_title' => __('competition.ai.validation_error_title'),
                 'please_check_input_fields' => __('competition.ai.please_check_input_fields'),
@@ -235,9 +235,10 @@
                 </x-button>
                 
                 <x-button 
+                    type="button"
                     color_type="primary" 
                     size="md"
-                    onclick="closeModal()"
+                    x-on:click="$dispatch('close-modal', { detail: 'ai-question-generation' })"
                 >
                     <span id="close-btn-text">{{__('competition.ai.close')}}</span>
                 </x-button>
@@ -259,7 +260,7 @@
             </div>
             
             <!-- Error reasons -->
-            <div id="errorReasons" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 text-left">
+            <div id="errorReasons" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 text-start">
                 <!-- Error reasons will be inserted here -->
             </div>
             
@@ -267,10 +268,11 @@
             <div id="errorActions" class="flex justify-center gap-4">
                 <!-- Default retry button -->
                 <x-button 
+                    type="button"
                     id="defaultRetryBtn"
                     color_type="primary" 
                     size="md"
-                    onclick="closeModal()"
+                    x-on:click="$dispatch('close-modal', { detail: 'ai-question-generation' })"
                 >
                     <span id="try-again-text">{{__('competition.ai.try_again')}}</span>
                 </x-button>
@@ -301,18 +303,20 @@
             
             <div class="flex justify-center gap-4">
                 <x-button 
+                    type="button"
                     color_type="warning" 
                     size="md"
-                    onclick="addCoins()"
+                    x-on:click="$dispatch('add-coins')"
                 >
                     <i class="fas fa-plus me-2"></i>
                     <span>{{__('competition.ai.add_coins')}}</span>
                 </x-button>
                 
                 <x-button 
+                    type="button"
                     color_type="secondary" 
                     size="md"
-                    onclick="closeModal()"
+                    x-on:click="$dispatch('close-modal', { detail: 'ai-question-generation' })"
                 >
                     <span>{{__('competition.ai.close')}}</span>
                 </x-button>

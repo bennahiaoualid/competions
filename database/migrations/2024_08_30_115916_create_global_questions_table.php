@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('global_questions', function (Blueprint $table) {
             $table->id();
             $table->text('question_text');
+            $table->text('explanation')->nullable(); // Explanation for the correct answer
             $table->integer('score');
             $table->integer('duration'); // time in seconds
             $table->enum('text_direction', ['ltr', 'rtl'])->default('ltr');

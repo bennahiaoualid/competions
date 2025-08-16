@@ -3,6 +3,7 @@
 namespace App\Services\GuestUsers;
 
 use Exception;
+use App\Models\User;
 use App\Traits\RegisterLogs;
 use App\Helpers\UsersGlobalOrder;
 use App\Models\GuestUsers\Choice;
@@ -29,14 +30,14 @@ class UserGuestService
     }
 
     // All business logic for getting a random question
-    public function getRandomQuestion(string $type = 'regular'): array
+    public function getRandomQuestion(string $type = 'regular', $questionId = null): array
     {
         try {
             $user = Auth::user();
             
             // Get question based on type
             $question = match($type) {
-                'ai' => $this->userRepository->getRandomAIQuestionForUser($user->id),
+                'ai' => $this->userRepository->getRandomAIQuestionForUser($user->id, $questionId),
                 'premium' => $this->userRepository->getRandomPremiumQuestionForUser($user->id),
                 default => $this->userRepository->getRandomEligibleQuestionForUser($user->id),
             };
@@ -91,7 +92,7 @@ class UserGuestService
             }
 
             $response = $this->updateUserResponse($data, $choice, $question, $responseTime, $user);
-            $dataResult = $this->prepareResponseData($question, $choice, $response);
+            $dataResult = $this->prepareResponseData($question, $choice, $response,$user);
             
             session()->forget(['start_time']);
             
@@ -135,13 +136,23 @@ class UserGuestService
         return $response;
     }
 
-    protected function prepareResponseData(GlobalQuestion $question, Choice $choice, GlobalResponse $response): array
+    protected function prepareResponseData(GlobalQuestion $question, Choice $choice, GlobalResponse $response, User $user): array
     {
+        $responses_count = $user->globalResponses()
+        ->where('question_id', $question->id)
+        ->count();
+
+        if(($choice->correct || $responses_count == 2) && $question->explanation){
+            $show_explanation = true;
+        }else{
+            $show_explanation = false;
+        }
         return [
             'question' => $question,
             'choice' => $choice->choice_text,
             'response' => $response,
             'correct' => $choice->correct,
+            'show_explanation' => $show_explanation,
         ];
     }
 
