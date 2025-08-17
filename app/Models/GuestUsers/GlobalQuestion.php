@@ -74,6 +74,7 @@ class GlobalQuestion extends Model
         return [
             'score' => 'integer',
             'duration' => 'integer',
+            'ai' => 'boolean'
         ];
     }
 

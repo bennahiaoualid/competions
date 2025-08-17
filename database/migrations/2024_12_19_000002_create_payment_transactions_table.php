@@ -39,9 +39,9 @@ return new class extends Migration
             $table->timestamps();
             
             // Indexes (only custom indexes, not foreign keys)
-            $table->index(['payable_id', 'payable_type'], 'idx_payable');
-            $table->index('status', 'idx_status');
-            $table->index('created_at', 'idx_created_at');
+            $table->index(['payable_id', 'payable_type'], 'idx_payment_transactions_payable');
+            $table->index('status', 'idx_payment_transactions_status');
+            $table->index('created_at', 'idx_payment_transactions_created_at');
             
             // Foreign keys (indexes created automatically)
             $table->foreign('approver_admin_id')->references('id')->on('admins')->onDelete('set null');

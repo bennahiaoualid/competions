@@ -237,7 +237,7 @@ class GenerateAIQuestionJob implements ShouldQueue
     private function getPromptFormat($systemMessage, $subject, $difficulty,$choicesCount, $difficultyGuidelines, $subjectContext)  {
         return "{$systemMessage}
 
-        Generate a multiple choice question for **{$subject->value}** at **{$difficulty->label()}** level with **{$choicesCount}** answer choices.
+        Generate a multiple choice question for **{$subject->value}** at **{$difficulty->value}** level with **{$choicesCount}** answer choices.
         
         Guidelines: {$difficultyGuidelines}
         Context: {$subjectContext}
@@ -312,5 +312,20 @@ class GenerateAIQuestionJob implements ShouldQueue
     private function getUserLocale(): UserLocaleEnum
     {
         return UserLocaleEnum::getDefault();
+    }
+
+    public function getParams(): array
+    {
+        return $this->params;
+    }
+
+    public function getCost(): float
+    {
+        return $this->cost;
+    }
+
+    public function getUserId(): int
+    {
+        return $this->userId;
     }
 } 

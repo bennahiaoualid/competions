@@ -22,8 +22,8 @@ return new class extends Migration
             $table->timestamps();
 
             // Indexes
-            $table->index('status', 'idx_status');
-            $table->index('created_at', 'idx_created_at');
+            $table->index('status', 'idx_payment_review_requests_status');
+            $table->index('created_at', 'idx_payment_review_requests_created_at');
 
             // Foreign keys
             $table->foreign('payment_transaction_id')
