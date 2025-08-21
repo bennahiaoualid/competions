@@ -388,6 +388,7 @@ return [
             'purchased' => 'Purchased',
             'competition_gift' => 'Competition Gift',
             'question_generate' => 'Question Generation',
+            'premium_question_purchase' => 'Premium Question Purchase',
         ],
         'transaction_types' => [
             'all' => 'All Types',

@@ -2,10 +2,12 @@
 
 namespace App\Services\Payment;
 
+use Exception;
+use App\Contracts\FlasherInterface;
 use App\Enums\CoinTransactionTypeEnum;
 use App\Models\Payment\CoinTransaction;
 use App\Contracts\TransactionManagerInterface;
-use App\Contracts\FlasherInterface;
+use App\Events\Payment\PaymentCacheInvalidationEvent;
 
 class CoinTransactionService
 {
@@ -55,12 +57,19 @@ class CoinTransactionService
     }
 
     /**
+     * Create a transaction for premium question purchase
+     */
+    public function createPremiumQuestionPurchaseTransaction($transactionable, int $amount, ?string $processedAt = null): CoinTransaction
+    {
+        return $this->createSpendTransaction($transactionable, CoinTransactionTypeEnum::PREMIUM_QUESTION_PURCHASE, $amount, $processedAt);
+    }
+
+    /**
      * Base method to create any transaction
      */
     protected function createTransaction($transactionable, string $type, CoinTransactionTypeEnum $detail, int $amount, ?string $processedAt = null): CoinTransaction
     {
-        return $this->transactionManager->run(function () use ($transactionable, $type, $detail, $amount, $processedAt) {
-            return CoinTransaction::create([
+            $coinTransaction = CoinTransaction::create([
                 'transactionable_id' => $transactionable->id,
                 'transactionable_type' => get_class($transactionable),
                 'type' => $type,
@@ -68,7 +77,13 @@ class CoinTransactionService
                 'detail' => $detail->value,
                 'processed_at' => $processedAt ?? now(),
             ]);
-        });
+            if($coinTransaction)
+            {
+                event(new PaymentCacheInvalidationEvent('invalidateGetUserCoinTransactions', ['userId' => $transactionable->id]));
+                return $coinTransaction;
+            }else{
+                throw new Exception('Failed to create coin transaction');
+            }
     }
 
     /**

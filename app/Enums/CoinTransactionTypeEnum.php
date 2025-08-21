@@ -7,6 +7,7 @@ enum CoinTransactionTypeEnum: string
     case PURCHASED = 'purchased';
     case COMPETITION_GIFT = 'competition_gift';
     case QUESTION_GENERATE = 'question_generate';
+    case PREMIUM_QUESTION_PURCHASE = 'premium_question_purchase';
 
     /**
      * Get all transaction types
@@ -25,6 +26,7 @@ enum CoinTransactionTypeEnum: string
             self::PURCHASED => __('payment.transaction_history.coin_transaction_types.purchased'),
             self::COMPETITION_GIFT => __('payment.transaction_history.coin_transaction_types.competition_gift'),
             self::QUESTION_GENERATE => __('payment.transaction_history.coin_transaction_types.question_generate'),
+            self::PREMIUM_QUESTION_PURCHASE => __('payment.transaction_history.coin_transaction_types.premium_question_purchase'),
         };
     }
 
@@ -46,6 +48,7 @@ enum CoinTransactionTypeEnum: string
     {
         return in_array($this, [
             self::QUESTION_GENERATE,
+            self::PREMIUM_QUESTION_PURCHASE,
         ]);
     }
 } 

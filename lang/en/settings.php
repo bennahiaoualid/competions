@@ -122,6 +122,13 @@ return [
             'unit' => 'tokens',
             'help' => 'Set the maximum token limit for AI responses'
         ],
+        'global_question_premium_cost_percentage' => [
+            'name' => 'Premium Question Cost Percentage',
+            'description' => 'if genrating cost is 100 coins, and premium cost percentage is 50%, then premium cost will be 50 coins',
+            'message' => 'Premium cost percentage: {value}%',
+            'unit' => '%',
+            'help' => 'Set the percentage of the base cost for premium questions'
+        ],
     ],
     
     // Common

@@ -9,10 +9,17 @@ use App\Helpers\UsersGlobalOrder;
 use App\Models\GuestUsers\Choice;
 use App\Contracts\FlasherInterface;
 use Illuminate\Support\Facades\Auth;
+use App\Enums\CoinTransactionTypeEnum;
+use App\Services\SystemSettingService;
 use App\Models\GuestUsers\GlobalQuestion;
 use App\Models\GuestUsers\GlobalResponse;
 use App\Contracts\TransactionManagerInterface;
+use App\Events\GuestUsers\ResponseStorageFailed;
+use App\Services\Payment\CoinTransactionService;
 use App\Repository\GuestUsers\UserGuestRepository;
+use App\Exceptions\GuestUsers\SessionStartTimeException;
+use App\Exceptions\AIQuestionGeneration\PaidServiceException;
+use App\Exceptions\GuestUsers\IncompatibleChoiceResponseException;
 
 class UserGuestService
 {
@@ -26,6 +33,8 @@ class UserGuestService
         protected UserGuestRepository $userRepository,
         protected FlasherInterface $flasher,
         protected TransactionManagerInterface $transactionManager,
+        protected SystemSettingService $systemSettingService,
+        protected CoinTransactionService $coinTransactionService,
     ) {
     }
 
@@ -43,11 +52,15 @@ class UserGuestService
             };
             
             if (!$question) {
-                return ['status' => 'empty_question'];
+                return ['status' => 'empty_question', 'type' => $type];
             }
             
+            
             // Initialize response in a transaction
-            $initSuccess = $this->transactionManager->run(function () use ($question, $user) {
+            $initSuccess = $this->transactionManager->run(function () use ($question, $user, $type) {
+                if ($type === 'premium') {
+                    $this->handlePremiumQuestionOwnership($user, $question);
+                }
                 $data = [
                     'score' => '0',
                     'question_id' => $question->id,
@@ -67,9 +80,12 @@ class UserGuestService
             $question->choices = $question->choices->shuffle();
             
             // Store the start time in the session
-            session(['start_time' => now()]);
+            session(['start_time' => now(), 'question_type' => $type]);
             
-            return ['status' => 'success' , 'question' => $question];
+            return ['status' => 'success' , 'question' => $question, 'type' => $type];
+        } catch (PaidServiceException $exception) {
+            $this->flasher->error(__('exceptions.insufficient_balance'));
+            return ['status' => 'error', 'type' => $type];
         } catch (Exception $exception) {
             $this->registerLogs('UserGuestSevice :: getRandomQuestion ',$exception);
             $this->flasher->error(__('something_went_wrong'));
@@ -85,31 +101,43 @@ class UserGuestService
             $user = Auth::user();
             $responseTime = $this->calculateResponseTime();
             $choice = Choice::find($data['choice_id']);
-            $question = GlobalQuestion::find($data['question_id']);
+            $question = GlobalQuestion::findOrFail($data['question_id']);
             
-            if (!$this->isCompatibleChoiceResponse($data['question_id'], $choice)) {
-                throw new Exception('Choice is not compatible with question');
-            }
-
-            $response = $this->updateUserResponse($data, $choice, $question, $responseTime, $user);
-            $dataResult = $this->prepareResponseData($question, $choice, $response,$user);
+            $this->isCompatibleChoiceResponse($data['question_id'], $choice);
             
-            session()->forget(['start_time']);
+            $type = session('question_type');
+            $dataResult = $this->transactionManager->run(function () use ($data, $choice, $question, $responseTime, $user, $type) {
+                $response = $this->updateUserResponse($data, $choice, $question, $responseTime, $user);
+                $dataResult = $this->prepareResponseData($question, $choice, $response,$user, $type);
+                session()->forget(['start_time','question_type']);
+                return $dataResult;
+            });
             
-            return ['status' => 'success', 'data_result' => $dataResult];
+            return ['status' => 'success', 'data_result' => $dataResult, 'type' => $type];
             
+        } catch (IncompatibleChoiceResponseException $exception) {
+            $this->registerLogs('UserGuestSevice :: storeResponse ',$exception);
+            $this->flasher->error($exception->getMessage());
+            return ['status' => 'error'];
+        } catch (SessionStartTimeException $exception) {
+            $this->registerLogs('UserGuestSevice :: storeResponse ',$exception);
+            $this->flasher->error($exception->getMessage());
+            return ['status' => 'error'];
         } catch (Exception $exception) {
+            // Fire event to cleanup the void response
+            event(new ResponseStorageFailed($data['question_id'], $user->id));
+            
             $this->registerLogs('UserGuestSevice :: storeResponse ',$exception);
             $this->flasher->error(__('something_went_wrong'));
             return ['status' => 'error'];
         }
     }
 
-    // Extracted methods for easier testing
+    
     protected function calculateResponseTime(): float
     {
         if (!session()->has('start_time')) {
-            throw new Exception('start_time not exist in session');
+            throw SessionStartTimeException::missingStartTime();
         }
         
         return session('start_time')->diffInUTCSeconds(now());
@@ -121,14 +149,11 @@ class UserGuestService
         $response = $this->userRepository->getLatestPendingResponse($data['question_id'], $user->id);
 
         if ($response) {
-            $this->transactionManager->run(function () use ($response, $score, $responseTime, $data) {
-                $this->userRepository->updateResponse($response->id, [
-                    'score' => $score,
-                    'response_duration' => round($responseTime, 2),
-                    'choice_id' => $data['choice_id'],
-                ]);
-            });
-            $response->refresh();
+            $response->update([
+                'score' => $score,
+                'response_duration' => round($responseTime, 2),
+                'choice_id' => $data['choice_id'],
+            ]);
         }else{
             throw new Exception('Response not found');
         }
@@ -136,13 +161,13 @@ class UserGuestService
         return $response;
     }
 
-    protected function prepareResponseData(GlobalQuestion $question, Choice $choice, GlobalResponse $response, User $user): array
+    protected function prepareResponseData(GlobalQuestion $question, Choice $choice, GlobalResponse $response, User $user , $type): array
     {
         $responses_count = $user->globalResponses()
         ->where('question_id', $question->id)
         ->count();
-
-        if(($choice->correct || $responses_count == 2) && $question->explanation){
+        $allowed_responses_count = $type === 'ai' ? 3 : 2;
+        if(($choice->correct || $responses_count == $allowed_responses_count) && $question->explanation){
             $show_explanation = true;
         }else{
             $show_explanation = false;
@@ -177,10 +202,41 @@ class UserGuestService
         }
     }
 
-    // Business logic helpers (private)
-    private function isCompatibleChoiceResponse(int $question_id, $choice): bool
+    public function getAIQuestionEligibileCount(): int
     {
-        return $choice->question_id == $question_id;
+        $user = Auth::user();
+        return $this->userRepository->getEligibleAIQuestionCountForUser($user->id);
+    }
+
+    // Handle premium question ownership when user gets a random premium question
+    private function handlePremiumQuestionOwnership(User $user, GlobalQuestion $question): void
+    {
+        // Calculate premium cost 
+        $baseCost = $this->systemSettingService->getValueAsFloat('global_question_generating_cost');
+        $premiumCostPercentage = $this->systemSettingService->getValueAsFloat('global_question_premium_cost_percentage');
+        $premiumCost = (int)($baseCost * ($premiumCostPercentage / 100));
+        
+        // Deduct coins from user balance
+        $coinBalance = $user->coinBalance;
+
+        if (!$coinBalance || !$coinBalance->spendCoins($premiumCost)) {
+            throw new PaidServiceException('Insufficient coins for premium question', PaidServiceException::ERROR_INSUFFICIENT_BALANCE);
+        }
+        
+        // Create transaction record
+        $this->coinTransactionService->createPremiumQuestionPurchaseTransaction($user, $premiumCost);
+        
+        // Create ownership record
+        $this->userRepository->createPremiumQuestionOwnership($user->id, $question->id);
+    }
+
+    // Business logic helpers (private)
+    private function isCompatibleChoiceResponse(int $question_id, $choice): void
+    {
+        if($choice?->question_id !== $question_id)
+        {
+            throw IncompatibleChoiceResponseException::choiceNotBelongsToQuestion($question_id);
+        }
     }
 
     private function calcResponseScore($choice, $question, int $response_time): float

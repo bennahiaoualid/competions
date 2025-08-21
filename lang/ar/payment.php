@@ -434,6 +434,7 @@ return [
             'purchased' => 'تم الشراء',
             'competition_gift' => 'هدية المسابقة',
             'question_generate' => 'إنشاء السؤال',
+            'premium_question_purchase' => 'شراء السؤال المميز',
         ],
         'transaction_types' => [
             'all' => 'جميع الأنواع',

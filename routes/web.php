@@ -83,6 +83,10 @@ Route::group(
 
         Route::get('/ai-question-generation', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'aiQuestionGeneration'])->name('global_questions.ai_question_generation');
         Route::post('/ai-question-generation', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'generateAIQuestion'])->name('global_questions.ai_question_generation.store');
+        
+        Route::get('/premium-info', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'premiumInfo'])->name('global_questions.premium_info');
+        
+        Route::get('/premium-questions', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'getRandomPremiumQuestion'])->name('global_questions.premium.browse');
     });
 
     Route::get( '/competitions', [\App\Http\Controllers\User\UserCompetitionController::class, "getAllPublicCompetitions"])->name('competitions');

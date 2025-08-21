@@ -79,6 +79,11 @@ class SystemSettingSeeder extends Seeder
                 'setting_key' => 'global_question_max_output_tokens',
                 'setting_value' => config('settings.defaults.global_question_max_output_tokens'),
                 'setting_trans_key' => 'settings.ai.global_question_max_output_tokens'
+            ],
+            [
+                'setting_key' => 'global_question_premium_cost_percentage',
+                'setting_value' => config('settings.defaults.global_question_premium_cost_percentage'),
+                'setting_trans_key' => 'settings.ai.global_question_premium_cost_percentage'
             ]
         ];
 

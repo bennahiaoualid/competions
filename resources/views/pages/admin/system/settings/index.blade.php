@@ -242,7 +242,8 @@
                             </div>
 
                             <div class="flex justify-end">
-                                <x-button type="submit" color_type="purple-600">
+                                <x-button type="submit" color_type="custom" 
+                                custom_color_class="bg-purple-600 border-purple-600 hover:text-white hover:bg-purple-600 focus:text-white focus:bg-purple-600 active:text-white active:bg-purple-600 focus:ring-purple-600">
                                     <x-slot:icon>
                                         <i class="fas fa-save me-2"></i>
                                     </x-slot:icon>
@@ -312,7 +313,8 @@
                             </div>
                             
                             <div class="flex justify-end">
-                                <x-button type="submit" color_type="orange">
+                                <x-button type="submit" color_type="custom" 
+                                custom_color_class="bg-orange-600 border-orange-600 hover:text-white hover:bg-orange-600 focus:text-white focus:bg-orange-600 active:text-white active:bg-orange-600 focus:ring-orange-600">
                                     <x-slot:icon>
                                         <i class="fas fa-save me-2"></i>
                                     </x-slot:icon>

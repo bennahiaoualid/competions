@@ -20,14 +20,30 @@
 </head>
 
 <body>
-
-    <div class="wrapper">
-        <!-- Header -->
-        @include("layouts.user.main-header")
-        <!-- Main Content -->
-            <main class="p-2 mt-4 container">
-                @yield('content')
-            </main>
+    <div class="wrapper {{ Auth::check() ? 'flex flex-1' : '' }}">
+        @auth
+            <!-- Sidebar -->
+            @include("layouts.user.sidebar")
+            <!-- Main Content -->
+            <div class="flex-1 flex flex-col">
+                <!-- Header -->
+                @include("layouts.user.main-header")
+                <!-- Main -->
+                <main class="flex-1 p-4">
+                    @yield('content')
+                </main>
+            </div>
+        @else
+            <!-- Guest Layout -->
+            <div class="w-full">
+                <!-- Header -->
+                @include("layouts.user.main-header")
+                <!-- Main -->
+                <main class="p-4">
+                    @yield('content')
+                </main>
+            </div>
+        @endauth
     </div>
     <x-notification-detail-modal />
 

@@ -62,7 +62,8 @@ class UserGuestController extends Controller
         $result =  $this->userGuestService->getRandomQuestion('premium');
 
         if($result['status'] === 'empty_question'){
-            return view('pages.user.guest_users.no_question');
+            $type = $result['type'];
+            return view('pages.user.guest_users.no_question', compact('type'));
         }elseif($result['status'] === 'error'){
             return redirect()->back();
         }else{
@@ -77,7 +78,8 @@ class UserGuestController extends Controller
         $result =  $this->userGuestService->storeResponse($request->validated());
         if($result['status'] === 'success'){
             $data_result = $result['data_result'];
-            return view('pages.user.guest_users.response_score', compact('data_result'));
+            $type = $result['type'];
+            return view('pages.user.guest_users.response_score', compact('data_result', 'type'));
         }else{
             return redirect()->route('global_questions.index');
         }
@@ -92,6 +94,7 @@ class UserGuestController extends Controller
     function getGlobalUserResponse() : View|RedirectResponse
     {
         $result = $this->userGuestService->getGlobalUserResponse();
+
         if($result['status'] === 'success'){
             $questions = $result['questions'];
             return view('pages.user.guest_users.user_global_responses', compact('questions'));
@@ -102,10 +105,20 @@ class UserGuestController extends Controller
 
     public function aiQuestionGeneration() : View
     {
+        $ai_question_eligibile_count = $this->userGuestService->getAIQuestionEligibileCount();
         $base_cost = $this->systemSettingService->getValueAsFloat('global_question_generating_cost');
         $difficulty_cost = $this->systemSettingService->getValueAsFloat('global_question_custom_difficulty_cost');
         $subject_cost = $this->systemSettingService->getValueAsFloat('global_question_custom_subject_cost');
-        return view('pages.user.guest_users.ai_question_generation', compact('base_cost', 'difficulty_cost', 'subject_cost'));
+        return view('pages.user.guest_users.ai_question_generation', compact('base_cost', 'difficulty_cost', 'subject_cost', 'ai_question_eligibile_count'));
+    }
+
+    public function premiumInfo() : View
+    {
+        $base_cost = $this->systemSettingService->getValueAsFloat('global_question_generating_cost');
+        $premium_cost_percentage = $this->systemSettingService->getValueAsFloat('global_question_premium_cost_percentage');
+        $premium_cost = (int) ($base_cost * ($premium_cost_percentage / 100));
+        
+        return view('pages.user.guest_users.premium_info', compact('premium_cost'));
     }
 
         /**

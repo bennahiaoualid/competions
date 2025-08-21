@@ -163,7 +163,9 @@ return [
         'rtl' => 'right to left',
         'action' => 'action',
         'reason' => 'reason',
-        'choose' => 'choose'
+        'choose' => 'choose',
+        'coins' => 'coins',
+        'coin' => 'coin',
     ],
     'mail' => [
         'welcome' => 'Welcome dear :user',

@@ -72,6 +72,7 @@ return [
         'filter' => 'filter',
         'generate' => 'generate',
         'start' => 'start',
+        'back' => 'back',
     ],
     'title' => [
         "rest_password" => "Rest Password",

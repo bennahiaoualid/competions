@@ -149,6 +149,8 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(UserGuestRepositoryInterface::class),
                 $app->make(FlasherInterface::class),
                 $app->make(TransactionManagerInterface::class),
+                $app->make(SystemSettingService::class),
+                $app->make(CoinTransactionService::class)
             );
         });
 

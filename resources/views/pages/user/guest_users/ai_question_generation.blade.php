@@ -174,15 +174,27 @@
                 </div>
 
                 <!-- Generate Button -->
-                <div class="flex justify-center">
+                <div class="flex justify-center gap-4">
                     <x-button 
+                        form="aiQuestionForm"
                         id="generateBtn" 
                         color_type="primary" 
                         size="md"
-                        type="submit"
-                    >
+                        type="submit">
                         <i class="fas fa-magic me-2"></i>
                         <span id="generate-btn-text">{{__('competition.ai.generate_question')}}</span>
+                    </x-button>
+
+                    <x-button 
+                        :islink="true"
+                        color_type="primary" 
+                        :outline="true"
+                        size="md"
+                        href="{{ route('user.global_questions.response.ai') }}"
+                    >
+                        <span>
+                            {{__('competition.ai.available_questions') . ' (' . $ai_question_eligibile_count . ') '}}
+                        </span>
                     </x-button>
                 </div>
             </form>

@@ -66,10 +66,19 @@ return [
         'duration' => 'duration',
         'level' => 'level',
         'start_solve' => 'start solve',
-        'no_question'=> 'there is no available question',
+        'no_question_free' => 'there is no available free question',
+        'no_question_premium' => 'there is no available premium question',
+        
         'try_later' => 'try later',
         'explanation' => 'explain the correct answer',
-        'ai_question' => 'AI generated question',
+        'type' => [
+            'ai' => 'AI generated question',
+            'premium' => 'premium question',
+            'free' => 'free question',
+        ],
+        'read_right_to_left' => 'Read Right to Left',
+        'read_left_to_right' => 'Read Left to Right',
+        'show_explanation' => 'Show Explanation',
 
     ],
     'response' =>[
@@ -85,6 +94,9 @@ return [
         'failed' => 'oops! that\' not right',
         'try_again' => 'try again',
         'play_more' => 'keep playing',
+        'play_more_premium' => 'premium question',
+        'play_more_free' => 'free question',
+        'play_more_ai' => 'AI question',
         'penalty' => 'penalty',
         'flag' => [
             'tab_switch' => 'switching tabs',
@@ -102,6 +114,11 @@ return [
             'suspicious_wpm' => 'if the number of words in the answer per minute is too high (more than 90 : words number / duration), it will be penalized, decrease the score by 10%',
             'too_fast_long_answer' => 'if the number of characters in the answer per second is too high (more than 10 : characters number / duration), it will be penalized, decrease the score by 20%',
         ],
+        'completed_questions' => 'Completed Questions',
+        'completed_at' => 'Completed',
+        'your_answers' => 'Your Answers',
+        'total_time' => 'Total Time',
+        'void_choice' => 'Void Choice',
     ],
     'result' => [
         'level' => 'the level results',
@@ -131,6 +148,7 @@ return [
             'auto_choices' => 'Automatic multiple choice generation',
         ],
         'generate_question' => 'Generate AI Question',
+        'available_questions' => 'Available Questions',
         'subject' => 'Subject',
         'select_subject' => 'Select a subject',
         'subjects' => [
@@ -202,5 +220,36 @@ return [
         'please_check_input_fields' => 'Please check your input fields',
         'please_fix_errors_below' => 'Please fix the errors below and try again',
     ],
+    
+    'premium' => [
+        'title' => 'Premium Questions',
+        'subtitle' => 'AI questions from other users, approved by admins',
+        'what_are' => 'What Are Premium Questions?',
+        'definition' => 'Premium questions are AI-generated questions created by other users and approved by our admin team.',
+        'cost' => 'Cost',
+        'price' => 'Premium Question',
+        'cost_note' => 'Always cheaper than generating your own AI question',
+        'what_you_get' => 'What You Get',
+        'benefit_1' => 'Own the question permanently',
+        'benefit_2' => 'Can retry even if you get it wrong',
+        'benefit_3' => 'Question becomes part of random question pool',
+        'how_it_works' => 'How It Works',
+        'step_1' => 'Buy premium question',
+        'step_2' => 'Answer it anytime',
+        'step_3' => 'Retry as many times as needed',
+        'browse_questions' => 'Browse Premium Questions',
+        'available_info' => 'Premium questions available at reduced cost',
+        'learn_more' => 'Learn more about premium questions',
+        'no_questions_available' => 'No premium questions are currently available',
+        'try_later_message' => 'Check back later for new premium questions',
+        'question_details_coming_soon' => 'Question details will be available soon',
+        'question_bought' => 'question have been added to your free questions collection, find it randomly',
+        'no_owned_questions' => 'No premium questions owned yet',
+        'buy_premium_questions' => 'Start building your premium question collection',
+        'regular_question' => 'Regular Question',
+        'premium' => 'Premium',
+    ],
+    
+
 
 ];

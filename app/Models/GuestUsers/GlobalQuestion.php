@@ -127,6 +127,14 @@ class GlobalQuestion extends Model
     }
 
     /**
+     * Check if this is an AI-generated question By user.
+     */
+    public function isAiGeneratedByUser($user_id): bool
+    {
+        return $this->ai === true && $this->user_id === $user_id;
+    }
+
+    /**
      * Check if this question is still in exclusive period (first 48 hours).
      */
     public function isExclusive(): bool
@@ -148,6 +156,18 @@ class GlobalQuestion extends Model
         }
         
         return $this->created_at->diffInHours(now()) >= 48;
+    }
+
+    /**
+     * Check if this question premium or ai belonged to user.
+     */
+    public function isPremiumForUser($user_id): bool
+    {
+        if (!$this->isAiGenerated()) {
+            return false;
+        }
+        
+        return $this->user_id !==  $user_id;
     }
 
     /**
@@ -211,6 +231,27 @@ class GlobalQuestion extends Model
     {
         return $query->where('ai', true)
                     ->where('created_at', '<=', now()->subHours(48));
+    }
+
+    /**
+     * The users who own this question as a premium question.
+     */
+    public function premiumOwners()
+    {
+        return $this->belongsToMany(
+            \App\Models\User::class,
+            'user_premium_questions',
+            'global_question_id',
+            'user_id'
+        )->withTimestamps();
+    }
+
+    /**
+     * Check if a specific user owns this question as a premium question.
+     */
+    public function isOwnedByUser(\App\Models\User $user): bool
+    {
+        return $this->premiumOwners()->where('user_id', $user->id)->exists();
     }
 
     /**

@@ -4,7 +4,6 @@
     {{-- Laravel Pagination --}}
     {{ $paginator->appends(request()->query())->links() }}
 
-    @if($paginator->hasPages())
         {{-- Per Page Dropdown --}}
         <form method="GET">
             @foreach(request()->query() as $key => $value)
@@ -24,5 +23,4 @@
                 })->toArray()"
             />
         </form>
-    @endif
 </div> 

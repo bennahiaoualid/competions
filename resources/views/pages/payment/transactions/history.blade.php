@@ -178,18 +178,7 @@
             </div>
             
             <!-- Pagination -->
-            @if($transactions->hasPages())
-                <div class="px-4 sm:px-6 py-4 border-t border-gray-200">
-                    <div class="flex items-center justify-between">
-                                            <div class="text-sm text-gray-700">
-                        {{ __('payment.transaction_history.pagination.showing') }} {{ $transactions->firstItem() }} {{ __('payment.transaction_history.pagination.to') }} {{ $transactions->lastItem() }} {{ __('payment.transaction_history.pagination.of') }} {{ $transactions->total() }} {{ __('payment.transaction_history.pagination.results') }}
-                    </div>
-                        <div>
-                            {{ $transactions->links() }}
-                        </div>
-                    </div>
-                </div>
-            @endif
+            <x-pagination :paginator="$transactions" />
         @else
             <!-- Empty State -->
             <div class="px-4 sm:px-6 py-12 text-center">

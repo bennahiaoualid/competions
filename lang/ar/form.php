@@ -72,6 +72,7 @@ return [
         'filter' => 'تصفية',
         'generate' => 'أنشأ',
         'start' => 'إبدأ',
+        'back' => 'السابق',
     ],
     'title' => [
         "rest_password" => "إعادة تعيين كلمة السر",

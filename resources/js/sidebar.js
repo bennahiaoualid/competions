@@ -1,7 +1,13 @@
 document.addEventListener('DOMContentLoaded', function () {
+    // Check if sidebar elements exist before proceeding
+    const sidebar = document.getElementById('sidebar');
     const sideBarToggleBtn = document.getElementById('toggleSidebarBtn');
     const sideBarToggleDesktopBtn = document.getElementById('toggleSidebarDesktopBtn');
-    const sidebar = document.getElementById('sidebar');
+    
+    // Only initialize if sidebar exists (user is authenticated)
+    if (!sidebar || !sideBarToggleBtn || !sideBarToggleDesktopBtn) {
+        return; 
+    }
     
     // Check localStorage for saved state
     const savedState = localStorage.getItem('sidebarCollapsed');
