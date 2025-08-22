@@ -2,18 +2,17 @@
 
 namespace App\Http\Controllers\Payment\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\Payment\CoinOffer;
-use App\Services\Payment\CoinOfferService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Payment\CoinOffer;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
+use App\Services\Payment\CoinPricingService;
 use App\Http\Requests\Payment\CreateCoinOfferRequest;
 
 class CoinOfferController extends Controller
 {
     public function __construct(
-        private CoinOfferService $coinOfferService
+        private CoinPricingService $coinPricingService
     ) {}
 
     /**
@@ -31,7 +30,7 @@ class CoinOfferController extends Controller
     {
         $data = $request->only(['coin_pricing_id', 'name', 'description', 'discount_percentage', 'start_date', 'end_date']);
 
-        $this->coinOfferService->createOffer($data);
+        $this->coinPricingService->createOffer($data);
 
         return redirect()->back();
     }
@@ -41,7 +40,8 @@ class CoinOfferController extends Controller
      */
     public function destroy(Request $request)
     {
-        $this->coinOfferService->deleteOffer($request->offer_id);
+        $coinOffer = CoinOffer::findOrFail($request->offer_id);
+        $this->coinPricingService->deleteOffer($coinOffer);
 
         return back();
     }

@@ -374,20 +374,4 @@ class PaymentService
                         ->get();
         return $coinPricing;
     }
-
-    /**
-     * Get payment statistics
-     */
-    public function getPaymentStats(): array
-    {
-        return [
-            'total_payments' => PaymentTransaction::count(),
-            'pending_payments' => PaymentTransaction::pending()->count(),
-            'approved_payments' => PaymentTransaction::approved()->count(),
-            'rejected_payments' => PaymentTransaction::rejected()->count(),
-            'cancelled_payments' => PaymentTransaction::cancelled()->count(),
-            'total_amount' => PaymentTransaction::approved()->sum('amount'),
-            'total_coins_credited' => PaymentTransaction::approved()->sum('coins_credited'),
-        ];
-    }
 } 

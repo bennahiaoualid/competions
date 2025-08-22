@@ -4,13 +4,10 @@ namespace App\Http\Controllers\Payment\Admin;
 
 use App\Enums\UserTypeEnum;
 use Illuminate\Http\Request;
-use App\Models\Payment\CoinPricing;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
 use App\Services\Payment\CoinPricingService;
 use App\Http\Requests\Payment\CreateCoinPricingRequest;
-use Illuminate\Support\Facades\Redis;
 
 class CoinPricingController extends Controller
 {

@@ -29,18 +29,16 @@
                                     <i class="fas fa-robot me-1"></i>
                                     {{__('competition.question.type.ai')}}
                                 </span>
+                            <!-- Premium Badge if applicable -->
+                            @elseif($question->isPremiumForUser(\Illuminate\Support\Facades\Auth::id()))
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                    <i class="fas fa-crown me-1"></i>
+                                    {{__('competition.question.type.premium')}}
+                                </span>
                             @else
                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                     <i class="fas fa-question-circle me-1"></i>
                                     {{__('competition.question.type.free')}}
-                                </span>
-                            @endif
-
-                            <!-- Premium Badge if applicable -->
-                            @if($question->isPremiumForUser(\Illuminate\Support\Facades\Auth::id()))
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                    <i class="fas fa-crown me-1"></i>
-                                    {{__('competition.question.type.premium')}}
                                 </span>
                             @endif
                         </div>

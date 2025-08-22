@@ -17,6 +17,7 @@ class PaymentTransactionFactory extends Factory
         $payableType = $this->faker->randomElement($payableTypes);
         
         return [
+            'uuid' => $this->faker->uuid(),
             'payable_id' => $payableType::factory(),
             'payable_type' => $payableType,
             'approver_admin_id' => null,

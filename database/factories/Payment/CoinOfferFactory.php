@@ -16,66 +16,36 @@ class CoinOfferFactory extends Factory
         $endDate = $this->faker->dateTimeBetween($startDate, '+3 months');
 
         return [
+            'coin_pricing_id' => \App\Models\Payment\CoinPricing::factory(),
             'name' => $this->faker->words(3, true),
             'description' => $this->faker->sentence(),
-            'user_type' => $this->faker->randomElement(['user', 'admin', 'both']),
             'discount_percentage' => $this->faker->numberBetween(5, 50),
-            'min_amount' => $this->faker->optional(0.7)->randomFloat(2, 50, 200),
-            'max_amount' => $this->faker->optional(0.5)->randomFloat(2, 300, 1000),
             'start_date' => $startDate,
             'end_date' => $endDate,
-            'is_active' => $this->faker->boolean(80), // 80% chance of being active
+            'expired' => false,
             'created_by_admin_id' => Admin::factory(),
         ];
     }
 
-    /**
-     * Indicate that the offer is for users only
-     */
-    public function forUsers(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'user_type' => 'user',
-        ]);
-    }
+
 
     /**
-     * Indicate that the offer is for admins only
-     */
-    public function forAdmins(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'user_type' => 'admin',
-        ]);
-    }
-
-    /**
-     * Indicate that the offer is for both users and admins
-     */
-    public function forBoth(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'user_type' => 'both',
-        ]);
-    }
-
-    /**
-     * Indicate that the offer is active
+     * Indicate that the offer is active (not expired)
      */
     public function active(): static
     {
         return $this->state(fn (array $attributes) => [
-            'is_active' => true,
+            'expired' => false,
         ]);
     }
 
     /**
-     * Indicate that the offer is inactive
+     * Indicate that the offer is inactive (expired)
      */
     public function inactive(): static
     {
         return $this->state(fn (array $attributes) => [
-            'is_active' => false,
+            'expired' => true,
         ]);
     }
 
@@ -125,16 +95,7 @@ class CoinOfferFactory extends Factory
         ]);
     }
 
-    /**
-     * Create offer with amount limits
-     */
-    public function withAmountLimits(float $minAmount, float $maxAmount): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'min_amount' => $minAmount,
-            'max_amount' => $maxAmount,
-        ]);
-    }
+
 
     /**
      * Create weekend special offer
@@ -145,7 +106,6 @@ class CoinOfferFactory extends Factory
             'name' => 'Weekend Special',
             'description' => 'Extra coins for weekend purchases',
             'discount_percentage' => 20,
-            'user_type' => 'both',
         ])->currentlyValid();
     }
 
@@ -158,7 +118,6 @@ class CoinOfferFactory extends Factory
             'name' => 'New User Bonus',
             'description' => 'Welcome bonus for new users',
             'discount_percentage' => 25,
-            'user_type' => 'user',
         ])->currentlyValid();
     }
 
@@ -171,8 +130,6 @@ class CoinOfferFactory extends Factory
             'name' => 'Bulk Purchase Bonus',
             'description' => 'Extra coins for large purchases',
             'discount_percentage' => 15,
-            'min_amount' => 500.00,
-            'user_type' => 'both',
         ])->currentlyValid();
     }
 } 

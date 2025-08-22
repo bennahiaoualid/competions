@@ -3,11 +3,13 @@
 namespace App\Models\Payment;
 
 use App\Enums\CoinTransactionTypeEnum;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class CoinTransaction extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'transactionable_id',
         'transactionable_type',
