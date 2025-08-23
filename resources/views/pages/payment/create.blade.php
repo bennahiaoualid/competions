@@ -38,7 +38,7 @@
                     @foreach($coinPricing as $pricing)
                         <div class="relative">
                             @php
-                                $offer = $pricing->activeOffer->first();
+                                $offer = $pricing->activeOffer?->first();
                             @endphp
                             @if($offer && $offer->isCurrentlyValid())
                                 <!-- Discount Ribbon -->

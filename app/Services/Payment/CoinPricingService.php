@@ -64,8 +64,9 @@ class CoinPricingService
      */
     public function deletePricing($coinPricingId): bool
     {
+        $pricing = CoinPricing::findOrFail($coinPricingId);
+
         try {
-            $pricing = CoinPricing::findOrFail($coinPricingId);
             $pricing->delete();
 
             $this->flasher->crudSuccess('deleted');
@@ -80,8 +81,9 @@ class CoinPricingService
 
     public function changePricingStatus(int $coinPricingId, bool $status): bool
     {
+        $pricing = CoinPricing::findOrFail($coinPricingId);
+
         try {
-            $pricing = CoinPricing::findOrFail($coinPricingId);
             $pricing->update(['is_active' => $status]);
             $this->flasher->crudSuccess('updated');
             return true;

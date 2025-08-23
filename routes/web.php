@@ -104,7 +104,7 @@ Route::group(
 
     
     // Payment routes for users
-    Route::middleware('either.auth')->group(function () {
+    Route::middleware(['either.auth', 'not_allowed_roles:accountant,admin'])->group(function () {
         Route::get('/payment/create', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'create'])->name('payment.create');
         Route::post('/payment/store', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'store'])->name('payment.store');
         Route::get('/payment/transactions', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'index'])->name('payment.transactions');

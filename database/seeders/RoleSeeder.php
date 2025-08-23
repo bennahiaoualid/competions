@@ -43,13 +43,19 @@ class RoleSeeder extends Seeder
         ];
 
         // Add payment permissions to main permissions array
-        $permissions = array_merge($permissions, $paymentPermissions);
-        foreach($permissions as $permission){
+        $all_permissions = array_merge($permissions, $paymentPermissions);
+        foreach($all_permissions as $permission){
             Permission::create(['guard_name' => 'admin', 'name' => $permission]);
         }
 
         $role_owner = Role::create(['guard_name' => 'admin', 'name' => 'owner']);
-        $role_owner->givePermissionTo($permissions);
+        $role_owner->givePermissionTo(
+            array_merge($permissions,[
+                'view payment',
+                'export payment',
+                'view payment_audit',
+            ])
+        );
 
         $role_super = Role::create(['guard_name' => 'admin', 'name' => 'super_admin']);
         $role_super->givePermissionTo(

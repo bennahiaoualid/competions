@@ -60,9 +60,10 @@ class PaymentReviewService
 
     public function approve(int $reviewId, ?string $observation = null): bool
     {
+        $review = PaymentReviewRequest::findOrFail($reviewId);
+
         try {
-            return $this->transactionManager->run(function () use ($reviewId, $observation) {
-                $review = PaymentReviewRequest::findOrFail($reviewId);
+            return $this->transactionManager->run(function () use ($review, $observation) {
                 if ($review->status !== 'pending') {
                     $this->flasher->error(__('payment.review.not_pending'));
                     return false;
@@ -74,6 +75,7 @@ class PaymentReviewService
                     'reviewed_at' => now(),
                     'review_observation' => $observation,
                 ]);
+
                 
                 $transaction = $review->paymentTransaction;
 
@@ -98,9 +100,10 @@ class PaymentReviewService
 
     public function reject(int $reviewId, string $observation): bool
     {
+        $review = PaymentReviewRequest::findOrFail($reviewId);
+
         try {
-            return $this->transactionManager->run(function () use ($reviewId, $observation) {
-                $review = PaymentReviewRequest::findOrFail($reviewId);
+            return $this->transactionManager->run(function () use ($review, $observation) {
                 if ($review->status !== 'pending') {
                     $this->flasher->error(__('payment.review.not_pending'));
                     return false;
