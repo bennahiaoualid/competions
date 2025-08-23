@@ -1,5 +1,8 @@
 <?php
 
+use PowerComponents\LivewirePowerGrid\Components\Exports\OpenSpout\v4\ExportToCsv;
+use PowerComponents\LivewirePowerGrid\Components\Exports\OpenSpout\v4\ExportToXLS;
+
 return [
 
     /*
@@ -135,8 +138,8 @@ return [
             'csv'  => \PowerComponents\LivewirePowerGrid\Components\Exports\OpenSpout\v4\ExportToCsv::class,
         ],
         'openspout_v3' => [
-            'xlsx' => \PowerComponents\LivewirePowerGrid\Components\Exports\OpenSpout\v3\ExportToXLS::class,
-            'csv'  => \PowerComponents\LivewirePowerGrid\Components\Exports\OpenSpout\v3\ExportToCsv::class,
+            'xlsx' => ExportToXLS::class,
+            'csv'  => ExportToCsv::class,
         ],
     ],
 

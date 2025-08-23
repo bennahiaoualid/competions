@@ -2,13 +2,14 @@
 
 namespace App\Services\Payment;
 
-use App\Contracts\FlasherInterface;
-use App\Contracts\TransactionManagerInterface;
-use App\Models\Payment\PaymentReviewRequest;
-use App\Models\Payment\PaymentTransaction;
-use App\Services\Notification\PaymentNotificationService;
+use Exception;
 use App\Traits\RegisterLogs;
+use App\Contracts\FlasherInterface;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Payment\PaymentTransaction;
+use App\Models\Payment\PaymentReviewRequest;
+use App\Contracts\TransactionManagerInterface;
+use App\Services\Notification\PaymentNotificationService;
 
 class PaymentReviewService
 {
@@ -59,14 +60,15 @@ class PaymentReviewService
 
     public function approve(int $reviewId, ?string $observation = null): bool
     {
+        $review = PaymentReviewRequest::findOrFail($reviewId);
+
         try {
-            return $this->transactionManager->run(function () use ($reviewId, $observation) {
-                $review = PaymentReviewRequest::findOrFail($reviewId);
+            return $this->transactionManager->run(function () use ($review, $observation) {
                 if ($review->status !== 'pending') {
                     $this->flasher->error(__('payment.review.not_pending'));
                     return false;
                 }
-
+                
                 $review->update([
                     'status' => 'approved',
                     'reviewed_by_admin_id' => Auth::id(),
@@ -74,9 +76,14 @@ class PaymentReviewService
                     'review_observation' => $observation,
                 ]);
 
+                
                 $transaction = $review->paymentTransaction;
+
                 // Delegate to PaymentService to handle coin credit + status change
-                $this->paymentService->approvePayment($transaction, $observation);
+                $isPaymentApproved = $this->paymentService->approvePayment($transaction, $observation);
+                if(!$isPaymentApproved){
+                    throw new Exception('Payment with id '.$transaction->id.' not approved');
+                }
 
                 // Send notification to payment owner about review approval
                 $this->notificationService->reviewApproved($transaction);
@@ -84,7 +91,8 @@ class PaymentReviewService
                 $this->flasher->crudSuccess('updated');
                 return true;
             });
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
+            $this->registerLogs('PaymentReviewService:approve',$e);
             $this->flasher->crudFailure('updated');
             return false;
         }
@@ -92,9 +100,10 @@ class PaymentReviewService
 
     public function reject(int $reviewId, string $observation): bool
     {
+        $review = PaymentReviewRequest::findOrFail($reviewId);
+
         try {
-            return $this->transactionManager->run(function () use ($reviewId, $observation) {
-                $review = PaymentReviewRequest::findOrFail($reviewId);
+            return $this->transactionManager->run(function () use ($review, $observation) {
                 if ($review->status !== 'pending') {
                     $this->flasher->error(__('payment.review.not_pending'));
                     return false;
@@ -116,7 +125,8 @@ class PaymentReviewService
                 $this->flasher->crudSuccess('updated');
                 return true;
             });
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
+            $this->registerLogs('PaymentReviewService:reject',$e);
             $this->flasher->crudFailure('updated');
             return false;
         }

@@ -29,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'guest.guard' => \App\Http\Middleware\GuestWithGuard::class,
             'auth_competitor' =>\App\Http\Middleware\AuthCompetitor::class,
             'either.auth' => \App\Http\Middleware\EitherAuth::class,
+            'not_allowed_roles' => \App\Http\Middleware\ExceptRole::class,
 
         ]);
     })

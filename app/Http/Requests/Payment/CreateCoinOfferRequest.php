@@ -2,10 +2,13 @@
 
 namespace App\Http\Requests\Payment;
 
+use App\Traits\TimeManipulation;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CreateCoinOfferRequest extends FormRequest
 {
+    use TimeManipulation;
+
     protected $errorBag = 'createCoinOffer';
 
     /**

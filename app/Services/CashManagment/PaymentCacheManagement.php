@@ -4,17 +4,20 @@ namespace App\Services\CashManagment;
 
 use Illuminate\Support\Facades\Cache;
 use App\Services\Payment\PaymentService;
+use App\Services\Payment\CoinTransactionService;
 
 class PaymentCacheManagement
 {
-    protected $paymentService;
 
     /**
      * Create a new service instance.
      */
-    public function __construct(PaymentService $paymentService)
+    public function __construct(
+        protected PaymentService $paymentService,
+        protected CoinTransactionService $coinTransactionService
+
+        )
     {
-        $this->paymentService = $paymentService;
     }
 
     /**
@@ -72,6 +75,28 @@ class PaymentCacheManagement
     }
 
     /**
+     * Get user coin transaction
+     */
+    public function getUserCoinTransactions($user, $filters = [], $page = 1, $perPage = 10)
+    {
+        $cacheKey = $this->buildCacheKey('getUserCoinTransactions', [
+            'userId' => $user->id,
+            'filters' => $filters,
+            'perPage' => $perPage,  
+            'page' => $page
+        ]);
+        
+        $cacheTags = $this->getCacheTags('user_coin_transactions', $user->id);
+        $cacheDuration = $this->getCacheDuration('getUserCoinTransactions');
+
+        return Cache::tags($cacheTags)
+            ->remember($cacheKey, $cacheDuration, function () use ($user, $filters, $page, $perPage) {
+                return $this->coinTransactionService->getTransactionsForEntity($user, $filters, $page, $perPage);
+            });
+    }
+
+
+    /**
      * Invalidate user transactions cache and also invalidate status counts
      */
     public function invalidateGetUserTransactions($userId): void
@@ -90,6 +115,16 @@ class PaymentCacheManagement
 
         // Optional: Log cache invalidation for debugging
         \Log::info("Cache invalidated for user {$userId}: transactions and status counts");
+    }
+
+
+    /**
+     * Invalidate user coin transactions cache
+     */
+    public function invalidateGetUserCoinTransactions($userId): void
+    {
+        $cacheTags = $this->getCacheTags('user_coin_transactions', $userId);
+        Cache::tags($cacheTags)->flush();
     }
 
     /**
@@ -139,6 +174,7 @@ class PaymentCacheManagement
     {
         $cacheDurations = [
             'getUserTransactions' => 43200 , // 12 hours
+            'getUserCoinTransactions' => 3600 , // 1 hour
             'getUserTransactionCountForDay' => 43200 , // 12 hours
             'getUserTransactionStatusCounts' => 43200 , // 12 hours
         ];
@@ -156,9 +192,11 @@ class PaymentCacheManagement
             'user_transactions_' . $userId,
             'user_transaction_status_' . $userId,
             'user_transaction_count_for_day_' . $userId,
+            'user_coin_transactions_' . $userId,
         ];
 
         foreach ($allUserTags as $tag) {
+            \Log::info("Invalidating cache tag: {$tag}");
             Cache::tags([$tag])->flush();
         }
 
@@ -187,6 +225,11 @@ class PaymentCacheManagement
         // Check if common caches exist
         $commonCacheKeys = [
             'transactions' => $this->buildCacheKey('getUserTransactions', [
+                'userId' => $userId,
+                'filters' => [],
+                'page' => 1
+            ]),
+            'coin_transactions' => $this->buildCacheKey('getUserCoinTransactions', [
                 'userId' => $userId,
                 'filters' => [],
                 'page' => 1

@@ -5,9 +5,11 @@ namespace App\Models\Payment;
 use App\Models\Admin\Admin;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class CoinOffer extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'coin_pricing_id',
         'name',
@@ -50,18 +52,15 @@ class CoinOffer extends Model
         return $query->where('expired', true);
     }
 
-    public function scopeCurrentlyValid($query)
-    {
-        $now = now();
-        return $query->where('expired', false)
-                    ->where('start_date', '<=', $now)
-                    ->where('end_date', '>=', $now);
-    }
 
     public function scopeForCoinPricing($query, int $coinPricingId)
     {
         return $query->where('coin_pricing_id', $coinPricingId);
     }
+
+
+
+
 
     // Helper methods
     public function isCurrentlyValid(): bool
@@ -72,10 +71,6 @@ class CoinOffer extends Model
                $this->end_date >= $now;
     }
 
-    public function isExpired(): bool
-    {
-        return $this->expired || $this->end_date < now();
-    }
 
     public function isNotStarted(): bool
     {

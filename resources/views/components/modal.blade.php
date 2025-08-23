@@ -53,7 +53,7 @@
             payload = $event.detail.input_detail;
         }
     "
-    x-on:close-modal.window="$event.detail == '{{ $name }}' ? show = false : null"
+    x-on:close-modal.window="$event.detail.detail == '{{ $name }}' ? show = false : null"
     x-on:close.stop="show = false"
     x-on:keydown.escape.window="show = false"
     x-on:keydown.tab.prevent="$event.shiftKey || nextFocusable().focus()"

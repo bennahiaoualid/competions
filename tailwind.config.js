@@ -16,6 +16,7 @@ export default {
         'app/PowerGridThemes/*.php',
         'app/Livewire/*.php',
         'app/View/**/*.php',
+        'app/PowerGridThemes/TailwindStriped.php',
     ],
     darkMode:'false',
     theme: {

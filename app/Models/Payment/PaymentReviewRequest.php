@@ -5,9 +5,10 @@ namespace App\Models\Payment;
 use App\Models\Admin\Admin;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 class PaymentReviewRequest extends Model
 {
+    use HasFactory;
     protected $table = 'payment_review_requests';
     protected $fillable = [
         'payment_transaction_id',

@@ -9,7 +9,7 @@
             <option value="" >{{ $placeholder }} </option>
         @endisset
         @foreach($options as $option)
-            <option value="{{$option["value"]}}" @if($option["selected"]) selected @endif>{{$option["text"]}}</option>
+            <option value="{{$option["value"]}}" @if(isset($option["selected"]) && $option["selected"]) selected @endif>{{$option["text"]}}</option>
         @endforeach
     </select>
 </div>

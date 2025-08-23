@@ -29,8 +29,8 @@ class StoreResponseRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'choice_id' => 'required|integer|exists:choices,id',
-            'question_id' => 'required|integer|exists:global_questions,id'
+            'choice_id' => 'required|integer',
+            'question_id' => 'required|integer'
         ];
     }
 }

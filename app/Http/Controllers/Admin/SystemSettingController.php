@@ -28,8 +28,9 @@ class SystemSettingController extends Controller
         $paymentSettings = $this->systemSettingService->filterSettingsByCategory($allSettings, 'payment');
         $systemSettings = $this->systemSettingService->filterSettingsByCategory($allSettings, 'system');
         $notificationSettings = $this->systemSettingService->filterSettingsByCategory($allSettings, 'notifications');
+        $aiSettings = $this->systemSettingService->filterSettingsByCategory($allSettings, 'ai.global_question');
         
-        return view('pages.admin.system.settings.index', compact('allSettings', 'paymentSettings', 'systemSettings', 'notificationSettings'));
+        return view('pages.admin.system.settings.index', compact('allSettings', 'paymentSettings', 'systemSettings', 'notificationSettings', 'aiSettings'));
     }
 
     /**

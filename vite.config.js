@@ -14,6 +14,7 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/css/admin-sidebar.css',
+                'resources/css/user-sidebar.css',
                 'resources/js/app.js',
                 'resources/js/sidebar.js',
                 'resources/js/notifications/NotificationManager.js',

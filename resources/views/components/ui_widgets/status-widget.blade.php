@@ -12,6 +12,7 @@
         case 'rejected':
         case 'failed':
         case 'expired':
+        case 'not_approved':
             $color = $outline ? 'bg-red-100' : 'bg-red-300';
             $color_border = 'border-red-300';
             break;

@@ -2,9 +2,11 @@
 
 namespace App\Services\Payment;
 
-use App\Models\Payment\PaymentTransaction;
+use Exception;
 use App\Traits\RegisterLogs;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Payment\PaymentTransaction;
 
 class PaymentCleanupService
 {
@@ -22,40 +24,25 @@ class PaymentCleanupService
         $config = config('payment.cleanup');
 
         // Build a single query with UNION for all statuses
-        $query = PaymentTransaction::query();
-        
-        $firstStatus = true;
-        foreach ($config['rules'] as $status => $rule) {
-            if ($rule['keep_days'] === null) {
-                continue; // Skip pending payments
+        $query = PaymentTransaction::query()
+        ->select('id', 'proof_image_path')
+        ->whereNotNull('proof_image_path')
+        ->where(function($q) use ($config) {
+            foreach ($config['rules'] as $status => $rule) {
+                if ($rule['keep_days'] !== null) {
+                    $cutoffDate = now()->subDays($rule['cleanup_images']);
+                    $q->orWhere(function($subQ) use ($status, $cutoffDate) {
+                        $subQ->where('status', $status)
+                              ->where('created_at', '<', $cutoffDate);
+                    });
+                }
             }
-
-            $cutoffDate = now()->subDays($rule['cleanup_images']);
-            
-            if ($firstStatus) {
-                $query->where(function($q) use ($status, $cutoffDate) {
-                    $q->where('status', $status)
-                      ->where('created_at', '<', $cutoffDate);
-                });
-                $firstStatus = false;
-            } else {
-                $query->orWhere(function($q) use ($status, $cutoffDate) {
-                    $q->where('status', $status)
-                      ->where('created_at', '<', $cutoffDate);
-                });
-            }
-        }
-
-        // Exclude transactions with pending reviews
-        $query->whereDoesntHave('reviewRequests', function ($q) {
+        })
+        ->whereDoesntHave('reviewRequests', function ($q) {
             $q->where('status', 'pending');
         });
-
         // Return array of arrays with id and proof_image_path
-        return $query->whereNotNull('proof_image_path')
-                    ->select('id', 'proof_image_path')
-                    ->get()
-                    ->toArray();
+        return $query->get()->toArray();
     }
 
     /**
@@ -137,7 +124,7 @@ class PaymentCleanupService
                 'transaction_ids' => $successfulIds
             ];
 
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             return [
                 'status' => 'error',
                 'message' => 'Database update failed: ' . $e->getMessage(),
@@ -159,10 +146,7 @@ class PaymentCleanupService
             $expiredTransactions = $this->detectExpiredTransactions();
             
             if (empty($expiredTransactions)) {
-                $this->registerLogs(
-                    'PaymentCleanupService::cleanupExpiredProofImages',
-                    new \Exception('No expired proof images found for cleanup')
-                );
+                Log::info('No expired proof images found for cleanup');
                 return;
             }
 
@@ -179,26 +163,24 @@ class PaymentCleanupService
                 $dbUpdateResults = $this->updateDatabaseAfterImageDeletion($allIdsToUpdate);
                 
                 // Log the complete cleanup results
-                $this->registerLogs(
-                    'PaymentCleanupService::cleanupExpiredProofImages',
-                    new \Exception(json_encode([
-                        'total_images' => count($expiredTransactions),
-                        'deletion_success' => $deletionResults['success'],
-                        'deletion_failed' => $deletionResults['failed'],
-                        'deletion_not_found' => $deletionResults['not_found'],
-                        'deletion_errors' => $deletionResults['errors'],
-                        'database_update_status' => $dbUpdateResults['status'],
-                        'database_updated_count' => $dbUpdateResults['updated_count'],
-                        'successful_transaction_ids' => $deletionResults['successful_ids'],
-                        'orphaned_record_ids' => $deletionResults['not_found_ids'],
-                        'total_records_updated' => count($allIdsToUpdate)
-                    ]))
-                );
+                Log::info('Cleanup results', [
+                    'total_images' => count($expiredTransactions),
+                    'deletion_success' => $deletionResults['success'],
+                    'deletion_failed' => $deletionResults['failed'],
+                    'deletion_not_found' => $deletionResults['not_found'],
+                    'deletion_errors' => $deletionResults['errors'],
+                    'database_update_status' => $dbUpdateResults['status'],
+                    'database_updated_count' => $dbUpdateResults['updated_count'],
+                    'successful_transaction_ids' => $deletionResults['successful_ids'],
+                    'orphaned_record_ids' => $deletionResults['not_found_ids'],
+                    'total_records_updated' => count($allIdsToUpdate)
+                ]);
+                
             } else {
                 // Log when no images were successfully deleted or found
                 $this->registerLogs(
                     'PaymentCleanupService::cleanupExpiredProofImages',
-                    new \Exception(json_encode([
+                    new Exception(json_encode([
                         'total_images' => count($expiredTransactions),
                         'deletion_success' => 0,
                         'deletion_failed' => $deletionResults['failed'],
@@ -209,7 +191,7 @@ class PaymentCleanupService
                 );
             }
 
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             $this->registerLogs(
                 'PaymentCleanupService::cleanupExpiredProofImages',
                 $e

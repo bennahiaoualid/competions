@@ -98,7 +98,70 @@ class Commands
         }
     }
 
+    /**
+     * Test LLM connection for a specific provider
+     */
+    public function testLLMConnection(string $provider = 'openai'): void
+    {
+        try {
+            Log::info("Testing LLM connection for provider: {$provider}");
+            
+            // This will be called by the artisan command
+            // The actual testing logic is in the TestLLMConnection command class
+            
+        } catch (\Exception $e) {
+            Log::error("LLM connection test failed", [
+                'provider' => $provider,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
 
+    /**
+     * Check LLM provider health status
+     */
+    public function checkLLMHealth(string $provider = 'openai'): void
+    {
+        try {
+            // Get the provider instance and check health
+            $providerInstance = app("llm.providers.{$provider}");
+            $healthStatus = $providerInstance->checkHealth();
+            
+            if ($healthStatus['status']) {
+                echo "✓ LLM provider {$provider} is healthy\n";
+                echo "  Response time: {$healthStatus['response_time_ms']}ms\n";
+                echo "  Models available: {$healthStatus['models_available']}\n";
+                echo "  API version: {$healthStatus['api_version']}\n";
+                echo "  Last checked: {$healthStatus['last_checked']}\n";
+                
+                Log::info("LLM provider {$provider} is healthy", [
+                    'response_time_ms' => $healthStatus['response_time_ms'],
+                    'models_available' => $healthStatus['models_available'] ?? 'unknown'
+                ]);
+            } else {
+                echo "❌ LLM provider {$provider} health check failed\n";
+                echo "  Error: {$healthStatus['message']}\n";
+                echo "  Last checked: {$healthStatus['last_checked']}\n";
+                
+                if (isset($healthStatus['error_details'])) {
+                    echo "  Details: " . json_encode($healthStatus['error_details']) . "\n";
+                }
+                
+                Log::error("LLM provider {$provider} health check failed", [
+                    'message' => $healthStatus['message'],
+                    'last_checked' => $healthStatus['last_checked']
+                ]);
+            }
+            
+        } catch (\Exception $e) {
+            echo "❌ LLM health check failed: {$e->getMessage()}\n";
+            
+            Log::error("LLM health check failed", [
+                'provider' => $provider,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
 
     /**
      * Archive old payment audit logs

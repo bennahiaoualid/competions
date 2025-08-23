@@ -10,5 +10,5 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <!-- tailwind complied -->
-@vite(['resources/css/app.css', 'resources/js/app.js'])
+@vite(['resources/css/app.css', 'resources/css/user-sidebar.css', 'resources/js/app.js', 'resources/js/sidebar.js'])
 @livewireStyles

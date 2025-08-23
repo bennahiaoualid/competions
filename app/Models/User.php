@@ -6,11 +6,13 @@ use Carbon\Carbon;
 use App\Enums\UserTypeEnum;
 use App\Models\Admin\Admin;
 use Illuminate\Support\Str;
+use App\Observers\UserObserver;
 use App\Models\Competition\Level;
 use Spatie\Activitylog\LogOptions;
 use App\Models\Payment\CoinBalance;
 use App\Models\Competition\Response;
 use App\Models\Competition\Competition;
+use App\Models\Payment\CoinTransaction;
 use Illuminate\Notifications\Notifiable;
 use App\Models\GuestUsers\GlobalResponse;
 use Illuminate\Database\Eloquent\Builder;
@@ -22,6 +24,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
@@ -83,6 +86,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property-read int|null $deletion_requests_count
  * @mixin \Eloquent
  */
+#[ObservedBy([UserObserver::class])]
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable , LogsActivity, SoftDeletes;
@@ -227,6 +231,36 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->morphOne(CoinBalance::class, 'balanceable');
     }
+
+    /**
+     * The coin transactions for this user.
+     */
+    public function coinTransactions()
+    {
+        return $this->morphMany(CoinTransaction::class, 'transactionable');
+    }
+
+    /**
+     * The premium questions that this user owns.
+     */
+    public function premiumQuestions()
+    {
+        return $this->hasMany(\App\Models\GuestUsers\UserPremiumQuestion::class);
+    }
+
+    /**
+     * The global questions that this user owns as premium questions.
+     */
+    public function ownedPremiumQuestions()
+    {
+        return $this->belongsToMany(
+            \App\Models\GuestUsers\GlobalQuestion::class,
+            'user_premium_questions',
+            'user_id',
+            'global_question_id'
+        )->withTimestamps();
+    }
+
 
 
     /**

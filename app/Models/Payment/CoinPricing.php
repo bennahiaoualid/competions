@@ -4,11 +4,14 @@ namespace App\Models\Payment;
 
 use App\Models\Admin\Admin;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class CoinPricing extends Model
 {
+    use HasFactory;
     protected $table = 'coin_pricing';
     protected $fillable = [
         'name',
@@ -39,9 +42,9 @@ class CoinPricing extends Model
         return $this->hasMany(CoinOffer::class);
     }
 
-    public function activeOffer(): HasMany
+    public function activeOffer(): HasOne
     {
-        return $this->hasMany(CoinOffer::class)->where('expired', false);
+        return $this->hasOne(CoinOffer::class)->where('expired', false);
     }
 
     // Scopes

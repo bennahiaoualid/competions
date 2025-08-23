@@ -16,7 +16,7 @@ class OrderReviewRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'transaction_id' => ['required', 'integer', 'exists:payment_transactions,id'],
+            'transaction_id' => ['required', 'integer'],
             'reason' => ['required', 'string', 'max:1000'],
         ];
     }

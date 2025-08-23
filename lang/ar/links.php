@@ -23,9 +23,9 @@ return [
         'auditing_responses' => 'مراجعة الإجابات'
     ],
     'global_user'=>[
-        'global_questions' => 'الأسئلة العالمية',
+        'global_questions' => 'الأسئلة العامة',
         'global_responses' => 'إجاباتي',
-        'global_order' => 'الترتيب العالمي',
+        'global_order' => 'الترتيب العام',
     ],
     'payment' => [
         'payments' => 'المدفوعات',

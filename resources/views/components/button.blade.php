@@ -1,4 +1,14 @@
-@props(["tooltip" => null, "islink" => false, "color_type" => 'primary', 'outline' => false, 'disabled' => false, 'size' => 'md', 'ariaLabel' => ''])
+@props([
+    "tooltip" => null, 
+    "islink" => false, 
+    "color_type" => 'primary', 
+    'outline' => false, 
+    'disabled' => false, 
+    'size' => 'md', 
+    'ariaLabel' => '',
+    'icon' => null,
+    'custom_color_class' => null
+])
 
 @php
     $base_classes = "block inline-flex items-center border rounded-md font-semibold uppercase cursor-pointer tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150";
@@ -36,6 +46,9 @@
             case "secondary":
                 $color_classes = "bg-transparent text-gray-600 border-gray-600 hover:bg-gray-600 hover:text-white focus:bg-gray-600 focus:text-white active:bg-gray-600 active:text-white focus:ring-gray-600";
                 break;
+            case "custom":
+                $color_classes = "bg-transparent  hover:text-white focus:text-white  active:text-white {$custom_color_class}";
+                break;
             default:
                 $color_classes = "bg-transparent text-{$color_type} border-{$color_type} hover:bg-{$color_type} hover:text-white focus:bg-{$color_type} focus:text-white active:bg-{$color_type} active:text-white focus:ring-{$color_type}";
         }
@@ -56,6 +69,9 @@
                 break;
             case "secondary":
                 $color_classes = "bg-gray-600 text-white border-transparent hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-700 focus:ring-gray-600";
+                break;
+            case "custom":
+                $color_classes = "text-white border-transparent hover:text-white focus:text-white  active:text-white {$custom_color_class}";
                 break;
             default:
                 $color_classes = "bg-{$color_type} text-white border-transparent hover:bg-{$color_type}-dark focus:bg-{$color_type}-dark active:bg-{$color_type}-dark focus:ring-{$color_type}";

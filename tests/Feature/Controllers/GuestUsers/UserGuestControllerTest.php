@@ -1,16 +1,21 @@
 <?php
 
-namespace Tests\Feature\Controllers;
+namespace Tests\Feature\Controllers\GuestUsers;
 
 use Tests\TestCase;
 use App\Models\User;
 use App\Models\Admin\Admin;
-use App\Models\GuestUsers\GlobalQuestion;
-use App\Models\GuestUsers\Choice;
-use App\Models\GuestUsers\GlobalResponse;
+use App\Enums\AISubjectEnum;
+use App\Enums\AIDifficultyEnum;
+use App\Jobs\Ai\GenerateAIQuestionJob;
 use Database\Seeders\RoleSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\GuestUsers\Choice;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Session;
+use App\Models\GuestUsers\GlobalQuestion;
+use App\Models\GuestUsers\GlobalResponse;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class UserGuestControllerTest extends TestCase
 {
@@ -70,8 +75,11 @@ class UserGuestControllerTest extends TestCase
     {
         $routes = [
             ['get', route('user.global_questions.response')],
+            ['get', route('user.global_questions.response.ai')],
             ['post', route('user.global_questions.response.store')],
             ['get', route('user.global_questions.responses')],
+            ['get', route('user.global_questions.ai_question_generation')],
+            ['post', route('user.global_questions.ai_question_generation.store')],
         ];
 
         foreach ($routes as [$method, $uri]) {
@@ -204,6 +212,413 @@ class UserGuestControllerTest extends TestCase
         $response->assertOk();
         $response->assertViewIs('pages.user.guest_users.no_question');
     }
+
+    public function test_get_random_question_falls_back_to_user_ai_question_when_no_approved_questions_available()
+    {
+        $this->actingAs($this->user);
+        
+        // Delete all approved questions
+        GlobalQuestion::query()->delete();
+        
+        // Create user's AI question (unapproved, but user owns it)
+        $aiQuestion = GlobalQuestion::factory()->create([
+            'ai' => true,
+            'user_id' => $this->user->id,
+            'approved' => null, // Not approved yet
+        ]);
+        
+        // Create choice for AI question
+        $aiChoice = Choice::factory()->create([
+            'question_id' => $aiQuestion->id,
+            'choice_text' => 'AI Question Choice',
+            'correct' => true,
+        ]);
+        
+        $response = $this->get(route('user.global_questions.response'));
+        
+        $response->assertOk();
+        $response->assertViewIs('pages.user.guest_users.question_response');
+        $response->assertViewHas('question');
+        
+        $question = $response->viewData('question');
+        $this->assertEquals($aiQuestion->id, $question->id);
+        $this->assertTrue($question->ai);
+        $this->assertEquals($this->user->id, $question->user_id);
+        $this->assertNull($question->approved);
+    }
+
+    // ========================================
+    // GET RANDOM AI QUESTION TESTS
+    // ========================================
+
+    public function test_get_random_ai_question_with_null_question_id_returns_user_ai_question_when_available()
+    {
+        $this->actingAs($this->user);
+        
+        // Create user's AI question
+        $aiQuestion = GlobalQuestion::factory()->create([
+            'ai' => true,
+            'user_id' => $this->user->id,
+            'approved' => null,
+        ]);
+        
+        // Create choice for AI question
+        $aiChoice = Choice::factory()->create([
+            'question_id' => $aiQuestion->id,
+            'choice_text' => 'AI Question Choice',
+            'correct' => true,
+        ]);
+        
+        $response = $this->get(route('user.global_questions.response.ai'));
+        
+        $response->assertOk();
+        $response->assertViewIs('pages.user.guest_users.question_response');
+        $response->assertViewHas('question');
+        
+        $question = $response->viewData('question');
+        $this->assertEquals($aiQuestion->id, $question->id);
+        $this->assertTrue($question->ai);
+        $this->assertEquals($this->user->id, $question->user_id);
+    }
+
+    public function test_get_random_ai_question_with_null_question_id_returns_no_question_when_no_eligible_ai_questions()
+    {
+        $this->actingAs($this->user);
+        
+        // Create AI question for another user (not eligible for current user)
+        $otherUser = User::factory()->create();
+        $otherAiQuestion = GlobalQuestion::factory()->create([
+            'ai' => true,
+            'user_id' => $otherUser->id,
+            'approved' => null,
+        ]);
+        
+        $response = $this->get(route('user.global_questions.response.ai'));
+        
+        $response->assertOk();
+        $response->assertViewIs('pages.user.guest_users.no_question');
+    }
+
+    public function test_get_random_ai_question_with_null_question_id_returns_no_question_when_user_has_answered_twice()
+    {
+        $this->actingAs($this->user);
+        
+        // Create user's AI question
+        $aiQuestion = GlobalQuestion::factory()->create([
+            'ai' => true,
+            'user_id' => $this->user->id,
+            'approved' => null,
+        ]);
+        
+        // Create choice for AI question
+        $aiChoice = Choice::factory()->create([
+            'question_id' => $aiQuestion->id,
+            'choice_text' => 'AI Question Choice',
+            'correct' => true,
+        ]);
+        
+        // Create two responses for the same question (making it ineligible)
+        GlobalResponse::factory()->create([
+            'user_id' => $this->user->id,
+            'question_id' => $aiQuestion->id,
+            'choice_id' => $aiChoice->id,
+            'score' => 5,
+        ]);
+        
+        GlobalResponse::factory()->create([
+            'user_id' => $this->user->id,
+            'question_id' => $aiQuestion->id,
+            'choice_id' => $aiChoice->id,
+            'score' => 3,
+        ]);
+        
+        $response = $this->get(route('user.global_questions.response.ai'));
+        
+        $response->assertOk();
+        $response->assertViewIs('pages.user.guest_users.no_question');
+    }
+
+    public function test_get_random_ai_question_with_specific_question_id_returns_exact_question_when_eligible()
+    {
+        $this->actingAs($this->user);
+        
+        // Create user's AI question
+        $aiQuestion = GlobalQuestion::factory()->create([
+            'ai' => true,
+            'user_id' => $this->user->id,
+            'approved' => null,
+        ]);
+        
+        // Create choice for AI question
+        $aiQuestion->choices()->create([
+            'choice_text' => 'AI Question Choice',
+            'correct' => true,
+        ]);
+        
+        $response = $this->get(route('user.global_questions.response.ai', $aiQuestion->id));
+        
+        $response->assertOk();
+        $response->assertViewIs('pages.user.guest_users.question_response');
+        $response->assertViewHas('question');
+        
+        $question = $response->viewData('question');
+        $this->assertEquals($aiQuestion->id, $question->id);
+        $this->assertTrue($question->ai);
+        $this->assertEquals($this->user->id, $question->user_id);
+    }
+
+    public function test_get_random_ai_question_with_specific_question_id_returns_exact_question_when_user_has_one_score_zero_response()
+    {
+        $this->actingAs($this->user);
+        
+        // Create user's AI question
+        $aiQuestion = GlobalQuestion::factory()->create([
+            'ai' => true,
+            'user_id' => $this->user->id,
+            'approved' => null,
+        ]);
+        
+        // Create choice for AI question
+        $aiChoice = Choice::factory()->create([
+            'question_id' => $aiQuestion->id,
+            'choice_text' => 'AI Question Choice',
+            'correct' => true,
+        ]);
+        
+        // Create exactly one response with score = 0 (making it eligible for retry)
+        GlobalResponse::factory()->create([
+            'user_id' => $this->user->id,
+            'question_id' => $aiQuestion->id,
+            'choice_id' => $aiChoice->id,
+            'score' => 0,
+        ]);
+        
+        $response = $this->get(route('user.global_questions.response.ai', $aiQuestion->id));
+        
+        $response->assertOk();
+        $response->assertViewIs('pages.user.guest_users.question_response');
+        $response->assertViewHas('question');
+        
+        $question = $response->viewData('question');
+        $this->assertEquals($aiQuestion->id, $question->id);
+    }
+
+    public function test_get_random_ai_question_with_specific_question_id_returns_no_question_when_question_not_owned_by_user()
+    {
+        $this->actingAs($this->user);
+        
+        // Create AI question for another user
+        $otherUser = User::factory()->create();
+        $otherAiQuestion = GlobalQuestion::factory()->create([
+            'ai' => true,
+            'user_id' => $otherUser->id,
+            'approved' => null,
+        ]);
+        
+        $response = $this->get(route('user.global_questions.response.ai', $otherAiQuestion->id));
+        
+        $response->assertOk();
+        $response->assertViewIs('pages.user.guest_users.no_question');
+    }
+
+    public function test_get_random_ai_question_with_specific_question_id_returns_no_question_when_user_has_answered_twice()
+    {
+        $this->actingAs($this->user);
+        
+        // Create user's AI question
+        $aiQuestion = GlobalQuestion::factory()->create([
+            'ai' => true,
+            'user_id' => $this->user->id,
+            'approved' => null,
+        ]);
+        
+        // Create choice for AI question
+        $aiChoice = Choice::factory()->create([
+            'question_id' => $aiQuestion->id,
+            'choice_text' => 'AI Question Choice',
+            'correct' => true,
+        ]);
+        
+        // Create two responses with scores > 0 (making it ineligible)
+        GlobalResponse::factory()->create([
+            'user_id' => $this->user->id,
+            'question_id' => $aiQuestion->id,
+            'choice_id' => $aiChoice->id,
+            'score' => 5,
+        ]);
+        
+        GlobalResponse::factory()->create([
+            'user_id' => $this->user->id,
+            'question_id' => $aiQuestion->id,
+            'choice_id' => $aiChoice->id,
+            'score' => 3,
+        ]);
+        
+        $response = $this->get(route('user.global_questions.response.ai', $aiQuestion->id));
+        
+        $response->assertOk();
+        $response->assertViewIs('pages.user.guest_users.no_question');
+    }
+
+    public function test_get_random_ai_question_with_nonexistent_question_id_returns_no_question()
+    {
+        $this->actingAs($this->user);
+        
+        $response = $this->get(route('user.global_questions.response.ai', 99999));
+        
+        $response->assertOk();
+        $response->assertViewIs('pages.user.guest_users.no_question');
+    }
+
+    // ========================================
+    // AI QUESTION GENERATION TESTS
+    // ========================================
+
+    public function test_ai_question_generation_page_is_accessible_to_authenticated_users()
+    {
+        $this->actingAs($this->user);
+        
+        $response = $this->get(route('user.global_questions.ai_question_generation'));
+        
+        $response->assertOk();
+        $response->assertViewIs('pages.user.guest_users.ai_question_generation');
+    }
+
+    public function test_ai_question_generation_page_passes_correct_cost_data_to_view()
+    {
+        $this->actingAs($this->user);
+        
+        $response = $this->get(route('user.global_questions.ai_question_generation'));
+        
+        $response->assertOk();
+        $response->assertViewIs('pages.user.guest_users.ai_question_generation');
+        
+        // Check that all three cost variables are passed to the view
+        $response->assertViewHas('base_cost', null);
+        $response->assertViewHas('difficulty_cost', null);
+        $response->assertViewHas('subject_cost', null);
+        
+    }
+
+    // ========================================
+    // GENERATE AI QUESTION TESTS
+    // ========================================
+
+    public function test_generate_ai_question_requires_authentication()
+    {
+        $response = $this->post(route('user.global_questions.ai_question_generation.store'), [
+            'subject' => 'math',
+            'difficulty' => 'medium',
+        ]);
+        
+        $response->assertRedirect(route('login'));
+    }
+
+    public function test_generate_ai_question_with_valid_data_returns_success()
+    {
+        Bus::fake();
+        $this->actingAs($this->user);
+        
+        // Ensure user has enough coins for AI question generation
+        $this->user->coinBalance()->create(['balance' => 100.0]);
+        
+        $response = $this->post(route('user.global_questions.ai_question_generation.store'), [
+            'subject' => AISubjectEnum::MATHEMATICS->value,
+            'difficulty' => AIDifficultyEnum::EASY->value,
+        ]);
+        
+        $response->assertOk();
+        
+        // Check that the response is JSON
+        $response->assertHeader('Content-Type', 'application/json');
+        
+        // Get the response data
+        $responseData = $response->json();
+        // Verify the response structure
+        $this->assertArrayHasKey('success', $responseData);
+        $this->assertArrayHasKey('data', $responseData);
+        
+        // The actual response will depend on the real AI service
+        // We just verify the structure is correct
+        $this->assertTrue($responseData['success']);
+        // Verify that a job was dispatched to the queue
+        Bus::assertDispatched(GenerateAIQuestionJob::class);
+    }
+
+    public function test_generate_ai_question_with_validation_errors_returns_error_response()
+    {
+        Bus::fake();
+        $this->actingAs($this->user);
+        
+        $response = $this->post(route('user.global_questions.ai_question_generation.store'), [
+            // Missing required fields
+        ]);
+        
+        $response->assertStatus(422);
+        
+        // Check that the response is JSON
+        $response->assertHeader('Content-Type', 'application/json');
+        
+        // Get the response data
+        $responseData = $response->json();
+        
+        // Verify the error response structure
+        $this->assertArrayHasKey('success', $responseData);
+        $this->assertArrayHasKey('exception_type', $responseData);
+        $this->assertArrayHasKey('error_type', $responseData);
+        $this->assertArrayHasKey('message', $responseData);
+        $this->assertArrayHasKey('user_message', $responseData);
+        $this->assertArrayHasKey('context', $responseData);
+        
+        // Verify the values
+        $this->assertFalse($responseData['success']);
+        $this->assertEquals('validation_error', $responseData['exception_type']);
+        $this->assertEquals('field_validation_failed', $responseData['error_type']);
+        
+        // Check that validation errors are included
+        $this->assertArrayHasKey('validation_errors', $responseData['context']);
+        $this->assertArrayHasKey('fields', $responseData['context']);
+        
+        // The actual fields will depend on the real validation rules
+        // We just verify the structure is correct
+        $this->assertIsArray($responseData['context']['validation_errors']);
+        $this->assertIsArray($responseData['context']['fields']);
+        $this->assertEquals($responseData['context']['fields'],['subject', 'difficulty']);
+
+        Bus::assertNotDispatched(GenerateAIQuestionJob::class);
+    }
+
+    public function test_generate_ai_question_with_insufficient_coins_returns_error()
+    {
+        Bus::fake();
+        $this->actingAs($this->user);
+        
+        // Ensure user has insufficient coins
+        $this->user->coinBalance()->create(['balance' => 0.0]);
+        
+        $response = $this->post(route('user.global_questions.ai_question_generation.store'), [
+            'subject' => AISubjectEnum::MATHEMATICS->value,
+            'difficulty' => AIDifficultyEnum::EASY->value,
+        ]);
+        
+        $response->assertOk();
+        
+        // Check that the response is JSON
+        $response->assertHeader('Content-Type', 'application/json');
+        
+        // Get the response data
+        $responseData = $response->json();
+        
+        // Verify the error response structure
+        $this->assertArrayHasKey('success', $responseData);
+        $this->assertFalse($responseData['success']);
+        
+        // Should indicate insufficient coins
+        $this->assertEquals('paid_service', $responseData['exception_type']);
+
+        Bus::assertNotDispatched(GenerateAIQuestionJob::class);
+    }
+
 
     // ========================================
     // STORE RESPONSE TESTS

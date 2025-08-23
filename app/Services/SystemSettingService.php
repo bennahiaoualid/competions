@@ -274,7 +274,7 @@ class SystemSettingService
     public function filterSettingsByCategory(Collection $settings, string $category): Collection
     {
         return $settings->filter(function ($setting) use ($category) {
-            return str_starts_with($setting->setting_trans_key, "settings.{$category}.");
+            return str_starts_with($setting->setting_trans_key, "settings.{$category}");
         });
     }
 } 

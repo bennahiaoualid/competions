@@ -30,7 +30,7 @@ class TailwindStriped extends Tailwind
                 'tbody' => 'text-pg-primary-800',
                 'tbodyEmpty' => '',
                 'tr' => 'even:bg-neutral-100 dark:even:bg-pg-primary-700 border-b border-pg-primary-100 dark:border-pg-primary-600 hover:bg-pg-primary-50 dark:bg-pg-primary-800 dark:hover:bg-pg-primary-800',
-                'td' => 'text-wrap px-3 py-2 whitespace-nowrap dark:text-pg-primary-200',
+                'td' => 'text-wrap leading-loose px-3 py-2 whitespace-nowrap dark:text-pg-primary-200',
                 'tdEmpty' => 'px-3 py-2 whitespace-nowrap dark:text-pg-primary-200',
                 'tdSummarize' => 'px-3 py-2 whitespace-nowrap dark:text-pg-primary-200 text-sm text-pg-primary-600 text-right space-y-2',
                 'trSummarize' => '',

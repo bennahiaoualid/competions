@@ -90,6 +90,41 @@ return [
 
         /*
         |--------------------------------------------------------------------------
+        | AI Question Generation Settings Validation
+        |--------------------------------------------------------------------------
+        */
+        'global_question_generating_cost' => [
+            'type' => 'integer',
+            'min' => 1,
+            'max' => 100,
+            'message' => 'settings.validation.global_question_generating_cost'
+        ],
+        'global_question_custom_difficulty_cost' => [
+            'type' => 'integer',
+            'min' => 0,
+            'max' => 50,
+            'message' => 'settings.validation.global_question_custom_difficulty_cost'
+        ],
+        'global_question_custom_subject_cost' => [
+            'type' => 'integer',
+            'min' => 0,
+            'max' => 50,
+            'message' => 'settings.validation.global_question_custom_subject_cost'
+        ],
+        'global_question_max_output_tokens' => [
+            'type' => 'integer',
+            'min' => 100,
+            'max' => 2000,
+            'message' => 'settings.validation.global_question_max_output_tokens'
+        ],
+        'global_question_premium_cost_percentage' => [
+            'type' => 'integer',
+            'min' => 1,
+            'max' => 100,
+            'message' => 'settings.validation.premium_question_cost_percentage'
+        ],
+        /*
+        |--------------------------------------------------------------------------
         | Notification Settings Validation
         |--------------------------------------------------------------------------
         */
@@ -124,7 +159,16 @@ return [
         'max_file_upload_size' => 10485760, // 10MB
         'session_timeout' => 120, // 2 hours
         
+        // Competition Settings
+        'max_competition_duration' => 30,
+        'min_competition_participants' => 5,
         
+        // AI Question Generation Settings
+        'global_question_generating_cost' => 10, // Base cost for generating a question
+        'global_question_custom_difficulty_cost' => 10, // Additional cost for custom difficulty
+        'global_question_custom_subject_cost' => 10, // Additional cost for custom subject
+        'global_question_max_output_tokens' => 350, // Maximum tokens for AI response
+        'global_question_premium_cost_percentage' => 50, // Premium question cost percentage
         // Notification Settings
         'email_notifications_enabled' => true,
         'push_notifications_enabled' => true

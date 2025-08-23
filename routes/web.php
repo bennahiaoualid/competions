@@ -1,17 +1,45 @@
 <?php
 
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Models\Payment\PaymentTransaction;
 use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\User\UserProfileController;
 use App\Http\Controllers\Payment\PaymentProofController;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 Route::get('/test', function () {
-    $s = PaymentTransaction::all()->first();
-    $g = explode('\\', $s->payable_type);
-    dd($g[count($g) - 1], $s->payable_type, User::class);
+    try {
+        // Use Gemini service directly for testing
+        $geminiService = app(\App\Services\LLM\GeminiService::class);
+        
+        // Simple prompt for testing
+        $prompt = "Generate a simple math question with 4 multiple choice answers. Return in this format: Question: [question text] A) [choice] B) [choice] C) [choice] D) [choice]";
+        
+        // Generate the question
+        $response = $geminiService->generate($prompt);
+        
+        if ($response->isSuccess()) {
+            $question = $response->getContent();
+            $tokens = $response->getTokensUsed();
+            $cost = $response->getCost();
+            
+            return view('test', [
+                'question' => $question,
+                'tokens' => $tokens,
+                'cost' => $cost,
+                'success' => true
+            ]);
+        } else {
+            return view('test', [
+                'error' => $response->getError(),
+                'success' => false
+            ]);
+        }
+        
+    } catch (\Exception $e) {
+        return view('test', [
+            'error' => 'Exception: ' . $e->getMessage(),
+            'success' => false
+        ]);
+    }
 });
 
 
@@ -47,10 +75,18 @@ Route::group(
         });
         // global questions
         Route::get('/questions/response/', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'getRandomQuestion'])->name('global_questions.response');
+        Route::get('/questions/response/ai/{questionId?}', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'getRandomAIQuestion'])->name('global_questions.response.ai');
+        Route::get('/questions/response/premium', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'getRandomPremiumQuestion'])->name('global_questions.response.premium');
         Route::post('/questions/response/store', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'storeResponse'])->name('global_questions.response.store');
 
         Route::get('my/global-responses', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'getGlobalUserResponse'])->name('global_questions.responses');
 
+        Route::get('/ai-question-generation', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'aiQuestionGeneration'])->name('global_questions.ai_question_generation');
+        Route::post('/ai-question-generation', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'generateAIQuestion'])->name('global_questions.ai_question_generation.store');
+        
+        Route::get('/premium-info', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'premiumInfo'])->name('global_questions.premium_info');
+        
+        Route::get('/premium-questions', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'getRandomPremiumQuestion'])->name('global_questions.premium.browse');
     });
 
     Route::get( '/competitions', [\App\Http\Controllers\User\UserCompetitionController::class, "getAllPublicCompetitions"])->name('competitions');
@@ -66,15 +102,15 @@ Route::group(
     Route::get('/questions',[\App\Http\Controllers\GuestUsers\UserGuestController::class, 'index'])->name('global_questions.index');
     Route::get('/global-order', [\App\Http\Controllers\GuestUsers\UserGuestController::class, 'globalUsersOrder'])->name('global_questions.global_order');
 
-
     
     // Payment routes for users
-    Route::middleware('either.auth')->group(function () {
+    Route::middleware(['either.auth', 'not_allowed_roles:accountant,admin'])->group(function () {
         Route::get('/payment/create', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'create'])->name('payment.create');
         Route::post('/payment/store', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'store'])->name('payment.store');
         Route::get('/payment/transactions', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'index'])->name('payment.transactions');
         Route::get('/payment/transactions/{paymentTransaction}', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'show'])->name('payment.transactions.show');
         Route::get('/payment/coin-balance', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'getCoinBalance'])->name('payment.coin-balance');
+        Route::get('/payment/history', [\App\Http\Controllers\Payment\CoinTransactionController::class, 'index'])->name('payment.transactions.history');
         
         Route::post('/payment/reviews/order', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'orderReview'])->name('payment.reviews.order');
     

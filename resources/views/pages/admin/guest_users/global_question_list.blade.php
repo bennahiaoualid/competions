@@ -20,7 +20,7 @@
                 <x-slot:icon>
                     <i class="fa-solid fa-plus me-2"></i>
                 </x-slot:icon>
-               {{__("form.actions.add")}}
+                {{__("form.actions.add")}}
             </x-button>
         </div>
     </div>
@@ -39,17 +39,23 @@
                 <x-input-error :messages="$errors->createQuestion->get('question_text')" class="mt-2" />
             </div>
 
+            <div>
+                <x-input-label for="explanation" :value=" ucwords(__('competition.question.explanation'))" />
+                <x-text-area id="explanation" name="explanation"  class="mt-1 block w-full whitespace-pre-wrap" min="3"></x-text-area>
+                <x-input-error :messages="$errors->createQuestion->get('explanation')" class="mt-2" />
+            </div>
+
             <div class="flex gap-4">
                 <div>
                     <x-input-label for="score" :value=" ucwords(__('competition.response.score'))" />
                     <x-text-input name="score" type="number" min="1"
-                                  lang="en" value="1" class="mt-1 block w-full" />
+                                lang="en" value="1" class="mt-1 block w-full" />
                     <x-input-error :messages="$errors->createQuestion->get('score')" class="mt-2" />
                 </div>
                 <div>
                     <x-input-label for="duration" :value=" ucwords(__('competition.response.response_duration') .' ('. __('messages.global.seconds')).')'" />
                     <x-text-input name="duration" type="number" min="60"
-                                  lang="en" value="60" class="mt-1 block w-full" />
+                                lang="en" value="60" class="mt-1 block w-full" />
                     <x-input-error :messages="$errors->createQuestion->get('duration')" class="mt-2" />
                 </div>
             </div>
@@ -92,9 +98,12 @@
                         </x-form.select-box>
                     </div>
                     <div>
-                        <button type="button" id="generate_choices" class="block px-4 py-1 bg-primary text-white rounded-md" id="generate_chices">
-                            {{__('form.actions.generate')}}
-                        </button>
+                        <x-button type="button" id="generate_choices" color_type="primary" >
+                            <x-slot:icon>
+                                <i class="fa-solid fa-circle-plus me-2"></i>
+                                {{__('form.actions.generate')}}
+                            </x-slot:icon>
+                        </x-button>
                     </div>
                 </div>
                 <div id="choices_container">

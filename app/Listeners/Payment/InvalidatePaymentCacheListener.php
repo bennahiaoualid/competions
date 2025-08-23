@@ -49,6 +49,9 @@ class InvalidatePaymentCacheListener implements ShouldQueue
                 case 'invalidateGlobalPaymentCaches':
                     $this->handleGlobalCacheInvalidation($parameters);
                     break;
+                case 'invalidateGetUserCoinTransactions':
+                    $this->handleCoinTransactionCacheInvalidation($parameters);
+                    break;
                     
                 default:
                     Log::warning("Unknown payment cache invalidation type", ['type' => $type]);
@@ -93,6 +96,23 @@ class InvalidatePaymentCacheListener implements ShouldQueue
         $this->cacheManagement->invalidateGetUserTransactions($parameters['userId']);
         
         Log::info("User transaction caches invalidated", [
+            'userId' => $parameters['userId']
+        ]);
+    }
+
+    /**
+     * Handle coin transaction cache invalidation.
+     */
+    private function handleCoinTransactionCacheInvalidation(array $parameters): void
+    {
+        if (!isset($parameters['userId'])) {
+            Log::warning("Missing userId parameter for coin transaction cache invalidation");
+            return;
+        }
+
+        $this->cacheManagement->invalidateGetUserCoinTransactions($parameters['userId']);
+        
+        Log::info("User coin transaction caches invalidated", [
             'userId' => $parameters['userId']
         ]);
     }

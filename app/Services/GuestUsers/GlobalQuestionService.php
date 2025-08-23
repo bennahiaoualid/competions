@@ -151,6 +151,7 @@ class GlobalQuestionService
 
         return [
             'question_text' => $data['question_text'],
+            'explanation' => $data['explanation'],
             'text_direction' => $data['txt_direction'],
             'score' => $data['score'],
             'duration' => $data['duration'],

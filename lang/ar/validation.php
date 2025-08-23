@@ -209,6 +209,9 @@ return [
         'payment_method' => 'طريقة الدفع',
         'proof_image' => 'صورة اثبات الدفع',
         'now' => 'الآن',
+        'subject' => 'المادة',
+        'difficulty' => 'المستوى',
+        'explanation' => 'التوضيح',
     ],
 
 ];

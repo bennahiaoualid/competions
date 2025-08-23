@@ -16,8 +16,8 @@ class ApproveReviewRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'review_id' => ['required', 'integer', 'exists:payment_review_requests,id'],
-            'observation' => ['nullable', 'string', 'max:1000'],
+            'review_id' => ['required', 'integer'],
+            'observation' => ['nullable', 'string', 'min:3', 'max:1000'],
         ];
     }
 } 

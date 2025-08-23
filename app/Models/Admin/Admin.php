@@ -217,6 +217,14 @@ class Admin extends Authenticatable
     }
 
     /**
+     * The coin transactions for this admin.
+     */
+    public function coinTransactions()
+    {
+        return $this->morphMany(\App\Models\Payment\CoinTransaction::class, 'transactionable');
+    }
+
+    /**
      * The payments that this admin has approved.
      */
     public function approvedPayments()

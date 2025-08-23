@@ -32,6 +32,8 @@ class GlobalQuestionFactory extends Factory
             'admin_id' => Admin::factory(), // The admin who created the question
             'approved' => null, // Don't create extra admins by default
             'deleted_admin_name' => null,
+            'ai' => false,
+            'user_id' => null,
         ];
     }
 
