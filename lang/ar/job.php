@@ -27,6 +27,8 @@ return [
         'user_restored' => 'تم استرجاع المستخدم :user',
         'user_hard_deleted' => 'تم حذف المستخدم :user بشكل نهائي',
         'user_hard_delete_failed' => 'فشل الحذف النهائي للمستخدم :user',
+        'level_finished' => 'تم انهاء المرحلة :level بنجاح',
+        'level_finish_failed' => 'تم انهاء المرحلة :level ولكن فشل',
     ],
     'status' => [
         'pending' => 'قيد الانتظار',
@@ -41,6 +43,7 @@ return [
         'soft_delete_user' => 'حذف المستخدم مؤقتا',
         'hard_delete_user' => 'حذف المستخدم نهائيا',
         'restore_admin' => 'استرجاع المسؤول',
+        'finish_level' => 'انهاء المرحلة',
     ],
     'result_keys' => [
         'auditor_id' => 'معرف المصحح',
@@ -59,6 +62,8 @@ return [
         'approved_by' => 'تمت الموافقة بواسطة',
         'deletion_request_id' => 'معرف طلب الازالة',
         'restored_at' => 'تم الاسترجاع في',
+        'level_id' => 'معرف المرحلة',
+        'level_name' => 'اسم المرحلة',
     ],
     'errors' => [
         'only_auditor' => 'لا يمكن ازالة هذا المشرف لانه المصحح الوحيد في بعض المسابقات : :competitions',

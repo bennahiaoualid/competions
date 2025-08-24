@@ -9,6 +9,16 @@ enum JobTypeEnum: string {
     case HARD_DELETE_USER = 'hard_delete_user';
     case SOFT_DELETE_USER = 'soft_delete_user';
     case RESTORE_ADMIN = 'restore_admin';
+    case FINISH_LEVEL = 'finish_level';
+
+    
+    /**
+     * Get all enum values as array
+     */
+    public static function values(): array
+    {
+        return array_column(self::cases(), 'value');
+    }
 
     public function label(): string
     {
@@ -19,6 +29,7 @@ enum JobTypeEnum: string {
             self::HARD_DELETE_USER => __('job.job_type.hard_delete_user'),
             self::SOFT_DELETE_USER => __('job.job_type.soft_delete_user'),
             self::RESTORE_ADMIN => __('job.job_type.restore_admin'),
+            self::FINISH_LEVEL => __('job.job_type.finish_level'),
         };
     }
 }
