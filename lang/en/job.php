@@ -27,6 +27,8 @@ return [
         'user_restored' => 'user :user has been restored',
         'user_hard_deleted' => 'user :user has been permanently deleted',
         'user_hard_delete_failed' => 'user :user hard deletion failed',
+        'level_finished' => 'level :level has been finished successfully',
+        'level_finish_failed' => 'level :level has been finished but failed',
     ],
     'status' => [
         'pending' => 'Pending',
@@ -41,6 +43,7 @@ return [
         'soft_delete_user' => 'Soft Delete User',
         'hard_delete_user' => 'Hard Delete User',
         'restore_admin' => 'Restore Admin',
+        'finish_level' => 'Finish Level',
     ],
     'result_keys' => [
         'auditor_id' => 'Auditor ID',
@@ -59,6 +62,8 @@ return [
         'approved_by' => 'Approved By',
         'deletion_request_id' => 'Deletion Request ID',
         'restored_at' => 'Restored At',
+        'level_id' => 'Level ID',
+        'level_name' => 'Level Name',
     ],
     'errors' => [
         'only_auditor' => 'This admin cannot be removed because they are the only auditor in some competitions.',
