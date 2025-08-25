@@ -12,11 +12,11 @@ use Illuminate\Support\Facades\Bus;
 use App\Enums\AdminApprovalTypeEnum;
 use App\Models\Competition\Question;
 use App\Models\Competition\Competition;
-use App\Jobs\Competition\FinishLevelJob;
 use Illuminate\Foundation\Testing\WithFaker;
+use App\Jobs\Notifications\BatchBroadcastJob;
+use App\Jobs\Notifications\BatchNotificationJob;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Jobs\Notifications\BatchBroadcastNotificationJob;
-use App\Jobs\Notifications\BatchCompetitionNotificationJob;
+use App\Jobs\Competition\FinishLevelTrackableJob;
 
 class LevelControllerTest extends TestCase
 {
@@ -97,8 +97,8 @@ class LevelControllerTest extends TestCase
             'entity_type' => Level::class,
             'type' => AdminApprovalTypeEnum::LEVEL_MANAGER->value
         ]);
-        Bus::assertDispatchedTimes(BatchCompetitionNotificationJob::class, 2);
-        Bus::assertDispatched(BatchCompetitionNotificationJob::class, function ($job) {
+        Bus::assertDispatchedTimes(BatchNotificationJob::class, 2);
+        Bus::assertDispatched(BatchNotificationJob::class, function ($job) {
             return 
                 $job->getNotifiableTypeForTest() === User::class &&
                 $job->getUserIdsForTest() === $this->competition->users()->pluck('users.id')->toArray();
@@ -253,8 +253,8 @@ class LevelControllerTest extends TestCase
             'entity_id' => $this->level->id,
             'type' => AdminApprovalTypeEnum::LEVEL_MANAGER->value
         ]);
-        Bus::assertDispatchedTimes(BatchCompetitionNotificationJob::class, 1);
-        Bus::assertDispatched(BatchCompetitionNotificationJob::class, function ($job) {
+        Bus::assertDispatchedTimes(BatchNotificationJob::class, 1);
+        Bus::assertDispatched(BatchNotificationJob::class, function ($job) {
             return 
                 $job->getNotifiableTypeForTest() === User::class &&
                 $job->getUserIdsForTest() === $this->competition->users()->pluck('users.id')->toArray();
@@ -289,8 +289,8 @@ class LevelControllerTest extends TestCase
             'entity_id' => $this->level->id,
             'type' => AdminApprovalTypeEnum::LEVEL_MANAGER->value
         ]);
-        Bus::assertDispatchedTimes(BatchCompetitionNotificationJob::class, 2);
-        Bus::assertDispatched(BatchCompetitionNotificationJob::class, function ($job) {
+        Bus::assertDispatchedTimes(BatchNotificationJob::class, 2);
+        Bus::assertDispatched(BatchNotificationJob::class, function ($job) {
             return 
                 $job->getNotifiableTypeForTest() === User::class &&
                 $job->getUserIdsForTest() === $this->competition->users()->pluck('users.id')->toArray();
@@ -416,7 +416,7 @@ class LevelControllerTest extends TestCase
             'entity_id' => $this->level->id,
             'type' => AdminApprovalTypeEnum::LEVEL_MANAGER->value
         ]);
-        Bus::assertDispatchedTimes(BatchCompetitionNotificationJob::class, 1);
+        Bus::assertDispatchedTimes(BatchNotificationJob::class, 1);
     }
 
     public function test_can_not_update_level_assign_manager_directly_not_available_as_manager()
@@ -506,8 +506,8 @@ class LevelControllerTest extends TestCase
             'id' => $this->level->id,
             'status' => 'active'
         ]);
-        Bus::assertDispatched(BatchCompetitionNotificationJob::class);
-        Bus::assertDispatched(BatchBroadcastNotificationJob::class);
+        Bus::assertDispatched(BatchNotificationJob::class);
+        Bus::assertDispatched(BatchBroadcastJob::class);
     }
 
     
@@ -552,11 +552,9 @@ class LevelControllerTest extends TestCase
         $response = $this->post(route('admin.competitions.level.finish', $this->level));
 
         $response->assertRedirectBack();
-        Bus::assertDispatched(FinishLevelJob::class, function ($job) {
+        Bus::assertDispatched(FinishLevelTrackableJob::class, function ($job) {
             return $job->getLevel()->id === $this->level->id;
         });
-        Bus::assertDispatched(BatchCompetitionNotificationJob::class);
-        Bus::assertDispatched(BatchBroadcastNotificationJob::class);
     }
 
     
@@ -576,6 +574,6 @@ class LevelControllerTest extends TestCase
             trans('messages.validation.not_allow.level_finish_still_active'),
             session()->get('messages')[0]['message']
         );
-        Bus::assertNotDispatched(FinishLevelJob::class);
+        Bus::assertNotDispatched(FinishLevelTrackableJob::class);
     }
 } 

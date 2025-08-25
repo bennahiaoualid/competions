@@ -10,14 +10,16 @@ use App\Helpers\UserNotifyEmail;
 use App\Models\Competition\Level;
 use App\Contracts\FlasherInterface;
 use App\Enums\AdminApprovalTypeEnum;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Competition\Competition;
-use App\Jobs\Competition\FinishLevelJob;
+use App\Jobs\Competition\FinishLevelTrackableJobFactory;
 use App\Services\Admin\AdminApprovalService;
 use App\Contracts\TransactionManagerInterface;
 use Illuminate\Support\Arr; // For Arr::except
+use App\Services\Monitoring\JobTrackingService;
 use App\Exceptions\AdminAlreadyDecidedException;
-use App\Exceptions\AdminNotAvailableAsLevelManagerException;
 use App\Interface\Competition\LevelRepositoryInterface;
+use App\Exceptions\AdminNotAvailableAsLevelManagerException;
 use App\Services\Notification\OptimizedCompetitionNotificationService;
 
 class LevelService
@@ -29,7 +31,9 @@ class LevelService
         protected TransactionManagerInterface $transactionManager,
         protected FlasherInterface $flasher,
         protected OptimizedCompetitionNotificationService $notificationService,
-        protected AdminApprovalService $approvalService
+        protected AdminApprovalService $approvalService,
+        protected JobTrackingService $jobTrackingService,
+        protected FinishLevelTrackableJobFactory $finishLevelFactory
     ) {
     }
 
@@ -342,11 +346,10 @@ class LevelService
             return false;
         }
         
-        FinishLevelJob::dispatchSync($level);
-        
-        // Send notification to competition users
-        $this->notificationService->levelFinished($level->competition, $level);
-        
+        // ✅ Use the injected factory instead of direct instantiation
+        $job = $this->finishLevelFactory->create($level, Auth::id());
+        $this->jobTrackingService->dispatchWithTracking($job);
+                
         return true;
     }
 }

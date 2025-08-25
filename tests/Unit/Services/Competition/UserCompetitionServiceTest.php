@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Services\User;
+namespace Tests\Unit\Services\Competition;
 
 use Mockery;
 use Exception;

@@ -3,15 +3,15 @@
 namespace Tests\Feature\Controllers\Payment\Admin;
 
 use Tests\TestCase;
-use App\Models\Admin\Admin;
-use App\Models\Payment\PaymentReviewRequest;
-use App\Models\Payment\PaymentTransaction;
 use App\Models\User;
-use App\Jobs\Notifications\BatchPaymentNotificationJob;
-use App\Jobs\Notifications\BatchPaymentBroadcastJob;
+use App\Models\Admin\Admin;
 use Database\Seeders\RoleSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
+use App\Models\Payment\PaymentTransaction;
+use App\Models\Payment\PaymentReviewRequest;
+use App\Jobs\Notifications\BatchBroadcastJob;
+use App\Jobs\Notifications\BatchNotificationJob;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class ReviewManagementControllerTest extends TestCase
 {
@@ -148,8 +148,7 @@ class ReviewManagementControllerTest extends TestCase
         ]);
 
         // Assert that no notification jobs were dispatched
-        Bus::assertNotDispatched(BatchPaymentNotificationJob::class);
-       
+        Bus::assertNothingDispatched();
     }
 
     public function test_accountant_with_manage_payment_permission_can_approve_payment_review()
@@ -184,7 +183,8 @@ class ReviewManagementControllerTest extends TestCase
         $this->assertNotNull($reviewToApprove->fresh()->reviewed_at);
 
         // Assert that notification jobs were dispatched
-        Bus::assertDispatched(BatchPaymentNotificationJob::class);
+        Bus::assertDispatchedTimes(BatchNotificationJob::class,2);
+        Bus::assertNotDispatched(BatchBroadcastJob::class);
     }
 
     public function test_regular_admin_cannot_approve_payment_review()
@@ -216,7 +216,7 @@ class ReviewManagementControllerTest extends TestCase
         ]);
 
         // Assert that no notification jobs were dispatched
-        Bus::assertNotDispatched(BatchPaymentNotificationJob::class);
+        Bus::assertNothingDispatched();
        
     }
 
@@ -247,7 +247,7 @@ class ReviewManagementControllerTest extends TestCase
         ]);
 
         // Assert that no notification jobs were dispatched
-        Bus::assertNotDispatched(BatchPaymentNotificationJob::class);
+        Bus::assertNothingDispatched();
     }
 
     public function test_accountant_with_manage_payment_permission_can_reject_payment_review()
@@ -277,7 +277,8 @@ class ReviewManagementControllerTest extends TestCase
         $this->assertNotNull($reviewToReject->fresh()->reviewed_at);
 
         // Assert that notification jobs were dispatched
-        Bus::assertDispatched(BatchPaymentNotificationJob::class);
+        Bus::assertDispatched(BatchNotificationJob::class);
+        Bus::assertNotDispatched(BatchBroadcastJob::class);
     }
 
     public function test_regular_admin_cannot_reject_payment_review()
@@ -304,7 +305,7 @@ class ReviewManagementControllerTest extends TestCase
         ]);
 
         // Assert that no notification jobs were dispatched
-        Bus::assertNotDispatched(BatchPaymentNotificationJob::class);
+        Bus::assertNothingDispatched();
        
     }
 
@@ -322,9 +323,6 @@ class ReviewManagementControllerTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors(['review_id'], errorBag: 'approveReview');
-
-        // Assert that no notification jobs were dispatched
-        Bus::assertNotDispatched(BatchPaymentNotificationJob::class);
        
     }
 
@@ -339,9 +337,6 @@ class ReviewManagementControllerTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors(['review_id'], errorBag: 'rejectReview');
-
-        // Assert that no notification jobs were dispatched
-        Bus::assertNotDispatched(BatchPaymentNotificationJob::class);
        
     }
 
@@ -355,9 +350,6 @@ class ReviewManagementControllerTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors(['observation'], errorBag: 'rejectReview');
-
-        // Assert that no notification jobs were dispatched
-        Bus::assertNotDispatched(BatchPaymentNotificationJob::class);
        
     }
 
@@ -371,9 +363,6 @@ class ReviewManagementControllerTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors(['review_id'], errorBag: 'approveReview');
-
-        // Assert that no notification jobs were dispatched
-        Bus::assertNotDispatched(BatchPaymentNotificationJob::class);
        
     }
 
@@ -387,9 +376,6 @@ class ReviewManagementControllerTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors(['observation'], errorBag: 'approveReview');
-
-        // Assert that no notification jobs were dispatched
-        Bus::assertNotDispatched(BatchPaymentNotificationJob::class);
        
     }
 
@@ -403,9 +389,6 @@ class ReviewManagementControllerTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors(['observation'], errorBag: 'approveReview');
-
-        // Assert that no notification jobs were dispatched
-        Bus::assertNotDispatched(BatchPaymentNotificationJob::class);
        
     }
 
@@ -422,8 +405,6 @@ class ReviewManagementControllerTest extends TestCase
 
         $response->assertSessionHasErrors(['observation'], errorBag: 'approveReview');
 
-        // Assert that no notification jobs were dispatched
-        Bus::assertNotDispatched(BatchPaymentNotificationJob::class);
        
     }
 
@@ -458,9 +439,6 @@ class ReviewManagementControllerTest extends TestCase
             'reviewed_by_admin_id' => $this->owner->id,
             'review_observation' => 'Previous approval'
         ]);
-
-        // Assert that no notification jobs were dispatched
-        Bus::assertNotDispatched(BatchPaymentNotificationJob::class);
        
     }
 
@@ -491,9 +469,6 @@ class ReviewManagementControllerTest extends TestCase
             'reviewed_by_admin_id' => $this->owner->id,
             'review_observation' => 'Previous rejection'
         ]);
-
-        // Assert that no notification jobs were dispatched
-        Bus::assertNotDispatched(BatchPaymentNotificationJob::class);
        
     }
 
@@ -507,9 +482,6 @@ class ReviewManagementControllerTest extends TestCase
         ]);
 
         $response->assertStatus(404);
-
-        // Assert that no notification jobs were dispatched
-        Bus::assertNotDispatched(BatchPaymentNotificationJob::class);
        
     }
 
@@ -523,9 +495,6 @@ class ReviewManagementControllerTest extends TestCase
         ]);
 
         $response->assertStatus(404);
-
-        // Assert that no notification jobs were dispatched
-        Bus::assertNotDispatched(BatchPaymentNotificationJob::class);
        
     }
 

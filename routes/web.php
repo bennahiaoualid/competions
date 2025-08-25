@@ -104,16 +104,17 @@ Route::group(
 
     
     // Payment routes for users
-    Route::middleware(['either.auth', 'not_allowed_roles:accountant,admin'])->group(function () {
-        Route::get('/payment/create', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'create'])->name('payment.create');
-        Route::post('/payment/store', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'store'])->name('payment.store');
-        Route::get('/payment/transactions', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'index'])->name('payment.transactions');
-        Route::get('/payment/transactions/{paymentTransaction}', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'show'])->name('payment.transactions.show');
-        Route::get('/payment/coin-balance', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'getCoinBalance'])->name('payment.coin-balance');
-        Route::get('/payment/history', [\App\Http\Controllers\Payment\CoinTransactionController::class, 'index'])->name('payment.transactions.history');
+    Route::middleware('either.auth')->group(function () {
+        Route::middleware('not_allowed_roles:accountant,admin')->group(function () {
+            Route::get('/payment/create', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'create'])->name('payment.create');
+            Route::post('/payment/store', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'store'])->name('payment.store');
+            Route::get('/payment/transactions', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'index'])->name('payment.transactions');
+            Route::get('/payment/transactions/{paymentTransaction}', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'show'])->name('payment.transactions.show');
+            Route::get('/payment/coin-balance', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'getCoinBalance'])->name('payment.coin-balance');
+            Route::get('/payment/history', [\App\Http\Controllers\Payment\CoinTransactionController::class, 'index'])->name('payment.transactions.history');
         
         Route::post('/payment/reviews/order', [\App\Http\Controllers\Payment\PaymentTransactionController::class, 'orderReview'])->name('payment.reviews.order');
-    
+        });
         Route::get('/transactions/{transaction}/proof', [PaymentProofController::class, 'show'])
         ->name('transactions.proof');
     });

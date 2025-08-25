@@ -15,6 +15,7 @@ use Illuminate\Validation\Rules\Password;
 use App\Services\Competition\AuditService;
 use App\Services\Competition\LevelService;
 use App\Services\Admin\AdminProfileService;
+use App\Services\Admin\AdminApprovalService;
 use App\Services\Payment\CoinPricingService;
 use App\Services\Competition\QuestionService;
 use App\Services\Database\TransactionManager;
@@ -41,6 +42,7 @@ use App\Services\CashManagment\PaymentCacheManagement;
 use App\Interface\Competition\AuditRepositoryInterface;
 use App\Interface\Competition\LevelRepositoryInterface;
 use App\Interface\Admin\AdminProfileRepositoryInterface;
+use App\Jobs\Competition\FinishLevelTrackableJobFactory;
 use App\Services\Notification\PaymentNotificationService;
 use App\Services\ProcessManagement\DelayedProcessService;
 use App\Interface\GuestUsers\UserGuestRepositoryInterface;
@@ -99,7 +101,9 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(TransactionManagerInterface::class),
                 $app->make(FlasherInterface::class),
                 $app->make(OptimizedCompetitionNotificationService::class),
-                $app->make(\App\Services\Admin\AdminApprovalService::class)
+                $app->make(AdminApprovalService::class),
+                $app->make(JobTrackingService::class),
+                $app->make(FinishLevelTrackableJobFactory::class)
             );
         });
 
@@ -240,6 +244,15 @@ class AppServiceProvider extends ServiceProvider
 
         // approval assignment service (bind - system integration)
         $this->app->bind(\App\Services\Approval\ApprovalAssignmentService::class);
+
+        // In AppServiceProvider.php boot() method or register() method
+        $this->app->bind(FinishLevelTrackableJobFactory::class, function ($app) {
+            return new FinishLevelTrackableJobFactory(
+                $app->make(LevelRepositoryInterface::class),
+                $app->make(OptimizedCompetitionNotificationService::class),
+                $app->make(JobTrackingService::class)
+            );
+        });
     }
 
     /**

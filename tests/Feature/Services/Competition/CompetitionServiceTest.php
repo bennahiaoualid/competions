@@ -14,7 +14,6 @@ use App\Models\Competition\Competition;
 use App\Services\Competition\CompetitionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Jobs\Competetion\SyncCompetitionParticipants;
-use App\Jobs\Notifications\BatchCompetitionNotificationJob;
 
 class CompetitionServiceTest extends TestCase
 {

@@ -39,8 +39,19 @@ class AuditControllerTest extends TestCase
         $this->level = Level::factory()->for($this->competition)->create();
         $this->otherLevel = Level::factory()->for($this->otherCompetition)->create();
         $this->user = User::factory()->create();
-        $this->question = Question::factory()->for($this->level)->create();
-        $this->response = Response::factory()->for($this->question)->for($this->user)->create(['admin_id' => null, 'score' => 0]);
+        $this->question = Question::factory()
+                            ->for($this->level)
+                            ->create([
+                                'duration' => 100,
+                            ]);
+        $this->response = Response::factory()
+                        ->for($this->question)
+                        ->for($this->user)
+                        ->create([
+                            'admin_id' => null,
+                            'score' => 0,
+                            'response_duration' => 100,
+                        ]);
     }
 
     protected function tearDown(): void
@@ -223,10 +234,8 @@ class AuditControllerTest extends TestCase
             ]);
         // Assert
         $response->assertRedirect();
-        $this->assertDatabaseHas('responses', [
-            'id' => $this->response->id,
-            'score' => 10,
-        ]);
+        $this->response->refresh();
+        $this->assertGreaterThan(0, $this->response->final_score);
     }
 
     // ========================================

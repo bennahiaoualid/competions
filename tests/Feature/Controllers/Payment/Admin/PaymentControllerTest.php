@@ -5,11 +5,13 @@ namespace Tests\Feature\Controllers\Payment\Admin;
 use Tests\TestCase;
 use App\Models\User;
 use App\Models\Admin\Admin;
-use App\Models\Payment\PaymentTransaction;
 use Database\Seeders\RoleSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Queue;
+use App\Models\Payment\PaymentTransaction;
+use App\Jobs\Notifications\BatchBroadcastJob;
+use App\Jobs\Notifications\BatchNotificationJob;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class PaymentControllerTest extends TestCase
 {
@@ -126,6 +128,8 @@ class PaymentControllerTest extends TestCase
             'id' => $this->paymentTransaction->id,
             'status' => 'approved'
         ]);
+
+        Bus::assertDispatched(BatchNotificationJob::class);
     }
 
     public function test_admin_without_manage_payment_permission_cannot_approve_payment()
@@ -182,6 +186,9 @@ class PaymentControllerTest extends TestCase
             'id' => $this->paymentTransaction->id,
             'status' => 'rejected'
         ]);
+
+        Bus::assertDispatched(BatchNotificationJob::class);
+        Bus::assertDispatched(BatchBroadcastJob::class);
     }
 
     public function test_admin_without_manage_payment_permission_cannot_reject_payment()
@@ -233,6 +240,9 @@ class PaymentControllerTest extends TestCase
             'id' => $this->paymentTransaction->id,
             'status' => 'cancelled'
         ]);
+
+        Bus::assertDispatched(BatchNotificationJob::class);
+        Bus::assertDispatched(BatchBroadcastJob::class);
     }
 
     public function test_admin_without_manage_payment_permission_cannot_cancel_payment()

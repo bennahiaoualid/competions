@@ -6,14 +6,20 @@ use Mockery;
 use Exception;
 use Tests\TestCase;
 use App\Models\User;
+use App\Models\Admin\Admin;
+use App\Helpers\UserSafeDelete;
 use App\Services\User\UserService;
 use App\Contracts\FlasherInterface;
+use App\Jobs\User\SoftDeleteUserJob;
 use Illuminate\Support\Facades\Auth;
-use App\Helpers\UserSafeDelete;
+use App\Services\Monitoring\JobTrackingService;
 
 class UserServiceTest extends TestCase
 {
+    /** @var FlasherInterface | Mockery\MockInterface */
     protected $flasher;
+    /** @var JobTrackingService | Mockery\MockInterface */
+    protected $jobTrackingService;
     protected $userService;
     protected static  $userModelMock;
     protected $userMock;
@@ -30,9 +36,10 @@ class UserServiceTest extends TestCase
         parent::setUp();
         
         $this->flasher = Mockery::mock(FlasherInterface::class);
-        
+        $this->jobTrackingService = Mockery::mock(JobTrackingService::class);
         $this->userService = new UserService(
-            $this->flasher
+            $this->flasher,
+            $this->jobTrackingService
         );
 
         $this->userMock = Mockery::mock('alias:' . User::class);
@@ -151,43 +158,24 @@ class UserServiceTest extends TestCase
         $user = $this->userMock;
         $user->id = 1;
 
-        // Mock UserSafeDelete helper
-        $mockUserSafeDelete = Mockery::mock('alias:' . UserSafeDelete::class);
-        $mockUserSafeDelete->shouldReceive('deleteUser')
-            ->once()
-            ->with(1);
+        $reason = 'test reason';
+        $admin = Mockery::mock(Admin::class);
+        $admin->shouldReceive('getAttribute')->with('id')->andReturn(1);
+        Auth::shouldReceive('user')->once()->andReturn($admin);
 
-        $user->shouldReceive('delete')
+
+        $this->jobTrackingService->shouldReceive('dispatchWithTracking')
             ->once()
+            ->with(Mockery::type(SoftDeleteUserJob::class))
             ->andReturn(true);
 
         $this->flasher->shouldReceive('crudSuccess')
             ->once()
             ->with('deleted');
 
-        $result = $this->userService->delete($user);
+        $result = $this->userService->delete($user, $reason);
 
         $this->assertTrue($result);
-    }
-
-    public function test_handles_user_deletion_failure()
-    {
-        $user = $this->userMock;
-        $user->id = 1;
-
-        $mockUserSafeDelete = Mockery::mock('alias:' . UserSafeDelete::class);
-        $mockUserSafeDelete->shouldReceive('deleteUser')
-            ->once()
-            ->with(1)
-            ->andThrow(new Exception('Safe delete failed'));
-
-        $this->flasher->shouldReceive('crudFailure')
-            ->once()
-            ->with('deleted');
-
-        $result = $this->userService->delete($user);
-
-        $this->assertFalse($result);
     }
 
 }

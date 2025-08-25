@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Controllers\Payment\User;
 
+use Bus;
 use Tests\TestCase;
 use App\Models\User;
 use App\Models\Admin\Admin;
@@ -13,6 +14,8 @@ use App\Models\Payment\CoinPricing;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Payment\PaymentTransaction;
+use App\Jobs\Notifications\BatchBroadcastJob;
+use App\Jobs\Notifications\BatchNotificationJob;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class PaymentTransactionControllerTest extends TestCase
@@ -62,6 +65,7 @@ class PaymentTransactionControllerTest extends TestCase
 
         // Fake storage for file uploads
         Storage::fake('local');
+        Bus::fake();
     }
 
     // ========================================
@@ -164,8 +168,18 @@ class PaymentTransactionControllerTest extends TestCase
     public function test_user_can_create_payment_transaction_with_valid_data()
     {
         $this->actingAs($this->user, 'web');
-
-        $file = UploadedFile::fake()->image('payment_proof.jpg');
+        $this->seed(\Database\Seeders\SystemSettingSeeder::class);
+        // Ensure system setting exists with a low limit
+        $systemSetting = SystemSetting::updateOrCreate(
+            [
+                'setting_key' => 'max_daily_transactions'
+            ],
+            [
+                'setting_value' => '2',
+                'setting_trans_key' => 'settings.payment.max_daily_transactions'
+            ]
+        );
+        $file = UploadedFile::fake()->image('payment_proof.jpg', 200, 200);
 
         $paymentData = [
             'coin_pricing_id' => $this->coinPricing->id,
@@ -185,6 +199,9 @@ class PaymentTransactionControllerTest extends TestCase
             'status' => 'pending',
             'payment_method' => 'bank_transfer'
         ]);
+
+        Bus::assertDispatched(BatchNotificationJob::class);
+        Bus::assertDispatched(BatchBroadcastJob::class);
     }
 
     public function test_user_cannot_create_payment_with_invalid_data()
@@ -321,6 +338,8 @@ class PaymentTransactionControllerTest extends TestCase
             session()->get('messages')[0]['message'],
             __('payment.review.messages.review_period_passed')
         );
+        Bus::assertDispatched(BatchNotificationJob::class);
+        Bus::assertDispatched(BatchBroadcastJob::class);
     }
 
     public function test_user_cannot_order_review_for_approved_transaction()

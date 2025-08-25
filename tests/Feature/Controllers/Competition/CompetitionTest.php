@@ -10,13 +10,12 @@ use App\Models\Competition\Level;
 use Illuminate\Support\Facades\Bus;
 use App\Enums\AdminApprovalTypeEnum;
 use App\Models\Competition\Competition;
-use App\Jobs\Competition\DeleteAuditorJob;
 use Illuminate\Foundation\Testing\WithFaker;
+use App\Jobs\Notifications\BatchBroadcastJob;
 use App\Jobs\Competition\SafeDeleteAuditorJob;
+use App\Jobs\Notifications\BatchNotificationJob;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Jobs\Competetion\SyncCompetitionParticipants;
-use App\Jobs\Notifications\BatchBroadcastNotificationJob;
-use App\Jobs\Notifications\BatchCompetitionNotificationJob;
 
 class CompetitionTest extends TestCase
 {
@@ -37,6 +36,8 @@ class CompetitionTest extends TestCase
         
         // Authenticate as admin for tests that require authentication
         $this->actingAs($this->admin, 'admin');
+
+        Bus::fake();
     }
 
     protected function tearDown(): void
@@ -46,7 +47,7 @@ class CompetitionTest extends TestCase
 
     public function test_admin_can_successfully_create_competition()
     {
-        Bus::fake();
+        
         // Give the admin the 'add competition' permission
         $this->admin->givePermissionTo('add competition');
         
@@ -70,7 +71,7 @@ class CompetitionTest extends TestCase
             'levels_number' => $competitionData['levels_number'],
         ]);
         Bus::assertDispatched(SyncCompetitionParticipants::class);
-        Bus::assertDispatched(BatchCompetitionNotificationJob::class);
+        Bus::assertDispatched(BatchNotificationJob::class);
     }
 
     public function test_create_fails_with_invalid_data()
@@ -95,6 +96,8 @@ class CompetitionTest extends TestCase
             ],
             errorBag:'createCompetition'
         );
+
+        Bus::assertNothingDispatched();
     }
 
     public function test_create_fails_with_unauthorized_admin()
@@ -106,7 +109,7 @@ class CompetitionTest extends TestCase
 
     public function test_admin_can_successfully_update_competition()
     {
-        Bus::fake();
+        
         
         $competition = Competition::factory()->create(['admin_id' => $this->admin->id]);
         // Create eligible users (age 18-25) before creating competition
@@ -130,7 +133,7 @@ class CompetitionTest extends TestCase
             'age_end' => $updateData['age_end'],
         ]);
         Bus::assertDispatched(SyncCompetitionParticipants::class);
-        Bus::assertDispatched(BatchCompetitionNotificationJob::class);
+        Bus::assertDispatched(BatchNotificationJob::class);
     }
 
     public function test_update_fails_with_invalid_data()
@@ -152,6 +155,8 @@ class CompetitionTest extends TestCase
             ],
             errorBag: 'updateCompetition'
         );
+
+        Bus::assertNothingDispatched();
     }
 
     public function test_update_fails_with_unauthorized_admin()
@@ -171,7 +176,9 @@ class CompetitionTest extends TestCase
         $this->assertStringContainsString(
             trans('messages.validation.not_allow.competition_update'),
             session()->get('messages')[0]['message']
-        );
+        );  
+
+        Bus::assertNothingDispatched();
     }
 
     public function test_admin_can_successfully_delete_competition()
@@ -209,7 +216,7 @@ class CompetitionTest extends TestCase
 
     public function test_admin_can_successfully_add_users_to_competition()
     {
-        Bus::fake();
+        
         $competition = Competition::factory()->create(['admin_id' => $this->admin->id]);
         $users = User::factory()->count(3)->create();
         $userIds = $users->pluck('id')->toArray();
@@ -225,7 +232,7 @@ class CompetitionTest extends TestCase
                 'user_id' => $userId
             ]);
         }
-        Bus::assertDispatched(BatchCompetitionNotificationJob::class);
+        Bus::assertDispatched(BatchNotificationJob::class);
     }
 
     public function test_add_users_fails_with_unauthorized_admin()
@@ -250,6 +257,8 @@ class CompetitionTest extends TestCase
                 'user_id' => $userId
             ]);
         }
+
+        Bus::assertNothingDispatched();
     }
 
     public function test_admin_can_successfully_remove_user_from_competition()
@@ -268,6 +277,8 @@ class CompetitionTest extends TestCase
             'competition_id' => $competition->id,
             'user_id' => $user->id
         ]);
+
+        Bus::assertNothingDispatched();
     }
 
     public function test_remove_user_fails_with_unauthorized_admin()
@@ -309,7 +320,7 @@ class CompetitionTest extends TestCase
 
     public function test_admin_can_successfully_request_auditor_assignment()
     {
-        Bus::fake();
+        
         $competition = Competition::factory()->create(['admin_id' => $this->admin->id]);
         $auditors = Admin::factory()->count(3)->create();
         // Create availability records for these auditors
@@ -333,12 +344,12 @@ class CompetitionTest extends TestCase
                 'type' => AdminApprovalTypeEnum::AUDITOR->value
             ]);
         }
-        Bus::assertDispatched(BatchCompetitionNotificationJob::class);
+        Bus::assertDispatched(BatchNotificationJob::class);
     }
 
     public function test_request_auditor_assignment_fails_with_unauthorized_admin()
     {
-        Bus::fake();
+        
         $new_admin = Admin::factory()->create();
         $competition = Competition::factory()->create(['admin_id' => $new_admin->id]);
         $auditors = Admin::factory()->count(3)->create();
@@ -361,12 +372,12 @@ class CompetitionTest extends TestCase
                 'type' => AdminApprovalTypeEnum::AUDITOR->value
             ]);
         }
-        Bus::assertNotDispatched(BatchCompetitionNotificationJob::class);
+        Bus::assertNothingDispatched();
     }
 
     public function test_admin_can_successfully_remove_auditor_from_competition()
     {
-        Bus::fake();
+        
         $competition = Competition::factory()->create(['admin_id' => $this->admin->id]);
         $auditor = Admin::factory()->count(2)->create();
         $competition->auditors()->attach($auditor->pluck('id')->toArray());
@@ -385,7 +396,7 @@ class CompetitionTest extends TestCase
 
     public function test_remove_auditor_fails_with_unauthorized_admin()
     {
-        Bus::fake();
+        
         $new_admin = Admin::factory()->create();
         $competition = Competition::factory()->create(['admin_id' => $new_admin->id]);
         $auditor = Admin::factory()->create();
@@ -405,12 +416,12 @@ class CompetitionTest extends TestCase
             'competition_id' => $competition->id,
             'admin_id' => $auditor->id
         ]);
-        Bus::assertNotDispatched(DeleteAuditorJob::class);
+        Bus::assertNothingDispatched();
     }
 
     public function test_admin_can_successfully_activate_competition()
     {
-        Bus::fake();
+        
         $competition = Competition::factory()->create([
             'admin_id' => $this->admin->id,
             'start_date' => now()->subDay(),
@@ -449,8 +460,8 @@ class CompetitionTest extends TestCase
             'id' => $competition->id,
             'status' => Competition::STATUS_ACTIVE
         ]);
-        Bus::assertDispatched(BatchCompetitionNotificationJob::class);
-        Bus::assertDispatched(BatchBroadcastNotificationJob::class);
+        Bus::assertDispatched(BatchNotificationJob::class);
+        Bus::assertDispatched(BatchBroadcastJob::class);
     }
 
     public function test_activate_fails_when_start_date_is_in_future()
@@ -472,6 +483,8 @@ class CompetitionTest extends TestCase
             'id' => $competition->id,
             'status' => Competition::STATUS_PENDING
         ]);
+
+        Bus::assertNothingDispatched();
     }
     /** private methods */
     private function createCompetitionData()

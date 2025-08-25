@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit;
+namespace Tests\Unit\Services\Competition;
 
 use Bus;
 use Mockery;
@@ -14,11 +14,13 @@ use App\Contracts\FlasherInterface;
 use App\Enums\AdminApprovalTypeEnum;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Competition\Competition;
-use App\Jobs\Competition\FinishLevelJob;
 use App\Services\Competition\LevelService;
 use App\Services\Admin\AdminApprovalService;
 use App\Contracts\TransactionManagerInterface;
+use App\Services\Monitoring\JobTrackingService;
+use App\Jobs\Competition\FinishLevelTrackableJob;
 use App\Interface\Competition\LevelRepositoryInterface;
+use App\Jobs\Competition\FinishLevelTrackableJobFactory;
 use App\Services\Notification\OptimizedCompetitionNotificationService;
 
 class LevelServiceTest extends TestCase
@@ -33,6 +35,10 @@ class LevelServiceTest extends TestCase
     protected $flasher;
     /** @var OptimizedCompetitionNotificationService&\Mockery\MockInterface */
     protected $notificationService;
+    /** @var FinishLevelTrackableJobFactory&\Mockery\MockInterface */
+    protected $finishLevelFactory;
+    /** @var JobTrackingService&\Mockery\MockInterface */
+    protected $jobTrackingService;
     /** @var AdminApprovalService&\Mockery\MockInterface */
     protected $approvalService;
     /** @var Level|\Mockery\MockInterface */
@@ -54,12 +60,16 @@ class LevelServiceTest extends TestCase
         $this->flasher = Mockery::mock(FlasherInterface::class);
         $this->notificationService = Mockery::mock(OptimizedCompetitionNotificationService::class);
         $this->approvalService = Mockery::mock(AdminApprovalService::class);
+        $this->jobTrackingService = Mockery::mock(JobTrackingService::class);
+        $this->finishLevelFactory = Mockery::mock(FinishLevelTrackableJobFactory::class);
         $this->levelService = new LevelService(
             $this->levelRepository,
             $this->transactionManager,
             $this->flasher,
             $this->notificationService,
-            $this->approvalService
+            $this->approvalService,
+            $this->jobTrackingService,
+            $this->finishLevelFactory
         );
 
         $this->level_partial = Mockery::mock(Level::class)->makePartial();
@@ -1162,9 +1172,15 @@ class LevelServiceTest extends TestCase
 
         $competition->shouldReceive('canEdit')->andReturn(true);
 
-        $this->notificationService
-            ->shouldReceive('levelFinished')
-            ->with($competition, $level)
+
+        $this->finishLevelFactory
+            ->shouldReceive('create')
+            ->with($level, Mockery::any())
+            ->once();
+
+        $this->jobTrackingService
+            ->shouldReceive('dispatchWithTracking')
+            ->with(Mockery::type(FinishLevelTrackableJob::class))
             ->once();
 
         // Act
@@ -1172,9 +1188,6 @@ class LevelServiceTest extends TestCase
         
         // Assert
         $this->assertTrue($result);
-        Bus::assertDispatched(FinishLevelJob::class, function ($job) use ($level) {
-            return $job->getLevel()->id === $level->id;
-        });
     }
 
     public function test_finish_level_faild_unauthorized()
@@ -1197,7 +1210,6 @@ class LevelServiceTest extends TestCase
         
         // Assert
         $this->assertFalse($result);
-        Bus::assertNotDispatched(FinishLevelJob::class);
     }
 
     public function test_finish_level_faild_still_active()
@@ -1221,7 +1233,6 @@ class LevelServiceTest extends TestCase
         
         // Assert
         $this->assertFalse($result);
-        Bus::assertNotDispatched(FinishLevelJob::class);
     }
     
 } 

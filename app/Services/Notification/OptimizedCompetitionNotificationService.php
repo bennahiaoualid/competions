@@ -3,11 +3,14 @@
 namespace App\Services\Notification;
 
 use App\Models\User;
-use App\Models\Competition\Level;
 use App\Models\Admin\Admin;
-use App\Models\Admin\AdminApproval;
+use App\Models\Competition\Level;
 use Illuminate\Support\Collection;
+use App\Models\Admin\AdminApproval;
+use App\Enums\NotificationClassTypes;
 use App\Models\Competition\Competition;
+use App\Jobs\Notifications\BatchBroadcastJob;
+use App\Jobs\Notifications\BatchNotificationJob;
 use App\Jobs\Notifications\BatchBroadcastNotificationJob;
 use App\Jobs\Notifications\BatchCompetitionNotificationJob;
 
@@ -51,11 +54,11 @@ class OptimizedCompetitionNotificationService
         
         $notifiableType = $this->getNotifiableType($eventType);
         // Dispatch single batch job for database notifications
-        BatchCompetitionNotificationJob::dispatch($userIds, $notificationData, $notifiableType);
+        BatchNotificationJob::dispatch($userIds, $notificationData, NotificationClassTypes::COMPETITION->value, $notifiableType);
         
         // Dispatch single batch job for broadcast notifications (if needed for real-time events)
         if ($this->shouldBroadcast($eventType)) {
-            BatchBroadcastNotificationJob::dispatch($userIds, $notificationData);
+            BatchBroadcastJob::dispatch($userIds, $notificationData, NotificationClassTypes::COMPETITION);
         }
     }
 

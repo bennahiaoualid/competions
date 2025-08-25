@@ -51,7 +51,7 @@ class PaymentReviewService
                 $this->flasher->crudSuccess('saved');
                 return true;
             });
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             $this->registerLogs('PaymentReviewService',$e);
             $this->flasher->crudFailure('saved');
             return false;

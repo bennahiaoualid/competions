@@ -12,7 +12,7 @@ use Illuminate\Http\UploadedFile;
 use App\Contracts\FlasherInterface;
 use App\Models\Payment\CoinBalance;
 use App\Models\Payment\CoinPricing;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Event;
 use App\Services\Payment\PaymentService;
 use App\Models\Payment\PaymentTransaction;
@@ -23,7 +23,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Events\Payment\PaymentCacheInvalidationEvent;
 use App\Services\Notification\PaymentNotificationService;
 
-use function Laravel\Prompts\error;
 
 class PaymentServiceTest extends TestCase
 {
@@ -63,6 +62,7 @@ class PaymentServiceTest extends TestCase
         
         // Fake events to avoid actual event dispatching during tests
         Event::fake();
+        Bus::fake();
     }
 
     protected function tearDown(): void
@@ -195,13 +195,6 @@ class PaymentServiceTest extends TestCase
             'status' => 'pending'
         ];
 
-        $this->transactionManager->shouldReceive('run')
-            ->once()
-            ->with(Mockery::type('Closure'))
-            ->andReturnUsing(function ($callback) {
-                return $callback();
-            });
-
         $this->notificationService->shouldReceive('transactionCreated')
             ->once()
             ->with(Mockery::type(PaymentTransaction::class));
@@ -217,6 +210,8 @@ class PaymentServiceTest extends TestCase
 
         // Verify event was dispatched
         Event::assertDispatched(PaymentCacheInvalidationEvent::class);
+        
+        
     }
 
     public function test_approve_payment_success()
@@ -264,6 +259,7 @@ class PaymentServiceTest extends TestCase
 
         // Verify event was dispatched
         Event::assertDispatched(PaymentCacheInvalidationEvent::class);
+        
     }
 
     public function test_approve_payment_handles_exception()
@@ -287,6 +283,8 @@ class PaymentServiceTest extends TestCase
         $result = $this->paymentService->approvePayment($payment);
 
         $this->assertFalse($result);
+
+        Bus::assertNothingDispatched();
     }
 
     public function test_reject_payment_success()
@@ -329,6 +327,8 @@ class PaymentServiceTest extends TestCase
 
         // Verify event was dispatched
         Event::assertDispatched(PaymentCacheInvalidationEvent::class);
+        
+        
     }
 
     public function test_reject_payment_handles_exception()
@@ -352,6 +352,7 @@ class PaymentServiceTest extends TestCase
         $result = $this->paymentService->rejectPayment($payment);
 
         $this->assertFalse($result);
+        Bus::assertNothingDispatched();
     }
 
     public function test_cancel_payment_success()
@@ -394,6 +395,8 @@ class PaymentServiceTest extends TestCase
 
         // Verify event was dispatched
         Event::assertDispatched(PaymentCacheInvalidationEvent::class);
+        
+        
     }
 
     public function test_cancel_payment_handles_exception()
@@ -417,6 +420,7 @@ class PaymentServiceTest extends TestCase
         $result = $this->paymentService->cancelPayment($payment);
 
         $this->assertFalse($result);
+        Bus::assertNothingDispatched();
     }
 
     public function test_credit_coins_to_user_creates_coin_balance()
