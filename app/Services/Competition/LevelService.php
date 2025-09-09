@@ -21,6 +21,7 @@ use App\Exceptions\AdminAlreadyDecidedException;
 use App\Interface\Competition\LevelRepositoryInterface;
 use App\Exceptions\AdminNotAvailableAsLevelManagerException;
 use App\Services\Notification\OptimizedCompetitionNotificationService;
+use App\Services\SystemSettingService;
 
 class LevelService
 {
@@ -33,7 +34,8 @@ class LevelService
         protected OptimizedCompetitionNotificationService $notificationService,
         protected AdminApprovalService $approvalService,
         protected JobTrackingService $jobTrackingService,
-        protected FinishLevelTrackableJobFactory $finishLevelFactory
+        protected FinishLevelTrackableJobFactory $finishLevelFactory,
+        protected SystemSettingService $systemSettingService
     ) {
     }
 
@@ -156,9 +158,42 @@ class LevelService
     public function getEditData(string $encodedId): array
     {
         try {
+            /** @var Level */
             $level = Level::findOrFail(base64_decode($encodedId));
+            $competition = $level->competition;
             $admins = Admin::availableAsLevelManager()->get();
-            return ['status' => 'success', 'level' => $level, 'admins' => $admins];
+            $counts = $this->levelRepository->getResponseAuditCounts($level->id, $competition->ai_auditing);
+            // dtect if lvael finihed and audit time passed
+            $auto_audit_pass = false;
+            if($level->finished_at){
+                $eligibleAt = $level->finished_at->copy()->addMinutes($competition->auditing_time_for_level);
+                $auto_audit_pass = now()->gte($eligibleAt);
+            }
+
+            // if competition has ai audting option calculate and show user coin blance
+            $user_balnce = 0;
+            $total_cost = 0;
+
+            if($competition->ai_auditing){
+                $user_balnce =  Auth::user()->coinBalance->balance;
+                $response_base_price = $this->systemSettingService->getValueAsFloat('ai_auditing_cost_per_response'); 
+                $total_cost = $response_base_price * $level->questions_number * $competition->users()->count();
+            }
+            
+            return [
+                'status' => 'success',
+                'data' =>[
+                    'level' => $level, 
+                    'admins' => $admins, 
+                    'response_counts' => $counts,
+                    'ai_auditing' => $competition->ai_auditing,
+                    'auto_audit_pass' => $auto_audit_pass,
+                    'cost' => [
+                        'user_balnce' => $user_balnce,
+                        'total' => $total_cost,
+                    ]
+                ]
+            ];
         } catch (Exception $exception) {
             $this->registerLogs('LevelService getEditData error: ', $exception);
             $this->flasher->error(__('messages.fetch_error_detailed'));
@@ -345,11 +380,74 @@ class LevelService
             $this->flasher->error(__('messages.validation.not_allow.level_finish_still_active'));
             return false;
         }
+
+        if ($level->finish_job_running) {
+            $this->flasher->error(__('messages.validation.not_allow.level_finish_in_progress'));
+            return false;
+        }
+
+        if($level->competition->ai_auditing){
+            $user_balnce =  Auth::user()->coinBalance->balance;
+            $response_base_price = $this->systemSettingService->getValueAsFloat('ai_auditing_cost_per_response'); 
+            $total_cost = $response_base_price * $level->questions_number * $level->competition->users()->count();
+            if($user_balnce < $total_cost){
+                $this->flasher->error(__('messages.validation.not_allow.service_insufficient_balance'));
+                return false;
+            }
+        }
         
-        // ✅ Use the injected factory instead of direct instantiation
+        // Atomic guard: set the flag only if it was false. Prevents double dispatch.
+        $affected = Level::where('id', $level->id)
+            ->where('finish_job_running', false)
+            ->update(['finish_job_running' => true]);
+
+        if ($affected === 0) {
+            // Another request already started finishing
+            $this->flasher->error(__('messages.validation.not_allow.level_finish_in_progress'));
+            return false;
+        }
+        
+        // Use the injected factory to create and dispatch with tracking
         $job = $this->finishLevelFactory->create($level, Auth::id());
         $this->jobTrackingService->dispatchWithTracking($job);
-                
+        
         return true;
+    }
+
+    /**
+     * Assign users that not audited yet to the level creator to audit them 
+     * this methode  work as backup if auditors doent audit users responses to level in period of time
+     * @param Level $level
+     */
+    public function assignAuditorsToResponsesForLevel(Level $level): int|false
+    {
+        try {
+            if (!$level->canEdit()) {
+                $this->flasher->error(__('messages.validation.not_allow.competition_update'));
+                return false;
+            }
+            
+            $eligibleAt = $level->finished_at->copy()->addMinutes($level->competition->auditing_time_for_level);
+
+            if (now()->lt($eligibleAt)) {
+                $eligibleAt->diffInMinutes(now());
+                $this->flasher->error(__('messages.validation.not_allow.re_assing_users_to_level_creator',["minutes"=>$eligibleAt]));
+                return false;
+            }
+
+            $affected = $this->levelRepository->reAssignUsersResponsesAudtingPermission($level->id, $level->competition->admin_id);
+
+            if ($affected > 0) {
+                $this->flasher->success(__('messages.validation.success.updated_records', ['count' => $affected]));
+            } else {
+                $this->flasher->info(__('messages.validation.info.nothing_to_update'));
+            }
+
+            return $affected;
+        } catch (\Throwable $e) {
+            $this->registerLogs('LevelService@assignAuditorsToResponsesForLevel', $e);
+            $this->flasher->error(__('messages.validation.fail.something_went_wrong'));
+            return false;
+        }
     }
 }

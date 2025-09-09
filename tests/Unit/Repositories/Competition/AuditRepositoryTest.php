@@ -129,4 +129,161 @@ class AuditRepositoryTest extends TestCase
         }
     }
 
+    public function test_assign_auditors_to_responses_for_level_updates_only_ai_generated_and_null_admin()
+    {
+        $level = Level::factory()->create();
+        $questions = Question::factory()->count(2)->create(['level_id' => $level->id]);
+        $user1 = User::factory()->create();
+        $user2 = User::factory()->create();
+
+        // Map admin to users for the level
+        $admin1 = Admin::factory()->create();
+        $admin2 = Admin::factory()->create();
+        DB::table('level_admin_user')->insert([
+            ['level_id' => $level->id, 'user_id' => $user1->id, 'admin_id' => $admin1->id],
+            ['level_id' => $level->id, 'user_id' => $user2->id, 'admin_id' => $admin2->id],
+        ]);
+
+        // Eligible responses: ai_generated=true, admin_id=null
+        $eligible1 = Response::factory()->create([
+            'user_id' => $user1->id,
+            'question_id' => $questions[0]->id,
+            'ai_generated' => true,
+            'admin_id' => null,
+        ]);
+        $eligible2 = Response::factory()->create([
+            'user_id' => $user2->id,
+            'question_id' => $questions[1]->id,
+            'ai_generated' => true,
+            'admin_id' => null,
+        ]);
+
+        // Not eligible: ai_generated=false
+        $notEligible1 = Response::factory()->create([
+            'user_id' => $user1->id,
+            'question_id' => $questions[0]->id,
+            'ai_generated' => false,
+            'admin_id' => null,
+        ]);
+        // Not eligible: already has admin_id
+        $notEligible2 = Response::factory()->create([
+            'user_id' => $user2->id,
+            'question_id' => $questions[1]->id,
+            'ai_generated' => true,
+            'admin_id' => $admin2->id,
+        ]);
+        // Different level question shouldn't be updated
+        $otherLevel = Level::factory()->create();
+        $otherQuestion = Question::factory()->create(['level_id' => $otherLevel->id]);
+        $otherResponse = Response::factory()->create([
+            'user_id' => $user1->id,
+            'question_id' => $otherQuestion->id,
+            'ai_generated' => true,
+            'admin_id' => null,
+        ]);
+
+        $affected = $this->repository->assignAuditorsToResponsesForLevel($level->id);
+
+        $this->assertEquals(2, $affected);
+        $this->assertEquals($admin1->id, $eligible1->fresh()->admin_id);
+        $this->assertEquals($admin2->id, $eligible2->fresh()->admin_id);
+        $this->assertNull($notEligible1->fresh()->admin_id);
+        $this->assertEquals($admin2->id, $notEligible2->fresh()->admin_id);
+        $this->assertNull($otherResponse->fresh()->admin_id);
+    }
+
+    public function test_bulk_update_responses_updates_targeted_and_flags_empty_in_batch()
+    {
+        $level = Level::factory()->create();
+        $questionA = Question::factory()->create(['level_id' => $level->id]);
+        $questionB = Question::factory()->create(['level_id' => $level->id]);
+        $userA = User::factory()->create();
+        $userB = User::factory()->create();
+        $outsideUser = User::factory()->create();
+
+        // Targeted responses
+        $r1 = Response::factory()->create([
+            'user_id' => $userA->id,
+            'question_id' => $questionA->id,
+            'score' => 0,
+            'final_score' => 0,
+            'ai_generated' => false,
+            'response_text' => 'ok',
+            'admin_id' => null,
+        ]);
+        $r2 = Response::factory()->create([
+            'user_id' => $userB->id,
+            'question_id' => $questionA->id,
+            'score' => 0,
+            'final_score' => 0,
+            'ai_generated' => false,
+            'response_text' => 'ok',
+            'admin_id' => null,
+        ]);
+        // Empty response in batch (should be zeroed)
+        $emptyInBatch = Response::factory()->create([
+            'user_id' => $userA->id,
+            'question_id' => $questionB->id,
+            'score' => 0,
+            'final_score' => 5,
+            'ai_generated' => false,
+            'response_text' => '',
+            'admin_id' => null,
+        ]);
+        // Already audited should not change in empty pass
+        $admin_alreadyAudited = Admin::factory()->create();
+        $alreadyAudited = Response::factory()->create([
+            'user_id' => $userB->id,
+            'question_id' => $questionB->id,
+            'score' => 0,
+            'final_score' => 7,
+            'ai_generated' => false,
+            'response_text' => '',
+            'admin_id' => $admin_alreadyAudited->id,
+        ]);
+        // Outside batch user/question should not be affected
+        $outside = Response::factory()->create([
+            'user_id' => $outsideUser->id,
+            'question_id' => $questionB->id,
+            'score' => 0,
+            'final_score' => 3,
+            'ai_generated' => false,
+            'response_text' => '',
+            'admin_id' => null,
+        ]);
+
+        $bulkData = [
+            ['id' => $r1->id, 'score' => 10, 'final_score' => 8],
+            ['id' => $r2->id, 'score' => 20, 'final_score' => 18],
+        ];
+        $batchUserIds = [$userA->id, $userB->id];
+        $batchQuestionIds = [$questionA->id, $questionB->id];
+
+        // Execute
+        $this->repository->bulkUpdateResponses($bulkData, $batchUserIds, $batchQuestionIds);
+
+        // Assert targeted updates
+        $this->assertEquals(10, $r1->fresh()->score);
+        $this->assertEquals(8, $r1->fresh()->final_score);
+        $this->assertTrue((bool)$r1->fresh()->ai_generated);
+        $this->assertNotNull($r1->fresh()->ai_score_generated_at);
+
+        $this->assertEquals(20, $r2->fresh()->score);
+        $this->assertEquals(18, $r2->fresh()->final_score);
+        $this->assertTrue((bool)$r2->fresh()->ai_generated);
+        $this->assertNotNull($r2->fresh()->ai_score_generated_at);
+
+        // Assert empty responses in batch are zeroed and flagged
+        $this->assertEquals(0, $emptyInBatch->fresh()->final_score);
+        $this->assertTrue((bool)$emptyInBatch->fresh()->ai_generated);
+        $this->assertNotNull($emptyInBatch->fresh()->ai_score_generated_at);
+
+        // Outside batch unaffected
+        $this->assertEquals(3, $outside->fresh()->final_score);
+        $this->assertFalse((bool)$outside->fresh()->ai_generated);
+
+        // Already audited unchanged
+        $this->assertEquals(7, $alreadyAudited->fresh()->final_score);
+        $this->assertEquals($admin_alreadyAudited->id, $alreadyAudited->fresh()->admin_id);
+    }
 } 

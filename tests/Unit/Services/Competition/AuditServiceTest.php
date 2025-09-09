@@ -13,6 +13,11 @@ use Illuminate\Support\Facades\Auth;
 use App\Services\Competition\AuditService;
 use App\Contracts\TransactionManagerInterface;
 use App\Interface\Competition\AuditRepositoryInterface;
+use App\Models\Competition\Response;
+use App\Services\CashManagment\CompetitionCacheManagmentSystem;
+use Barryvdh\LaravelIdeHelper\Macro;
+use PHPUnit\Framework\MockObject\Generator\MockType;
+use Carbon\Carbon;
 
 class AuditServiceTest extends TestCase
 {
@@ -24,6 +29,8 @@ class AuditServiceTest extends TestCase
     protected $transactionManagerMock;
     /** @var FlasherInterface | Mockery\MockInterface */
     protected $flasherMock;
+     /** @var CompetitionCacheManagmentSystem | Mockery\MockInterface */
+    protected $competitionCache;
     /** @var Level | Mockery\MockInterface */
     protected Level $level;
     /** @var User | Mockery\MockInterface */
@@ -34,11 +41,14 @@ class AuditServiceTest extends TestCase
         parent::setUp();
         $this->repositoryMock = Mockery::mock(AuditRepositoryInterface::class);
         $this->transactionManagerMock = Mockery::mock(TransactionManagerInterface::class);
+        $this->competitionCache = Mockery::mock(CompetitionCacheManagmentSystem::class);
         $this->flasherMock = Mockery::mock(FlasherInterface::class);
+
         $this->service = new AuditService(
             $this->repositoryMock,
             $this->transactionManagerMock,
-            $this->flasherMock
+            $this->flasherMock,
+            $this->competitionCache
         );
 
         // mock level
@@ -58,13 +68,21 @@ class AuditServiceTest extends TestCase
     protected function tearDown(): void
     {
         Mockery::close();
+        Carbon::setTestNow();
         parent::tearDown();
     }
 
     public function test_audit_user_responses_returns_expected_array()
     {
         
-        $questions = ['q1', 'q2'];
+        // Create mock questions with responses
+        $response1 = (object) ['admin_id' => 1];
+        $response2 = (object) ['admin_id' => null];
+        
+        $question1 = (object) ['responses' => collect([$response1])];
+        $question2 = (object) ['responses' => collect([$response2])];
+        
+        $questions = collect([$question1, $question2]);
 
         $this->repositoryMock->shouldReceive('getUser')
             ->once()
@@ -81,6 +99,7 @@ class AuditServiceTest extends TestCase
         $this->assertEquals($this->level, $result['level']);
         $this->assertEquals($this->user, $result['user']);
         $this->assertEquals($questions, $result['questions']);
+        $this->assertFalse($result['is_all_audited']);
     }
 
     public function test_audit_user_responses_aborts_if_user_not_found()
@@ -172,7 +191,8 @@ class AuditServiceTest extends TestCase
         $partialMock = Mockery::mock(AuditService::class, [
             $this->repositoryMock,
             $this->transactionManagerMock,
-            $this->flasherMock
+            $this->flasherMock,
+            $this->competitionCache
         ])->makePartial();
 
         // Mock the trait method to return expected messages
@@ -197,6 +217,10 @@ class AuditServiceTest extends TestCase
         
         $this->flasherMock->shouldReceive('notify')
             ->with('3 responses updated', 'info')
+            ->once();
+
+        $this->competitionCache->shouldReceive('invalidateUsersAuditingInfo')
+            ->with(Mockery::any())
             ->once();
 
         // Act
@@ -239,7 +263,8 @@ class AuditServiceTest extends TestCase
         $partialMock = Mockery::mock(AuditService::class, [
             $this->repositoryMock,
             $this->transactionManagerMock,
-            $this->flasherMock
+            $this->flasherMock,
+            $this->competitionCache,
         ])->makePartial();
 
         // Mock the trait method
@@ -259,6 +284,10 @@ class AuditServiceTest extends TestCase
         // Mock flasher calls
         $this->flasherMock->shouldReceive('notify')
             ->with('Audit submitted successfully', 'success')
+            ->once(); 
+
+        $this->competitionCache->shouldReceive('invalidateUsersAuditingInfo')
+            ->with(Mockery::any())
             ->once();
 
         // Act
@@ -361,28 +390,259 @@ class AuditServiceTest extends TestCase
         // Assert
         $this->assertFalse($result);
     }
-    /*public function test_submit_audit_unauthorized_admin()
+ 
+    // New tests for assignAuditorsToResponsesForLevel
+    public function test_assign_auditors_returns_false_when_level_cannot_edit()
     {
-        $level = Level::factory()->make(['id' => 6]);
-        $user = User::factory()->make(['id' => 7]);
-        $responses = ['scores' => [1 => 10]];
-        $this->repositoryMock->shouldReceive('isAdminAllowedToAuditUser')->with($level, $user)->andReturn(false);
-        $this->flasherMock->shouldReceive('notifyCrudResult')->with(false, 'error')->once();
-        $result = $this->service->submitAudit($responses, $level, $user);
+        $this->level->shouldReceive('canEdit')->once()->andReturn(false);
+
+        $this->flasherMock->shouldReceive('error')->once();
+
+        $result = $this->service->assignAuditorsToResponsesForLevel($this->level);
+
         $this->assertFalse($result);
     }
 
-    public function test_submit_audit_exception_handling()
+    public function test_assign_auditors_returns_false_when_too_early()
     {
-        $level = Level::factory()->make(['id' => 8]);
-        $user = User::factory()->make(['id' => 9]);
-        $responses = ['scores' => [1 => 10]];
-        $this->repositoryMock->shouldReceive('isAdminAllowedToAuditUser')->with($level, $user)->andReturn(true);
-        $this->transactionManagerMock->shouldReceive('run')->once()->andThrow(new Exception('DB error'));
-        $this->flasherMock->shouldReceive('notifyCrudResult')->with(false, 'error')->once();
-        $result = $this->service->submitAudit($responses, $level, $user);
-        $this->assertFalse($result);
-    }*/
+        Carbon::setTestNow(now());
 
-    // ... more tests for each method will follow ...
+        $this->level->shouldReceive('canEdit')->once()->andReturn(true);
+
+        $finishedAt = now()->subMinutes(40);
+        $competition = (object) ['auditing_time_for_level' => 30];
+
+        $this->level->shouldReceive('getAttribute')->with('finished_at')->andReturn($finishedAt);
+        $this->level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
+
+
+        $this->flasherMock->shouldReceive('error')->once();
+
+        $result = $this->service->assignAuditorsToResponsesForLevel($this->level);
+
+        $this->assertFalse($result);
+    }
+
+    public function test_assign_auditors_success_with_updates_and_notifications()
+    {
+        Carbon::setTestNow(now());
+
+        $this->level->shouldReceive('canEdit')->once()->andReturn(true);
+
+        $finishedAt = now()->subHour();
+        $competition = (object) ['auditing_time_for_level' => 30];
+        $this->level->shouldReceive('getAttribute')->with('finished_at')->andReturn($finishedAt);
+        $this->level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
+
+
+        $this->repositoryMock->shouldReceive('assignAuditorsToResponsesForLevel')
+            ->once()
+            ->with($this->level->id)
+            ->andReturn(5);
+
+        $this->flasherMock->shouldReceive('success')->once();
+
+        $this->competitionCache->shouldReceive('invalidateUsersAuditingInfo')
+            ->with(Mockery::any())
+            ->once();
+
+        $result = $this->service->assignAuditorsToResponsesForLevel($this->level);
+
+        $this->assertSame(5, $result);
+    }
+
+    public function test_assign_auditors_info_when_nothing_to_update()
+    {
+        Carbon::setTestNow(now());
+
+        $this->level->shouldReceive('canEdit')->once()->andReturn(true);
+
+        $finishedAt = now()->subHour();
+        $competition = (object) ['auditing_time_for_level' => 30];
+        $this->level->shouldReceive('getAttribute')->with('finished_at')->andReturn($finishedAt);
+        $this->level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
+
+
+        $this->repositoryMock->shouldReceive('assignAuditorsToResponsesForLevel')
+            ->once()
+            ->with($this->level->id)
+            ->andReturn(0);
+
+        $this->flasherMock->shouldReceive('info')->once();
+
+        $this->competitionCache->shouldReceive('invalidateUsersAuditingInfo')
+            ->with(Mockery::any())
+            ->once();
+
+        $result = $this->service->assignAuditorsToResponsesForLevel($this->level);
+
+        $this->assertSame(0, $result);
+    }
+
+    public function test_assign_auditors_handles_exception_and_returns_false()
+    {
+        Carbon::setTestNow(now());
+
+        $this->level->shouldReceive('canEdit')->once()->andReturn(true);
+
+        $finishedAt = now()->subHour();
+        $competition = (object) ['auditing_time_for_level' => 30];
+        $this->level->shouldReceive('getAttribute')->with('finished_at')->andReturn($finishedAt);
+        $this->level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
+
+
+
+        $this->repositoryMock->shouldReceive('assignAuditorsToResponsesForLevel')
+            ->once()
+            ->with($this->level->id)
+            ->andThrow(new Exception('DB error'));
+
+        $this->flasherMock->shouldReceive('error')->once();
+
+        $result = $this->service->assignAuditorsToResponsesForLevel($this->level);
+
+        $this->assertFalse($result);
+    }
+
+    // New tests for processAndStoreAIBatchScores
+    public function test_process_and_store_ai_batch_scores_success()
+    {
+        $level = Mockery::mock(Level::class);
+        $level->shouldReceive('getAttribute')->with('id')->andReturn(10);
+
+        $users = collect([
+            (object)['id' => 1],
+            (object)['id' => 2],
+        ]);
+
+        $questions = collect([
+            (object)['id' => 100, 'max_score' => 100, 'duration' => 100],
+            (object)['id' => 200, 'max_score' => 50, 'duration' => 100],
+        ]);
+
+        $responses = collect([
+            Response::factory()->make([
+                'id' => 1001,
+                'user_id' => 1,
+                'question_id' => 100,
+                'response_duration' => 60,
+                'penalty' => 0,
+            ]),
+            Response::factory()->make([
+                'id' => 1002,
+                'user_id' => 2,
+                'question_id' => 100,
+                'response_duration' => 60,
+                'penalty' => 0,
+            ]),
+            Response::factory()->make([
+                'id' => 2001,
+                'user_id' => 1,
+                'question_id' => 200,
+                'response_duration' => 40,
+                'penalty' => 0,
+            ]),
+        ]);
+
+        $aiScores = [
+            'questions_audited' => [
+                [
+                    'question_id' => 100,
+                    'user_responses_audited' => [
+                        ['user_id' => 1, 'user_response_score' => 90],
+                        ['user_id' => 2, 'user_response_score' => 80],
+                    ],
+                ],
+                [
+                    'question_id' => 200,
+                    'user_responses_audited' => [
+                        ['user_id' => 1, 'user_response_score' => 40],
+                    ],
+                ],
+            ],
+        ];
+
+        $this->repositoryMock->shouldReceive('bulkUpdateResponses')
+            ->once()
+            ->with(Mockery::any(),Mockery::any(),Mockery::any());
+
+        // Execute transaction
+        $this->transactionManagerMock->shouldReceive('run')
+            ->once()
+            ->with(Mockery::type('callable'))
+            ->andReturnUsing(function ($callback) {
+                return $callback();
+            });
+
+        $result = $this->service->processAndStoreAIBatchScores($level, $users, $questions, $aiScores, $responses);
+
+        $this->assertTrue($result['success']);
+        $this->assertSame(2, $result['processed_users']);
+        $this->assertSame(3, $result['processed_responses']);
+        $this->assertCount(0, $result['errors']);
+        $this->assertNotEmpty($result['notifications']);
+    }
+
+    public function test_process_and_store_ai_batch_scores_collects_errors_and_still_returns_result()
+    {
+        $level = Mockery::mock(Level::class);
+        $level->shouldReceive('getAttribute')->with('id')->andReturn(11);
+
+        $users = collect([
+            (object)['id' => 1],
+        ]);
+        $questions = collect([
+            (object)['id' => 100, 'max_score' => 100, 'duration' => 100],
+        ]);
+
+        $responses = collect([
+            Response::factory()->make([
+                'id' => 1001,
+                'user_id' => 1,
+                'question_id' => 100,
+                'response_duration' => 60,
+                'penalty' => 0,
+            ]),
+        ]);
+
+        $aiScores = [
+            'questions_audited' => [
+                [
+                    'question_id' => 999, // Missing question
+                    'user_responses_audited' => [
+                        ['user_id' => 1, 'user_response_score' => 10],
+                    ],
+                ],
+                [
+                    'question_id' => 100,
+                    'user_responses_audited' => [
+                        ['user_id' => 3, 'user_response_score' => 10], // Missing user
+                        ['user_id' => 1, 'user_response_score' => 150], // Exceeds max
+                        ['user_id' => 1, 'user_response_score' => 50], // Valid
+                    ],
+                ],
+            ],
+        ];
+
+        $this->repositoryMock->shouldReceive('bulkUpdateResponses')
+            ->once()
+            ->with(Mockery::on(function ($bulkData) {
+                return is_array($bulkData) && count($bulkData) === 1;
+            }), [1], [100]);
+
+        $this->transactionManagerMock->shouldReceive('run')
+            ->once()
+            ->with(Mockery::type('callable'))
+            ->andReturnUsing(function ($callback) {
+                return $callback();
+            });
+
+        $result = $this->service->processAndStoreAIBatchScores($level, $users, $questions, $aiScores, $responses);
+
+        $this->assertTrue($result['success']);
+        $this->assertSame(1, $result['processed_users']);
+        $this->assertSame(1, $result['processed_responses']);
+        $this->assertGreaterThanOrEqual(3, count($result['errors']));
+        $this->assertNotEmpty($result['notifications']);
+    }
 } 

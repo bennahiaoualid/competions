@@ -202,6 +202,10 @@ return [
         'coin_pricing_id' => 'coin pricing id',
         'payment_method' => 'payment method',
         'proof_image' => 'proof image',
+        'winner_gifts' => 'winner gifts',
+        'multi_winner' => 'multi winner',
+        'ai_auditing' => 'ai auditing',
+        'auditing_time_for_level' => 'auditing time for level after finish'
     ],
 
 ];

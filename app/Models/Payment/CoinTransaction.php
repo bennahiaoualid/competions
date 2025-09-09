@@ -7,6 +7,40 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
+/**
+ * 
+ *
+ * @property int $id
+ * @property int $transactionable_id
+ * @property string $transactionable_type
+ * @property string $type
+ * @property int $amount
+ * @property string $detail
+ * @property \Illuminate\Support\Carbon|null $processed_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string $detail_label
+ * @property-read string $formatted_amount
+ * @property-read Model|\Eloquent $transactionable
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinTransaction byDetail(string $detail)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinTransaction byTransactionable($transactionable)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinTransaction earn()
+ * @method static \Database\Factories\Payment\CoinTransactionFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinTransaction newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinTransaction newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinTransaction query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinTransaction spend()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinTransaction whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinTransaction whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinTransaction whereDetail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinTransaction whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinTransaction whereProcessedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinTransaction whereTransactionableId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinTransaction whereTransactionableType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinTransaction whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinTransaction whereUpdatedAt($value)
+ * @mixin \Eloquent
+ */
 class CoinTransaction extends Model
 {
     use HasFactory;
@@ -20,7 +54,7 @@ class CoinTransaction extends Model
     ];
 
     protected $casts = [
-        'amount' => 'integer',
+        'amount' => 'float',
         'processed_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'

@@ -37,6 +37,7 @@ class UpdateCompetitionRequest extends FormRequest
             'start_date' => 'required|date_format:Y-m-d H:i',
             'age_start' => 'required|integer|min:6',
             'age_end' => 'required|integer|min:6',
+            'auditing_time_for_level' => 'required|integer|min:10',
         ];
 
         // Apply the after_or_equal:now rule if the start_date has changed

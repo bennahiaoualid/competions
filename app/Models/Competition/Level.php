@@ -46,6 +46,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @method static Builder<static>|Level whereStartDate($value)
  * @method static Builder<static>|Level whereStatus($value)
  * @method static Builder<static>|Level whereUpdatedAt($value)
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, AdminApproval> $adminApprovals
+ * @property-read int|null $admin_approvals_count
+ * @property \Illuminate\Support\Carbon|null $finished_at
+ * @method static Builder<static>|Level whereFinishedAt($value)
+ * @property bool $finish_job_running
+ * @method static Builder<static>|Level whereFinishJobRunning($value)
  * @mixin \Eloquent
  */
 class Level extends Model
@@ -69,6 +75,8 @@ class Level extends Model
         'duration',
         'questions_number',
         'status',
+        'finished_at',
+        'finish_job_running'
     ];
 
     /**
@@ -82,6 +90,8 @@ class Level extends Model
             'start_date' => 'datetime',
             'duration' => 'integer',
             'questions_number' => 'integer',
+            'finished_at' => 'datetime',
+            'finish_job_running' => 'boolean'
         ];
     }
 

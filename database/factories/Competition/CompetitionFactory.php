@@ -48,6 +48,10 @@ class CompetitionFactory extends Factory
             'last_synced_at' => now(),
             'status' => 'pending', // 'pending', 'active', 'finished'
             'is_suspended' => false,
+            'winner_gifts' => $this->faker->numberBetween(100, 1000),
+            'multi_winner' => $this->faker->boolean,
+            'ai_auditing' => $this->faker->boolean,
+            'auditing_time_for_level' => 10,
         ];
     }
 

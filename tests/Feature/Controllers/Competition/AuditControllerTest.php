@@ -8,6 +8,7 @@ use App\Models\Competition\Level;
 use App\Models\Competition\Question;
 use App\Models\Competition\Response;
 use App\Models\User;
+use DB;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -363,5 +364,50 @@ class AuditControllerTest extends TestCase
             'id' => $this->response->id,
             'score' => 5,
         ]);
+    }
+
+    /**
+     * Test autoConfirmAigeneratedResponsesScore redirects back (early return path to avoid DB driver differences).
+     */
+    public function test_auto_confirm_ai_generated_responses_score_redirects_back()
+    {
+        // Arrange: Create a level that is still within the early window so service returns early
+        $competition = Competition::factory()->create([
+            'admin_id' => $this->auditor,
+            'auditing_time_for_level' => 60,
+            'ai_auditing' => true
+        ]);
+
+        $user = User::factory()->create();
+        $competition->users()->attach([$user->id]);
+        $level = Level::factory()->for($competition)->create([
+            'finished_at' => now()->subDay(),
+        ]);
+        $questions = Question::factory()->for($level)->count(5)->create();
+
+        foreach($questions as $question){
+            Response::factory()->for($question)->create([
+                'ai_generated'=> true,
+                'user_id' => $user->id
+            ]);
+        }
+        $admin = Admin::factory()->create();
+        DB::table('level_admin_user')->insert(
+            [
+                'level_id' => $level->id,
+                'admin_id' => $admin->id,
+                'user_id' => $user->id
+            ]
+        );
+
+        // Act
+        $response = $this->actingAs($this->auditor, 'admin')
+            ->post(route('admin.auditor.auto_audit', ['level' => $level->id]));
+
+        // Assert
+        $response->assertRedirectBack();
+        $responsesCount = Response::where('user_id' , $user->id)
+                            ->where('admin_id' , $admin->id)->count();
+        $this->assertEquals($responsesCount,5);
     }
 } 

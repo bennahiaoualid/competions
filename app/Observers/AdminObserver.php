@@ -13,6 +13,10 @@ class AdminObserver
     public function created(Admin $admin): void
     {
         AdminAvailability::create(['admin_id' => $admin->id]);
+        $admin->coinBalance()->firstOrCreate([
+            'balanceable_id' => $admin->id,
+        'balanceable_type' => Admin::class
+        ]);
     }
 
     /**

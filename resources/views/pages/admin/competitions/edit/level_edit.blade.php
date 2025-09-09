@@ -20,43 +20,47 @@
             <div class="flex justify-between items-center my-2 p-2 shadow-sm" >
                 <h2 class="text-xl font-bold capitalize">{{__('competition.level.info')}}</h2>
                 @if($level->canEdit())
-
-                    {{-- show activation button --}}
-                    @if($level->status == 'pending')
-                        <form action="{{route('admin.competitions.level.activate', ['level' => $level])}}" method="post">
-                            @csrf
-                            @method('post')
-                            <x-button color_type="success">
-                                <x-slot:icon>
-                                    <i class="fa-solid fa-circle-check fa-fw me-2"></i>
-                                </x-slot:icon>
-                                {{__("form.actions.activate")}}
-                            </x-button>
-                        </form>
-                    @else
-                        {{-- show finishing button --}}
-                        @if($level->isStillActive() || $level->status == 'finished')
-                            <x-status-widget :status="$level->status" :outline="false"
-                                            :text="__('competition.info.status.' . $level->status)">
-                            </x-status-widget>
-                        @else
-                            <form action="{{route('admin.competitions.level.finish', ['level' => $level])}}" method="post">
+                    <div>
+                        {{-- show activation button --}}
+                        @if($level->status == 'pending')
+                            <form action="{{route('admin.competitions.level.activate', ['level' => $level])}}" method="post">
                                 @csrf
                                 @method('post')
-                                <x-button color_type="danger">
+                                <x-button color_type="success">
                                     <x-slot:icon>
                                         <i class="fa-solid fa-circle-check fa-fw me-2"></i>
                                     </x-slot:icon>
-                                    {{__("form.actions.finish")}}
+                                    {{__("form.actions.activate")}}
                                 </x-button>
                             </form>
+                        @else
+                            {{-- show finishing button --}}
+                            @if($level->isStillActive() || $level->status == 'finished')
+                                <x-status-widget :status="$level->status" :outline="false"
+                                                :text="__('competition.info.status.' . $level->status)">
+                                </x-status-widget>
+                            @elseif ($level->finish_job_running)
+                                <x-status-widget status="processing" :outline="false"
+                                                :text="__('competition.info.status.finish_processing')">
+                                </x-status-widget>
+                            @elseif($cost['total'] <= $cost['user_balnce'])
+                                <form action="{{route('admin.competitions.level.finish', ['level' => $level])}}" method="post">
+                                    @csrf
+                                    @method('post')
+                                    <x-button color_type="danger">
+                                        <x-slot:icon>
+                                            <i class="fa-solid fa-circle-check fa-fw me-2"></i>
+                                        </x-slot:icon>
+                                        {{__("form.actions.finish")}}
+                                    </x-button>
+                                </form>
+                            @endif
                         @endif
-                    @endif
-
+                    </div>
                 @endif
             </div>
             
-            <form id="edit_level_form" method="post" action="{{ route('admin.competitions.level.update', ['level' => $level]) }}" class="space-y-2">
+            <form id="update_form" method="post" action="{{ route('admin.competitions.level.update', ['level' => $level]) }}" class="space-y-2">
                 @csrf
                 @method('patch')
                 <div>
@@ -123,11 +127,126 @@
                     </div>
                 @endif
 
-                <div class="flex justify-end">
+                {{-- show cost if this level belong to compeition with ai audting option --}}
+                @if(!$level->isStillActive() && $level->status == 'active' && $ai_auditing)
+                    {{-- not enough balance --}}
+                    @if ($cost['total'] > $cost['user_balnce'])
+                        <div id="balanceErrorModal" class="text-center">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
+                                <i class="fas fa-coins text-2xl text-orange-600"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-orange-800 mb-4">
+                                {{__('competition.ai.insufficient_balance_title')}}
+                            </h3>
+
+                            <p class="my-2">
+                                {{__('competition.ai.insufficient_balance_level_finish')}}
+                            </p>
+                            
+                            <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-orange-700">{{__('competition.ai.required_coins')}}:</span>
+                                    <span id="requiredCoins" class="font-semibold text-orange-800">
+                                        {{ $cost['total'] }}
+                                    </span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-orange-700">{{__('competition.ai.available_coins')}}:</span>
+                                    <span id="availableCoins" class="font-semibold text-orange-800">
+                                        {{ $cost['user_balnce'] }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>  
+                    @else
+                        <div id="balanceCost" class="text-center">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
+                                <i class="fas fa-coins text-2xl text-green-600"></i>
+                            </div>
+
+                            <h3 class="text-lg font-semibold text-green-800 mb-4">
+                                {{__('competition.ai.ai_audting_cost_for_level')}}
+                            </h3>
+
+                            <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-green-700">{{__('competition.ai.required_coins')}}:</span>
+                                    <span id="requiredCoins" class="font-semibold text-green-800">
+                                        {{ $cost['total'] .' '. __('messages.global.coin')}}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>                    
+                    @endif
+
+                @endif
+
+                {{-- show how many responses needs audit or confirmation if the level finihed --}}
+                @if ($level->canEdit() && $level->status == "finished")
+                    <ul class="my-2 p-2 space-y-4 shadow-md">
+                        <li class="flex gap-4">
+                            <p> <i class="fa-solid fa-square-check me-2 text-success"></i>
+                                {{ __('competition.response.response_count.audited') }} :
+                            </p> 
+                            <span class="text-success">{{ $response_counts['audited'] }}</span>
+                        </li>
+                        <li class="flex gap-4">
+                            <p> <i class="fa-solid fa-circle-xmark me-2 text-danger"></i>
+                                {{ __('competition.response.response_count.not_audited') }} :
+                            </p> 
+                            <span class="text-danger">{{ $response_counts['not_audited'] }}</span>
+                        </li>
+                        @if ($ai_auditing)
+                            <li class="flex gap-4">
+                                <p> <i class="fa-solid fa-check-double me-2 text-success"></i>
+                                    {{ __('competition.response.response_count.confirmed') }} :
+                                </p> 
+                                <span class="text-success">{{ $response_counts['confirmed'] }}</span>
+                            </li>
+                            <li class="flex gap-4">
+                                <p> <i class="fa-solid fa-xmark me-2 text-warning"></i>
+                                    {{ __('competition.response.response_count.not_confirmed') }} :
+                                </p> 
+                                <span class="text-warning">{{ $response_counts['not_confirmed'] }}</span>
+                            </li>
+                        @endif
+                    </ul>
+                @endif
+                <div class="flex justify-end items-center gap-4">
                     @if($level->canEdit())
-                        <x-button color_type="success" class="my-1" >{{ __('form.actions.update') }}</x-button>
+                        @if ($level->status == "finished" && $auto_audit_pass)
+                            @if ($response_counts['not_confirmed'] > 0)
+                                <x-button color_type="warning" form="auto-audit" type="submit">
+                                    <x-slot:icon>
+                                        <i class="fa-solid fa-circle-exclamation me-2"></i>
+                                    </x-slot:icon>
+                                    {{__("form.actions.auto_audit")}}
+                                </x-button>
+                            @elseif($response_counts['not_audited'] > 0)
+                                <x-button color_type="warning" form="re-assing-users-responses" type="submit"
+                                        :tooltip="__('form.actions.reassign_level_auditor.tooltip')">
+                                    <x-slot:icon>
+                                        <i class="fa-solid fa-circle-exclamation me-2"></i>
+                                    </x-slot:icon>
+                                    {{__("form.actions.reassign_level_auditor.title")}}
+                                </x-button>
+                            @endif
+                        @endif
+                        <x-button form="update_form" color_type="success" class="my-1" :disabled="$level->status != 'pending'" >{{ __('form.actions.update') }}</x-button>
                     @endif
                 </div>
+            </form>
+
+            {{-- auto edit form --}}
+            <form class="hidden" id="auto-audit" action="{{route('admin.auditor.auto_audit', ['level' => $level])}}" method="post">
+                @csrf
+                @method('post')
+            </form>
+
+            {{-- re assign users responses that not audited to creator form --}}
+            <form class="hidden" id="re-assing-users-responses" action="{{route('admin.competitions.level.re-assign-user-responses', ['level' => $level])}}" method="post">
+                @csrf
+                @method('post')
             </form>
         </div>
 

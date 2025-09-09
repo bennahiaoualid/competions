@@ -44,6 +44,7 @@ return [
         'hard_delete_user' => 'حذف المستخدم نهائيا',
         'restore_admin' => 'استرجاع المسؤول',
         'finish_level' => 'انهاء المرحلة',
+        'ai_auditing_batch' => 'تدقيق اجابات المستخدمين بواسطة الذكاء الاصطناعي',
     ],
     'result_keys' => [
         'auditor_id' => 'معرف المصحح',
@@ -64,11 +65,15 @@ return [
         'restored_at' => 'تم الاسترجاع في',
         'level_id' => 'معرف المرحلة',
         'level_name' => 'اسم المرحلة',
+        'users_responses_batch_number' => 'الدفعة من اجابات المستخدمين التي يتم معاجتها',
+        'users_responses_total_batches' => 'العدد الكلي لدفعات اجابات المستخدمين',
+        'users_processed' => 'عدد المستخدمين الذين تتم معالجة اجابتهم في هذه الدفعة',
     ],
     'errors' => [
         'only_auditor' => 'لا يمكن ازالة هذا المشرف لانه المصحح الوحيد في بعض المسابقات : :competitions',
         'owns_active_competition_with_running_level' => 'لا يمكن ازالة هذا المشرف لان لديه مسابقة بمرحلة نشطة انتضر حتى انتهائها : :competitions',
         'admin_must_soft_deleted' => 'لا يمكن الازالة, يجب ازالة هذا المشرف بشكل مؤقت قبل ازالته كليا',
+        'insufficient_balance' => 'رصيد غير كافي. المطلوب: :required عملة، المتوفر: :available عملة',
 
     ],
 ];

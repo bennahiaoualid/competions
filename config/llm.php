@@ -64,4 +64,36 @@ return [
         'request_timeout' => env('LLM_REQUEST_TIMEOUT', 30),
         'connection_timeout' => env('LLM_CONNECTION_TIMEOUT', 10),
     ],
+
+    'providers_list' => [
+        'openai' => 'OpenAI',
+        'anthropic' => 'Anthropic',
+        'gemini' => 'Gemini',
+    ],
+
+    'models_list' => [
+        'openai' => [
+            'gpt-3.5-turbo' => 'GPT-3.5 Turbo',
+            'gpt-4' => 'GPT-4',
+            'gpt-4-turbo' => 'GPT-4 Turbo',
+            'gpt-4o' => 'GPT-4o',
+            'gpt-4o-mini' => 'GPT-4o Mini',
+        ],
+        'anthropic' => [
+            'claude-3-haiku' => 'Claude 3 Haiku',
+            'claude-3-sonnet' => 'Claude 3 Sonnet',
+            'claude-3-opus' => 'Claude 3 Opus',
+            'claude-3.5-sonnet' => 'Claude 3.5 Sonnet',
+            'claude-3.5-haiku' => 'Claude 3.5 Haiku',
+        ],
+        
+        'gemini' => [
+            'gemini-1.5-flash' => 'Gemini 1.5 Flash',
+            'gemini-1.5-pro' => 'Gemini 1.5 Pro',
+            'gemini-1.5-flash-latest' => 'Gemini 1.5 Flash Latest',
+            'gemini-1.5-pro-latest' => 'Gemini 1.5 Pro Latest',
+            'gemini-pro' => 'Gemini Pro',
+            'gemini-pro-vision' => 'Gemini Pro Vision',
+        ],
+    ],
 ]; 

@@ -10,6 +10,57 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+/**
+ * 
+ *
+ * @property int $id
+ * @property string $uuid
+ * @property int $payable_id
+ * @property string $payable_type
+ * @property int|null $approver_admin_id
+ * @property \Illuminate\Support\Carbon|null $approved_at
+ * @property numeric $amount
+ * @property int $coins_credited
+ * @property string $payment_method
+ * @property string|null $proof_image_path
+ * @property string $status
+ * @property string|null $accountant_observation
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Admin|null $approver
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Payment\PaymentAuditLog> $auditLogs
+ * @property-read int|null $audit_logs_count
+ * @property-read string $status_color
+ * @property-read string $status_text
+ * @property-read Model|\Eloquent $payable
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Payment\PaymentReviewRequest> $reviewRequests
+ * @property-read int|null $review_requests_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction approved()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction byAdmin($adminId)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction byUser($userId)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction cancelled()
+ * @method static \Database\Factories\Payment\PaymentTransactionFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction pending()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction rejected()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction whereAccountantObservation($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction whereApprovedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction whereApproverAdminId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction whereCoinsCredited($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction wherePayableId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction wherePayableType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction wherePaymentMethod($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction whereProofImagePath($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentTransaction whereUuid($value)
+ * @mixin \Eloquent
+ */
 class PaymentTransaction extends Model
 {
     use HasFactory;
@@ -41,7 +92,7 @@ class PaymentTransaction extends Model
     protected $casts = [
         'approved_at' => 'datetime',
         'amount' => 'decimal:2',
-        'coins_credited' => 'integer',
+        'coins_credited' => 'float',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];

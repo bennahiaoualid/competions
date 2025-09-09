@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Auth;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminAvailability whereLevelManager($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminAvailability whereOwnershipTransfer($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminAvailability whereUpdatedAt($value)
+ * @property-read array $hidden_fields_for_user
  * @mixin \Eloquent
  */
 

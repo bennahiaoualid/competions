@@ -32,6 +32,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|GlobalResponse whereScore($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|GlobalResponse whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|GlobalResponse whereUserId($value)
+ * @property-read GlobalQuestion $question
+ * @property-read User $user
  * @mixin \Eloquent
  */
 class GlobalResponse extends Model

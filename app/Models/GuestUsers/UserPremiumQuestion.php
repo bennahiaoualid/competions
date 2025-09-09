@@ -6,6 +6,26 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * 
+ *
+ * @property int $id
+ * @property int $user_id
+ * @property int $global_question_id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\GuestUsers\GlobalQuestion $question
+ * @property-read User $user
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserPremiumQuestion newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserPremiumQuestion newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserPremiumQuestion query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserPremiumQuestion whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserPremiumQuestion whereGlobalQuestionId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserPremiumQuestion whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserPremiumQuestion whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserPremiumQuestion whereUserId($value)
+ * @mixin \Eloquent
+ */
 class UserPremiumQuestion extends Model
 {
     protected $fillable = [

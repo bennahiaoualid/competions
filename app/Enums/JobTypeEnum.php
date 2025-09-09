@@ -10,6 +10,7 @@ enum JobTypeEnum: string {
     case SOFT_DELETE_USER = 'soft_delete_user';
     case RESTORE_ADMIN = 'restore_admin';
     case FINISH_LEVEL = 'finish_level';
+    case AI_AUDITING_BATCH = 'ai_auditing_batch';
 
     
     /**
@@ -30,6 +31,7 @@ enum JobTypeEnum: string {
             self::SOFT_DELETE_USER => __('job.job_type.soft_delete_user'),
             self::RESTORE_ADMIN => __('job.job_type.restore_admin'),
             self::FINISH_LEVEL => __('job.job_type.finish_level'),
+            self::AI_AUDITING_BATCH => __('job.job_type.ai_auditing_batch'),
         };
     }
 }

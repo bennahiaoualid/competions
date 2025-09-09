@@ -212,6 +212,11 @@ return [
         'subject' => 'المادة',
         'difficulty' => 'المستوى',
         'explanation' => 'التوضيح',
+        'winner_gifts' => 'المكافأة',
+        'multi_winner' => 'المرابحة المتعددة',
+        'ai_auditing' => 'التدقيق الذكاء الاصطناعي',
+        'auditing_time_for_level' => 'وقت مراجعة المرحلة',
+
     ],
 
 ];

@@ -4,20 +4,24 @@ namespace App\Services\Competition;
 
 use Exception;
 use App\Models\Admin\Admin;
+use Illuminate\Support\Facades\DB;
 use App\Contracts\FlasherInterface;
+use App\Enums\AdminApprovalTypeEnum;
 use Illuminate\Support\Facades\Auth;
+use App\Services\SystemSettingService;
 use App\Models\Competition\Competition;
+use App\Services\Admin\AdminApprovalService;
 use App\Contracts\TransactionManagerInterface;
 use App\Jobs\Competition\SafeDeleteAuditorJob;
 use App\Services\Monitoring\JobTrackingService;
+use App\Services\Payment\CoinTransactionService;
 use App\Traits\RegisterLogs; // For logging errors
 use App\Jobs\Competetion\SyncCompetitionParticipants;
 use App\Helpers\UserNotifyEmail; // For sending emails
+use App\Exceptions\AIQuestionGeneration\PaidServiceException;
 use App\Interface\Competition\CompetitionRepositoryInterface;
-use App\Services\Notification\OptimizedCompetitionNotificationService;
-use App\Services\Admin\AdminApprovalService;
-use App\Enums\AdminApprovalTypeEnum;
 use App\Traits\CrudOperationNotificationAlert; // For notifications
+use App\Services\Notification\OptimizedCompetitionNotificationService;
 use App\Models\User; // For Auth::user() type hinting if specific methods are used
 
 class CompetitionService
@@ -36,8 +40,50 @@ class CompetitionService
         protected FlasherInterface $flasher,
         protected JobTrackingService $jobTrackingService,
         protected OptimizedCompetitionNotificationService $notificationService,
-        protected AdminApprovalService $approvalService
+        protected AdminApprovalService $approvalService,
+        protected SystemSettingService $systemSettingService,
+        protected CoinTransactionService $coinTransactionService
     ) {
+    }
+
+    /**
+     * Validate if admin has sufficient balance for multi-winner competition
+     *
+     * @param int $winnerCoins The number of coins for the winner
+     * @param bool $multiWinner Whether this is a multi-winner competition
+     * @return bool True if balance is sufficient
+     * @throws PaidServiceException If insufficient balance
+     */
+    protected function validateMultiWinnerBalance(int $winnerCoins, bool $multiWinner): int
+    {
+        // Get current admin user
+        $admin = Auth::user();
+        if (!$admin || !$admin->coinBalance) {
+            throw PaidServiceException::insufficientBalance(0, 0, $admin->id ?? 0);
+        }
+
+        $totalCoinsNeeded = $winnerCoins;
+
+        $userBalance = $admin->coinBalance->balance;
+
+        if ($multiWinner) {
+
+            // Get system settings for percentages
+            $secondPlacePercentage = $this->systemSettingService->getValueAsInt('second_place_winner_percentage', 50);
+            $thirdPlacePercentage = $this->systemSettingService->getValueAsInt('third_place_winner_percentage', 20);
+
+            // Calculate total coins needed
+            $secondPlaceCoins = round($winnerCoins * ($secondPlacePercentage / 100));
+            $thirdPlaceCoins = round($winnerCoins * ($thirdPlacePercentage / 100));
+            $totalCoinsNeeded = $winnerCoins + $secondPlaceCoins + $thirdPlaceCoins;
+        }
+
+        // Check if balance is sufficient
+        if ($userBalance < $totalCoinsNeeded) {
+            throw PaidServiceException::insufficientBalance($totalCoinsNeeded, $userBalance, $admin->id);
+        }
+
+        return intval($totalCoinsNeeded);
     }
 
     /**
@@ -66,16 +112,46 @@ class CompetitionService
     public function createCompetition(array $data): bool
     {
         try {
-            $result = $this->transactionManager->run(function () use ($data) {
-                $competition = Competition::create(array_merge($data, ['admin_id' => Auth::id()]));
-                SyncCompetitionParticipants::dispatch($competition)->afterCommit();
-                // Send notification to eligible users
-                $this->notificationService->competitionCreated($competition);
+            $auth_admin = Auth::user();
+            // Validate balance for multi-winner competitions before creating
+            $winnerCoins = (int)($data['winner_gifts'] ?? 0);
+            $multiWinner = (bool)($data['multi_winner'] ?? false);
+
+            $competitionGift = $this->systemSettingService->getValueAsInt('min_competition_coins');
+
+            if($winnerCoins < $competitionGift){
+                $this->flasher->error(
+                    __('messages.validation.not_allow.competition_create_less_gift', ['gift' => $competitionGift])
+                );
+                return false;
+            }
+            $totalCoinsNeeded = 0;
+            if ($winnerCoins > 0) {
+                $totalCoinsNeeded = $this->validateMultiWinnerBalance($winnerCoins, $multiWinner);
+            }
+
+            $result = $this->transactionManager->run(function () use ($data, $totalCoinsNeeded, $auth_admin) {
                 
+                $competition = Competition::create(array_merge($data, ['admin_id' => $auth_admin->id]));
+                
+                SyncCompetitionParticipants::dispatch($competition)->afterCommit();
+                
+                //Deduct coins from admin balance
+                $auth_admin->coinBalance->spendCoins($totalCoinsNeeded);
+
+                DB::afterCommit(function () use ($totalCoinsNeeded, $competition, $auth_admin) {
+                    $this->coinTransactionService->createCompetitionWinnerGiftTransaction($auth_admin, $totalCoinsNeeded);
+                    // Send notification to eligible users
+                    $this->notificationService->competitionCreated($competition);
+                });
                 return true;
             });
             $this->flasher->crudSuccess('saved');
             return $result;
+        } catch (PaidServiceException $exception) {
+            // Handle insufficient balance specifically
+            $this->flasher->error(__('messages.validation.not_allow.service_insufficient_balance'));
+            return false;
         } catch (Exception $exception) {
             $this->registerLogs('Competition creation error: ', $exception);
             $this->flasher->crudFailure('saved');

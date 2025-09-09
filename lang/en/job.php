@@ -44,6 +44,7 @@ return [
         'hard_delete_user' => 'Hard Delete User',
         'restore_admin' => 'Restore Admin',
         'finish_level' => 'Finish Level',
+        'ai_auditing_batch' => 'Auditing Users Responses By AI',
     ],
     'result_keys' => [
         'auditor_id' => 'Auditor ID',
@@ -64,11 +65,15 @@ return [
         'restored_at' => 'Restored At',
         'level_id' => 'Level ID',
         'level_name' => 'Level Name',
+        'users_responses_batch_number' => 'Users Responses Batch Number',
+        'users_responses_total_batches' => 'Users Responses Total Batches',
+        'users_processed' => 'Total Users Processed In This Batch',
     ],
     'errors' => [
         'only_auditor' => 'This admin cannot be removed because they are the only auditor in some competitions.',
         'owns_active_competition_with_running_level' => 'This admin cannot be removed because they own competitions with active levels. Please wait until they finish.',
         'admin_must_soft_deleted' => 'Cannot delete, Admin must be soft deleted before hard delete.',
-    
+        'insufficient_balance' => 'Insufficient balance. Required: :required coins, Available: :available coins',
+
     ],
 ];

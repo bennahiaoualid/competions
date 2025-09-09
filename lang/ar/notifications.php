@@ -59,6 +59,14 @@ return [
             'title' => 'طلب مدير مستوى',
             'message' => 'تم طلبك كمدير مستوى لـ ":level_name" في ":competition_title"',
         ],
+        'audit_level_requested' => [
+            'title' => 'طلب مراجعة مستوى',
+            'message' => 'تم إكمال المستوى ":level_name" في المسابقة ":competition_title". تم طلبك لمراجعة اجابات المتسابقين في اسرع وقت ممكن',
+        ],
+        'confirm_ai_auditing_level_requested' => [
+            'title' => 'طلب تأكيد مراجعة مستوى بواسطة الذكاء الاصطناعي',
+            'message' => 'تم إكمال المستوى ":level_name" في المسابقة ":competition_title". تم طلبك لتأكيد العلامات الممنوحة للمتسابقين بواسطة الذكاء الاصطناعي.  بعد :minutes دقيقة سيتم اعتبارك مؤكدا',
+        ],
     ],
     // Link text translations
     'link_text' => [

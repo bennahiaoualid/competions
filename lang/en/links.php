@@ -41,6 +41,12 @@ return [
     ],
     'system' => [
         'settings' => 'System Settings',
+        'settings_overview' => 'Settings Overview',
+        'settings_payment' => 'Payment Settings',
+        'settings_system' => 'System Configuration',
+        'settings_notifications' => 'Notification Settings',
+        'settings_ai_question_generation' => 'AI Question Generation',
+        'settings_ai_auditing' => 'AI Auditing',
     ],
     'home' => 'home',
     'log_out' => 'Sign out',

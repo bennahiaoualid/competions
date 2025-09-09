@@ -73,6 +73,11 @@ return [
         'generate' => 'generate',
         'start' => 'start',
         'back' => 'back',
+        'auto_audit' => 'confirm responses audit',
+        'reassign_level_auditor' => [
+            'title' => 're-assing-responses',
+            'tooltip' => 're-assign users response that doesnt audit yet to creator',
+        ]
     ],
     'title' => [
         "rest_password" => "Rest Password",

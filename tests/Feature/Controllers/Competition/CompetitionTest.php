@@ -5,11 +5,13 @@ namespace Tests\Feature;
 use Tests\TestCase;
 use App\Models\User;
 use App\Models\Admin\Admin;
+use App\Models\SystemSetting;
 use Database\Seeders\RoleSeeder;
 use App\Models\Competition\Level;
 use Illuminate\Support\Facades\Bus;
 use App\Enums\AdminApprovalTypeEnum;
 use App\Models\Competition\Competition;
+use Database\Seeders\SystemSettingSeeder;
 use Illuminate\Foundation\Testing\WithFaker;
 use App\Jobs\Notifications\BatchBroadcastJob;
 use App\Jobs\Competition\SafeDeleteAuditorJob;
@@ -50,6 +52,12 @@ class CompetitionTest extends TestCase
         
         // Give the admin the 'add competition' permission
         $this->admin->givePermissionTo('add competition');
+
+        $this->admin->coinBalance->update(['balance' => 500]);
+
+        // Set min competition winner gift validation coins to 50
+        $this->seed(SystemSettingSeeder::class);
+        SystemSetting::where('setting_key', 'min_competition_coins')->update(['setting_value' => 50]);
         
         // Create eligible users (age 18-25) before creating competition
         $eligibleUsers = User::factory()->count(3)->create([
@@ -62,6 +70,7 @@ class CompetitionTest extends TestCase
         $response = $this->post(route('admin.competitions.store'), $competitionData);
 
         $response->assertRedirectBack();
+        //assert database has competition data
         $this->assertDatabaseHas('competitions', [
             'title' => $competitionData['title'],
             'description' => $competitionData['description'],
@@ -69,9 +78,63 @@ class CompetitionTest extends TestCase
             'age_start' => $competitionData['age_start'],
             'age_end' => $competitionData['age_end'],
             'levels_number' => $competitionData['levels_number'],
+            'winner_gifts' => $competitionData['winner_gifts'],
+            'multi_winner' => $competitionData['multi_winner'],
+            'ai_auditing' => $competitionData['ai_auditing'],
+        ]);
+        // assert admin balnce updated
+        $this->assertEquals(400, $this->admin->coinBalance->balance); // 500 - 100
+        //assert coin transaction created
+        $this->assertDatabaseHas('coin_transactions', [
+            'transactionable_id' => $this->admin->id,
+            'transactionable_type' =>Admin::class,
+            'amount' => 100,
+            'type' => 'spend',
         ]);
         Bus::assertDispatched(SyncCompetitionParticipants::class);
         Bus::assertDispatched(BatchNotificationJob::class);
+    }
+
+    public function test_admin_can_successfully_create_competition_with_multi_winner()
+    {
+        
+        // Give the admin the 'add competition' permission
+        $this->admin->givePermissionTo('add competition');
+
+        $this->admin->coinBalance->update(['balance' => 500]);
+
+        // Set min competition winner gift validation coins to 50
+        $this->seed(SystemSettingSeeder::class);
+        SystemSetting::where('setting_key', 'min_competition_coins')->update(['setting_value' => 50]);
+        SystemSetting::where('setting_key', 'second_place_winner_percentage')->update(['setting_value' => 50]);
+        SystemSetting::where('setting_key', 'third_place_winner_percentage')->update(['setting_value' => 20]);
+        // Create eligible users (age 18-25) before creating competition
+        $eligibleUsers = User::factory()->count(3)->create([
+            'birthdate' => $this->faker->dateTimeBetween('2000-01-01', '2007-01-01')->format('Y-m-d'),
+            'email_verified_at' => now(), // Ensure they are verified
+        ]);
+        
+        $competitionData = $this->createCompetitionData(['multi_winner' => true]);
+
+        $response = $this->post(route('admin.competitions.store'), $competitionData);
+
+        $response->assertRedirectBack();
+        //assert database has competition data
+        $this->assertDatabaseHas('competitions', [
+            'title' => $competitionData['title'],
+            'admin_id' => $this->admin->id,
+            'multi_winner' => true,
+        ]);
+        // assert admin balnce updated
+        //100 + 50%(50) + 20%(20) = 170
+        $this->assertEquals(330, $this->admin->coinBalance->balance); // 500 - 170
+        //assert coin transaction created
+        $this->assertDatabaseHas('coin_transactions', [
+            'transactionable_id' => $this->admin->id,
+            'transactionable_type' =>Admin::class,
+            'amount' => 170,
+            'type' => 'spend',
+        ]);
     }
 
     public function test_create_fails_with_invalid_data()
@@ -83,7 +146,11 @@ class CompetitionTest extends TestCase
         $data['age_end'] = 20; 
         $data['levels_number'] = 0;
         $data['start_date'] = now()->subDays(1)->format('Y-m-d H:i');
-        unset($data['title']);
+        $data['winner_gifts'] = 'not int';
+        $data['multi_winner'] = 'not bool';
+        $data['auditing_time_for_level'] = 5.6;//not integer
+
+        unset($data['title'], $data['ai_auditing']);
 
         $response = $this->post(route('admin.competitions.store'), $data);
 
@@ -93,6 +160,9 @@ class CompetitionTest extends TestCase
                 'levels_number',
                 'start_date',
                 'title',
+                'winner_gifts',
+                'multi_winner',
+                'auditing_time_for_level'
             ],
             errorBag:'createCompetition'
         );
@@ -122,6 +192,8 @@ class CompetitionTest extends TestCase
             'start_date' => now()->addDays(7)->format('Y-m-d H:i'),
             'age_start' => 18,
             'age_end' => 25,
+            'auditing_time_for_level' => 60,
+
         ];
 
         $response = $this->patch(route('admin.competitions.update', ['competition' => $competition]), $updateData);
@@ -487,15 +559,20 @@ class CompetitionTest extends TestCase
         Bus::assertNothingDispatched();
     }
     /** private methods */
-    private function createCompetitionData()
+    private function createCompetitionData($override = [])
     {
-        return [
+        return array_merge([
             'title' => 'Laravel Competition 2024',
             'description' => 'Laravel Competition 2024',
             'start_date' => now()->addDays(7)->format('Y-m-d H:i'),
             'age_start' => 18,
             'age_end' => 25,
             'levels_number' => 1,
-        ];
+            'winner_gifts' => 100,
+            'multi_winner' => false,
+            'ai_auditing' => false,
+            'auditing_time_for_level' => 60,
+
+        ], $override);
     }
 } 

@@ -6,25 +6,31 @@ use Bus;
 use Mockery;
 use Carbon\Carbon;
 use Tests\TestCase;
+use App\Models\User;
 use App\Models\Admin\Admin;
+use App\Models\SystemSetting;
 use App\Helpers\UserNotifyEmail;
 use App\Models\Competition\Level;
 use Illuminate\Support\Collection;
 use App\Contracts\FlasherInterface;
 use App\Enums\AdminApprovalTypeEnum;
 use Illuminate\Support\Facades\Auth;
+use App\Services\SystemSettingService;
 use App\Models\Competition\Competition;
+use Database\Seeders\SystemSettingSeeder;
 use App\Services\Competition\LevelService;
 use App\Services\Admin\AdminApprovalService;
 use App\Contracts\TransactionManagerInterface;
 use App\Services\Monitoring\JobTrackingService;
 use App\Jobs\Competition\FinishLevelTrackableJob;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Interface\Competition\LevelRepositoryInterface;
 use App\Jobs\Competition\FinishLevelTrackableJobFactory;
 use App\Services\Notification\OptimizedCompetitionNotificationService;
 
 class LevelServiceTest extends TestCase
 {
+    use RefreshDatabase;
     /** @var LevelService&\Mockery\MockInterface */
     protected $levelService;
     /** @var LevelRepositoryInterface&\Mockery\MockInterface */
@@ -39,6 +45,8 @@ class LevelServiceTest extends TestCase
     protected $finishLevelFactory;
     /** @var JobTrackingService&\Mockery\MockInterface */
     protected $jobTrackingService;
+    /** @var SystemSettingService&\Mockery\MockInterface */
+    protected $systemSettingService;
     /** @var AdminApprovalService&\Mockery\MockInterface */
     protected $approvalService;
     /** @var Level|\Mockery\MockInterface */
@@ -52,6 +60,7 @@ class LevelServiceTest extends TestCase
 
     protected function setUp(): void
     {
+        
         parent::setUp();
         
         // Create mock repository & transaction manager & flasher
@@ -62,6 +71,7 @@ class LevelServiceTest extends TestCase
         $this->approvalService = Mockery::mock(AdminApprovalService::class);
         $this->jobTrackingService = Mockery::mock(JobTrackingService::class);
         $this->finishLevelFactory = Mockery::mock(FinishLevelTrackableJobFactory::class);
+        $this->systemSettingService = Mockery::mock(SystemSettingService::class);
         $this->levelService = new LevelService(
             $this->levelRepository,
             $this->transactionManager,
@@ -69,7 +79,8 @@ class LevelServiceTest extends TestCase
             $this->notificationService,
             $this->approvalService,
             $this->jobTrackingService,
-            $this->finishLevelFactory
+            $this->finishLevelFactory,
+            $this->systemSettingService
         );
 
         $this->level_partial = Mockery::mock(Level::class)->makePartial();
@@ -82,8 +93,8 @@ class LevelServiceTest extends TestCase
         $this->userNotifyEmail = Mockery::mock('alias:'.UserNotifyEmail::class);
         
         // Mock Auth facade
-        Auth::shouldReceive('id')->andReturn(1);
-        Auth::shouldReceive('user')->andReturn($this->mockAdmin('owner', true));
+        //Auth::shouldReceive('id')->andReturn(1);
+       // Auth::shouldReceive('user')->andReturn($this->mockAdmin('owner', true));
     }
 
     protected function tearDown(): void
@@ -1156,21 +1167,25 @@ class LevelServiceTest extends TestCase
     }
 
 
-    public function test_finish_level_success()
+    public function test_finish_level_success_without_ai_audting()
     {
         Bus::fake();
         // Arrange
-        $level = $this->level_partial;
-        $competition = $this->competition_partial;
-        
-        $level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
-        $level->shouldReceive('getAttribute')->with('id')->andReturn(1);
-        $level->shouldReceive('getAttribute')->with('status')->andReturn('active');
-        $level->shouldReceive('canEdit')->andReturn(true);
-        $level->shouldReceive('isStillActive')->andReturn(false);
-        $level->shouldReceive('fresh')->with('competition.users', 'competition.auditors')->andReturn($level);
-
-        $competition->shouldReceive('canEdit')->andReturn(true);
+        $admin= Admin::factory()->create();
+        $this->actingAs($admin);
+        $competition = Competition::factory()->create(
+            [
+                'ai_auditing' => false,
+                'admin_id' => $admin->id,
+            ]
+        );
+        $level = Level::factory()->create([
+            'competition_id' => $competition->id,
+            'status' => Level::STATUS_ACTIVE,
+            'finish_job_running' => false,
+            'start_date' => now()->subDay(),
+            'duration' => 60,
+        ]);
 
 
         $this->finishLevelFactory
@@ -1188,6 +1203,94 @@ class LevelServiceTest extends TestCase
         
         // Assert
         $this->assertTrue($result);
+    }
+
+    public function test_finish_level_success_with_ai_audting()
+    {
+        Bus::fake();
+        // Arrange
+        $admin= Admin::factory()->create();
+        $admin->coinBalance->addCoins(100);
+        $this->actingAs($admin);
+        $competition = Competition::factory()
+            ->has(User::factory()->count(5), 'users')
+            ->create(
+                [
+                    'ai_auditing' => true,
+                    'admin_id' => $admin->id,
+                ]
+            );
+        $level = Level::factory()->create([
+            'competition_id' => $competition->id,
+            'status' => Level::STATUS_ACTIVE,
+            'finish_job_running' => false,
+            'start_date' => now()->subDay(),
+            'duration' => 60,
+        ]);
+
+
+        $this->systemSettingService
+        ->shouldReceive('getValueAsFloat')
+        ->with('ai_auditing_cost_per_response')
+        ->once()
+        ->andReturn(1);
+
+        $this->finishLevelFactory
+            ->shouldReceive('create')
+            ->with($level, Mockery::any())
+            ->once();
+
+        $this->jobTrackingService
+            ->shouldReceive('dispatchWithTracking')
+            ->with(Mockery::type(FinishLevelTrackableJob::class))
+            ->once();
+
+        // Act
+        $result = $this->levelService->finishLevel($level);
+        
+        // Assert
+        $this->assertTrue($result);
+    }
+
+    public function test_finish_level_fail_with_ai_audting_insufficent_balance()
+    {
+        Bus::fake();
+        // Arrange
+        $admin= Admin::factory()->create();
+        $this->actingAs($admin);
+        $competition = Competition::factory()
+            ->has(User::factory()->count(5), 'users')
+            ->create(
+                [
+                    'ai_auditing' => true,
+                    'admin_id' => $admin->id,
+                ]
+            );
+        $level = Level::factory()->create([
+            'competition_id' => $competition->id,
+            'status' => Level::STATUS_ACTIVE,
+            'finish_job_running' => false,
+            'start_date' => now()->subDay(),
+            'duration' => 60,
+        ]);
+
+
+        $this->systemSettingService
+        ->shouldReceive('getValueAsFloat')
+        ->with('ai_auditing_cost_per_response')
+        ->once()
+        ->andReturn(1);
+
+        $this->flasher
+            ->shouldReceive('error')
+            ->with(__('messages.validation.not_allow.service_insufficient_balance'))
+            ->once();
+
+        // Act
+        $result = $this->levelService->finishLevel($level);
+        
+        // Assert
+        $this->assertFalse($result);
     }
 
     public function test_finish_level_faild_unauthorized()

@@ -87,12 +87,14 @@ abstract class BaseTrackableJob implements ShouldQueue
      */
     protected function createTrackingRecord()
     {
+        $payload = $this->getPayloadData();
         $this->trackingStrategy->createTrackingRecord([
             'job_id' => $this->trackingId,
             'job_class' => $this->jobClass,
             'job_type' => $this->jobType,
             'status' => 'pending',
-            'payload' => $this->getPayloadData(),
+            'payload' => $payload,
+            'payload_hash' => hash('sha256', json_encode($payload)),
             'user_id' => $this->userId,
             'entity_type' => $this->entityType,
             'entity_id' => $this->entityId,
@@ -278,5 +280,10 @@ abstract class BaseTrackableJob implements ShouldQueue
     public function getTrackingId(): string
     {
         return $this->trackingId;
+    }
+
+    public function setTrackingId($trackingId): void
+    {
+        $this->trackingId = $trackingId;
     }
 }

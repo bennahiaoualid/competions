@@ -8,15 +8,18 @@ use App\Models\Admin\Admin;
 use App\Jobs\SendBulkEmailJob;
 use Database\Seeders\RoleSeeder;
 use App\Models\Competition\Level;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Bus;
 use App\Enums\AdminApprovalTypeEnum;
 use App\Models\Competition\Question;
+use App\Models\Competition\Response;
 use App\Models\Competition\Competition;
+use Database\Seeders\SystemSettingSeeder;
 use Illuminate\Foundation\Testing\WithFaker;
 use App\Jobs\Notifications\BatchBroadcastJob;
 use App\Jobs\Notifications\BatchNotificationJob;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Jobs\Competition\FinishLevelTrackableJob;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class LevelControllerTest extends TestCase
 {
@@ -33,6 +36,7 @@ class LevelControllerTest extends TestCase
         // Create test data that will be used across multiple tests
         $this->admin = Admin::factory()->create();
         $this->admin->availability()->update(['level_manager' => true]);
+        $this->admin->coinBalance->addCoins(100);
         
         // seed role
         $this->seed(RoleSeeder::class);
@@ -44,7 +48,11 @@ class LevelControllerTest extends TestCase
             'age_end' => 25,
             'status' => 'pending', // Not activated
             'start_date' => now()->addDays(7),
-            'levels_number' => 3
+            'levels_number' => 3,
+            'winner_gifts' => 100,
+            'multi_winner' => false,
+            'ai_auditing' => false,
+            'auditing_time_for_level' => 60,
         ]);
 
         // Create eligible users (age 18-25) before creating competition
@@ -540,14 +548,40 @@ class LevelControllerTest extends TestCase
     }
 
     
-    public function test_can_finish_level_successfully()
+    public function test_can_finish_level_successfully_without_ai_audting()
     {
         // Setup required conditions
         $this->level->update([
             'status' => 'active',
             'start_date' => now()->subHours(2),
-            'duration' => 60
+            'duration' => 60,
+            'finish_job_running' => false
         ]);
+
+        $response = $this->post(route('admin.competitions.level.finish', $this->level));
+
+        $response->assertRedirectBack();
+        Bus::assertDispatched(FinishLevelTrackableJob::class, function ($job) {
+            return $job->getLevel()->id === $this->level->id;
+        });
+    }
+
+    public function test_can_finish_level_successfully_with_ai_audting()
+    {
+        // Setup required conditions
+        $this->competition->update([
+            'ai_auditing' => true
+        ]);
+
+        $this->level->update([
+            'status' => 'active',
+            'start_date' => now()->subHours(2),
+            'duration' => 60,
+            'finish_job_running' => false
+
+        ]);
+
+        $this->seed(SystemSettingSeeder::class);
 
         $response = $this->post(route('admin.competitions.level.finish', $this->level));
 
@@ -575,5 +609,58 @@ class LevelControllerTest extends TestCase
             session()->get('messages')[0]['message']
         );
         Bus::assertNotDispatched(FinishLevelTrackableJob::class);
+    }
+
+    public function test_reassign_users_responses_redirects_back()
+    {
+        $this->actingAs($this->admin, 'admin');
+
+        $level = Level::factory()->create(
+            [
+                'competition_id' => $this->competition->id,
+                'finished_at' => now()->subDay(),
+            ]
+        );
+        $questions = Question::factory()->count(2)->create(['level_id' => $level->id]);
+
+
+        $users = User::factory()->count(3)->create();
+        $auditorA = Admin::factory()->create();
+        $auditorB = Admin::factory()->create();
+
+        // User 0: has at least one unaudited response (admin_id null)
+        Response::factory()->create([
+            'user_id' => $users[0]->id,
+            'question_id' => $questions[0]->id,
+            'admin_id' => null,
+        ]);
+        // User 1: all responses audited
+        Response::factory()->create([
+            'user_id' => $users[1]->id,
+            'question_id' => $questions[0]->id,
+            'admin_id' => $auditorA->id,
+        ]);
+        // User 2: at least one unaudited response
+        Response::factory()->create([
+            'user_id' => $users[2]->id,
+            'question_id' => $questions[1]->id,
+            'admin_id' => null,
+        ]);
+
+        // Seed pivot with initial assignments
+        DB::table('level_admin_user')->insert([
+            [ 'level_id' => $level->id, 'user_id' => $users[0]->id, 'admin_id' => $auditorA->id ],
+            [ 'level_id' => $level->id, 'user_id' => $users[1]->id, 'admin_id' => $auditorA->id ],
+            [ 'level_id' => $level->id, 'user_id' => $users[2]->id, 'admin_id' => $auditorB->id ],
+        ]);
+
+        $response = $this->post(route('admin.competitions.level.re-assign-user-responses', ['level' => $level]));
+
+        $response->assertRedirect();
+
+        $pivot = DB::table('level_admin_user')->where('level_id', $level->id)->get()->keyBy('user_id');
+        $this->assertEquals($this->admin->id, $pivot[$users[0]->id]->admin_id);
+        $this->assertEquals($auditorA->id, $pivot[$users[1]->id]->admin_id); // unchanged
+        $this->assertEquals($this->admin->id, $pivot[$users[2]->id]->admin_id);
     }
 } 

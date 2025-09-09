@@ -76,6 +76,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin availableAsAuditor()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin availableAsLevelManager()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin availableAsOwnershipTransfer()
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Payment\PaymentTransaction> $approvedPayments
+ * @property-read int|null $approved_payments_count
+ * @property-read \App\Models\Payment\CoinBalance|null $coinBalance
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Payment\CoinTransaction> $coinTransactions
+ * @property-read int|null $coin_transactions_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Payment\PaymentTransaction> $paymentTransactions
+ * @property-read int|null $payment_transactions_count
  * @mixin \Eloquent
  */
 

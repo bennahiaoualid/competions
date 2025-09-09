@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @property int $id
  * @property string $question_text
+ * @property string $perfect_response
  * @property int $max_score
  * @property int $duration
  * @property int $level_id
@@ -31,6 +32,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Question whereMaxScore($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Question whereQuestionText($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Question whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Question wherePerfectResponse($value)
  * @mixin \Eloquent
  */
 class Question extends Model
@@ -43,6 +45,7 @@ class Question extends Model
      */
     protected $fillable = [
         'question_text',
+        'perfect_response',
         'max_score',
         'duration',
         'level_id',

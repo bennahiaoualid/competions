@@ -30,6 +30,17 @@ class SystemSettingSeeder extends Seeder
                 'setting_trans_key' => 'settings.payment.competition_gift'
             ],
             
+            [
+                'setting_key' => 'second_place_winner_percentage',
+                'setting_value' => config('settings.defaults.second_place_winner_percentage'),
+                'setting_trans_key' => 'settings.payment.second_place_winner_percentage'
+            ],
+            [
+                'setting_key' => 'third_place_winner_percentage',
+                'setting_value' => config('settings.defaults.third_place_winner_percentage'),
+                'setting_trans_key' => 'settings.payment.third_place_winner_percentage'
+            ],
+            
             // System Configuration
             [
                 'setting_key' => 'maintenance_mode',
@@ -63,27 +74,59 @@ class SystemSettingSeeder extends Seeder
             [
                 'setting_key' => 'global_question_generating_cost',
                 'setting_value' => config('settings.defaults.global_question_generating_cost'),
-                'setting_trans_key' => 'settings.ai.global_question_generating_cost'
+                'setting_trans_key' => 'settings.ai.service_global_question.generating_cost'
             ],
             [
                 'setting_key' => 'global_question_custom_difficulty_cost',
                 'setting_value' => config('settings.defaults.global_question_custom_difficulty_cost'),
-                'setting_trans_key' => 'settings.ai.global_question_custom_difficulty_cost'
+                'setting_trans_key' => 'settings.ai.service_global_question.custom_difficulty_cost'
             ],
             [
                 'setting_key' => 'global_question_custom_subject_cost',
                 'setting_value' => config('settings.defaults.global_question_custom_subject_cost'),
-                'setting_trans_key' => 'settings.ai.global_question_custom_subject_cost'
+                'setting_trans_key' => 'settings.ai.service_global_question.custom_subject_cost'
             ],
             [
                 'setting_key' => 'global_question_max_output_tokens',
                 'setting_value' => config('settings.defaults.global_question_max_output_tokens'),
-                'setting_trans_key' => 'settings.ai.global_question_max_output_tokens'
+                'setting_trans_key' => 'settings.ai.service_global_question.max_output_tokens'
             ],
             [
                 'setting_key' => 'global_question_premium_cost_percentage',
                 'setting_value' => config('settings.defaults.global_question_premium_cost_percentage'),
-                'setting_trans_key' => 'settings.ai.global_question_premium_cost_percentage'
+                'setting_trans_key' => 'settings.ai.service_global_question.premium_cost_percentage'
+            ],
+            [
+                'setting_key' => 'global_question_llm_provider',
+                'setting_value' => config('settings.defaults.global_question_llm_provider'),
+                'setting_trans_key' => 'settings.ai.service_global_question.llm_provider'
+            ],
+            [
+                'setting_key' => 'global_question_model',
+                'setting_value' => config('settings.defaults.global_question_model'),
+                'setting_trans_key' => 'settings.ai.service_global_question.model'
+            ],
+            
+            // AI Auditing Settings
+            [
+                'setting_key' => 'ai_auditing_cost_per_response',
+                'setting_value' => config('settings.defaults.ai_auditing_cost_per_response'),
+                'setting_trans_key' => 'settings.ai.service_ai_auditing.cost_per_response'
+            ],
+            [
+                'setting_key' => 'ai_auditing_max_response_auditing_at_one_batch',
+                'setting_value' => config('settings.defaults.ai_auditing_max_response_auditing_at_one_batch'),
+                'setting_trans_key' => 'settings.ai.service_ai_auditing.max_response_auditing_at_one_batch'
+            ],
+            [
+                'setting_key' => 'ai_auditing_llm_provider',
+                'setting_value' => config('settings.defaults.ai_auditing_llm_provider'),
+                'setting_trans_key' => 'settings.ai.service_ai_auditing.llm_provider'
+            ],
+            [
+                'setting_key' => 'ai_auditing_model',
+                'setting_value' => config('settings.defaults.ai_auditing_model'),
+                'setting_trans_key' => 'settings.ai.service_ai_auditing.model'
             ]
         ];
 

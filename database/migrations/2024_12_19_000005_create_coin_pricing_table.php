@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('display_name', 255)->nullable()->comment('Optional longer description');
             $table->enum('user_type', ['user', 'admin', 'both'])->comment('Type of user this pricing applies to');
             $table->decimal('base_amount', 10, 2)->comment('Money amount in DZD');
-            $table->integer('base_coins')->comment('Number of coins given for this amount');
+            $table->float('base_coins')->comment('Number of coins given for this amount');
             $table->boolean('is_active')->default(true)->comment('Whether this pricing is currently active');
             $table->foreignId('created_by_admin_id')->nullable()->constrained('admins')->nullOnDelete()->comment('Admin who created this pricing');
             $table->timestamps();

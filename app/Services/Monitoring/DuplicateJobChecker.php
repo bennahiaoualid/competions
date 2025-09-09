@@ -14,13 +14,13 @@ class DuplicateJobChecker
      * @param array $payload
      * @return bool
      */
-    public function hasDuplicateSuccessfulJob(string $jobClass, string $jobType, array $payload): bool
+    public function hasDuplicateSuccessfulJob(string $jobClass, string $jobType, array $payload_hash): bool
     {
         return JobTracking::query()
             ->where('job_class', $jobClass)
             ->where('job_type', $jobType)
             ->where('status', 'completed')
-            ->where('payload', json_encode($payload))
+            ->where('payload', json_encode($payload_hash))
             ->exists();
     }
 
@@ -32,13 +32,13 @@ class DuplicateJobChecker
      * @param array $payload
      * @return JobTracking|null
      */
-    public function getDuplicateSuccessfulJob(string $jobClass, string $jobType, array $payload): ?JobTracking
+    public function getDuplicateSuccessfulJob(string $jobClass, string $jobType, string $payload_hash): ?JobTracking
     {
         return JobTracking::query()
             ->where('job_class', $jobClass)
             ->where('job_type', $jobType)
             ->where('status', 'completed')
-            ->where('payload', json_encode($payload))
+            ->where('payload_hash', json_encode($payload_hash))
             ->latest()
             ->first();
     }

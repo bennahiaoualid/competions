@@ -73,24 +73,30 @@ trait UserResponseCalculation
             $response_counter++;
 
             $score = (float) $scores[$response->id];
+            if($score !== $response->score){
 
-            if ($score > $response->question->max_score) {
-                $notifications[] = [
-                    __('messages.validation.not_allow.audit_score_greater_then_max', ['number' => $response_counter]),
-                    "error"
-                ];
-                continue;
+                if ($score > $response->question->max_score) {
+                    $notifications[] = [
+                        __('messages.validation.not_allow.audit_score_greater_then_max', ['number' => $response_counter]),
+                        "error"
+                    ];
+                    continue;
+                }
+    
+                // claculate score
+                if ($score === 0 || $response->response_duration >= $response->question->duration) {
+                    $calc_score = $score / 2;
+                } else {
+                    $calc_score = $score - $response->response_duration / $response->question->duration * ($score / 2);
+                }
+                $penalty = $calc_score * $response->penalty;
+                $response->score = $score;
+                $response->final_score = round($calc_score - $penalty, 2);
+                $response->ai_generated = false;
+                $response->ai_score_generated_at = null;
             }
 
-            // claculate score
-            if ($score === 0 || $response->response_duration >= $response->question->duration) {
-                $calc_score = $score / 2;
-            } else {
-                $calc_score = $score - $response->response_duration / $response->question->duration * ($score / 2);
-            }
-            $penalty = $calc_score * $response->penalty;
-            $response->score = $score;
-            $response->final_score = round($calc_score - $penalty, 2);
+            
             $response->admin_id = Auth::id();
             $response->save();
 
@@ -99,6 +105,30 @@ trait UserResponseCalculation
                 "success"
             ];
         }
+
         return $notifications;
+    }
+
+    /**
+     * Calculate final score for a single response without any database operations
+     * Optimized for AI auditing - lightweight and fast
+     * 
+     * @param Response $response The response object
+     * @param float $score The score to calculate from
+     * @return float The calculated final score
+     */
+    protected function calculateSingleResponseFinalScore($response, $question, float $score): float
+    {
+        // Apply the same scoring logic as the full method but without DB operations
+        if ($score === 0 || $response->response_duration >= $question->duration) {
+            $calcScore = $score / 2;
+        } else {
+            $calcScore = $score - $response->response_duration / $question->duration * ($score / 2);
+        }
+
+        // Apply penalty if exists (no DB query needed)
+        $penalty = $calcScore * ($response->penalty ?? 0);
+        
+        return round($calcScore - $penalty, 2);
     }
 }

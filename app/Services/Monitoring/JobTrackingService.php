@@ -8,6 +8,10 @@ use App\Jobs\Base\BaseTrackableJob;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Monitoring\JobTracking;
 use App\Events\Monitoring\JobStatusUpdated;
+use DB;
+use Exception;
+use Log;
+use Throwable;
 
 /**
  * Service for managing job tracking and retry operations.
@@ -66,6 +70,7 @@ class JobTrackingService
      */
     public function retryFailedJob(string $trackingId): bool
     {
+        /** @var JobTracking */
         $tracking = JobTracking::where('job_id', $trackingId)
             ->where('status', 'failed')
             ->first();
@@ -80,7 +85,7 @@ class JobTrackingService
         $duplicate = $checker->getDuplicateSuccessfulJob(
             $tracking->job_class,
             $tracking->job_type,
-            $tracking->payload
+            $tracking->payload_hash
         );
 
         if ($duplicate) {
@@ -103,17 +108,33 @@ class JobTrackingService
 
             return true;
         }
+        try{
+            return DB::transaction(function() use($tracking){
+                $tracking->update([
+                    'status' => 'pending',
+                    'attempts' => 0,
+                    'error_message' => null,
+                    'failed_at' => null,
+                ]);
+        
+                $this->redispatchJob($tracking);
+        
+                return true;
+            });
+        }catch(Throwable $e){
+            Log::error($e->getMessage(),[
+                'job_tracking_id' => $tracking->id,
+                'job_tracking_class' => $tracking->job_class,
+                'job_tracking_type' => $tracking->job_type,
+                'job_tracking_entity_id' => $tracking->entity_id,
+                'job_tracking_entity_type' => $tracking->entity_type,
+                'detail' => $e
+            ]);
+            return false;
+        }
+        
 
-        $tracking->update([
-            'status' => 'pending',
-            'attempts' => 0,
-            'error_message' => null,
-            'failed_at' => null,
-        ]);
 
-        $this->redispatchJob($tracking);
-
-        return true;
     }
 
     /**
@@ -143,9 +164,10 @@ class JobTrackingService
     
         /** @var BaseTrackableJob $job */
         $job = $jobClass::fromTrackingPayload($payload, $tracking->user_id, $tracking->job_id);
-        if ($job) {
-            dispatch($job);
+        if (!$job) {
+            throw new Exception("Job with class {$jobClass} faild redispatching.");
         }
+        dispatch($job);
     }
 
     /**

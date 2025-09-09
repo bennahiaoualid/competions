@@ -1,51 +1,28 @@
 <?php
 
-namespace App\View\composer;
+namespace App\View\Composer;
 
-use Illuminate\Support\Facades\View;
-use Illuminate\Support\ServiceProvider;
+use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use App\Services\CashManagment\CompetitionCacheManagmentSystem;
 
-class SideBarComposer extends ServiceProvider
+class SidebarComposer
 {
-    /**
-     * Register services.
-     *
-     * @return void
-     */
-    public function register()
+    protected $competitionCacheManagmentSystem;
+
+    public function __construct(CompetitionCacheManagmentSystem $competitionCacheManagmentSystem)
     {
-        //
+        $this->competitionCacheManagmentSystem = $competitionCacheManagmentSystem;
     }
 
-    /**
-     * Bootstrap services.
-     *
-     * @return void
-     */
-    public function boot()
+    public function compose(View $view)
     {
-        // Using a Closure based composer...
-        View::composer('layouts.admin.sidebar', function ($view) {
-            $adminId = Auth::id(); // Get the authenticated admin's ID
-            $cacheKey = "assigned_user_count_admin_{$adminId}";
-            // Query to count users assigned to the auth admin who have responses with admin_id == null
-            $assignedUserCount = cache()->remember($cacheKey, now()->addMinutes(60), function () use ($adminId) {
-                return DB::table('users')
-                    ->join('level_admin_user', 'users.id', '=', 'level_admin_user.user_id')
-                    ->join('responses', 'users.id', '=', 'responses.user_id')
-                    ->join('questions', 'responses.question_id', '=', 'questions.id')
-                    ->where('level_admin_user.admin_id', $adminId)
-                    ->whereColumn('level_admin_user.level_id', 'questions.level_id')
-                    ->whereNull('responses.admin_id')
-                    ->distinct('users.id')
-                    ->count('users.id');
-            });
+        $adminId = Auth::id();
+        
+        // Use injected service
+        $userCounts = $this->competitionCacheManagmentSystem->getUsersCountForAdminAuditing($adminId);
 
-            // Pass the count to the sidebar view
-            $view->with('assignedUserCount', $assignedUserCount);
-        });
+        $view->with('needsManualAuditCount', $userCounts['needs_manual_audit']);
+        $view->with('needsAIConfirmationCount', $userCounts['needs_ai_confirmation']);
     }
 }
-

@@ -21,7 +21,10 @@ return new class extends Migration
             $table->dateTime('start_date')->index();
             $table->integer('duration'); // Duration in minutes
             $table->enum('status', ['pending','active','finished'])->default('pending')->index()->comment('pending,active,finished');
+            $table->timestamp('finished_at')->nullable();
+            $table->boolean('finish_job_running')->default(false);
             $table->timestamps();
+
         });
     }
 

@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('job_type');
             $table->enum('status', ['pending', 'processing', 'completed', 'failed'])->default('pending');            
             $table->json('payload')->nullable();
+            $table->string('payload_hash')->nullable();
             $table->json('result')->nullable();
             $table->text('error_message')->nullable();
             $table->integer('attempts')->default(0);
@@ -30,9 +31,12 @@ return new class extends Migration
             $table->unsignedBigInteger('entity_id')->nullable();
             $table->timestamps();
 
-            $table->index(['status', 'created_at']);
-            $table->index(['user_id', 'status', 'created_at']);
+            $table->index(['job_id', 'status'], 'idx_job_id_status');
+            $table->index(['status', 'started_at']);
+            $table->index(['status', 'failed_at'], 'idx_status_failed_at');
+            $table->index(['user_id', 'status', 'started_at']);
             $table->index(['entity_type', 'entity_id']);
+            $table->index(['job_class','job_type','status','payload_hash'],'idx_job_tracking_duplicate_checker');
         });
     }
 

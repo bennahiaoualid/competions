@@ -31,6 +31,7 @@ class StoreCompetitionRequest extends FormRequest
      */
     public function rules(): array
     {
+
         return [
             'title' => 'required|string|min:3|max:40',
             'description' => 'nullable|string|min:3|max:100',
@@ -38,6 +39,10 @@ class StoreCompetitionRequest extends FormRequest
             'age_start' => 'required|integer|min:6',
             'age_end' => 'required|integer|min:6',
             'levels_number' => 'required|integer|min:1',
+            'winner_gifts' => 'required|integer|min:1',
+            'multi_winner' => 'required|boolean',
+            'ai_auditing' => 'required|boolean',
+            'auditing_time_for_level' => 'required|integer|min:10',
         ];
     }
 

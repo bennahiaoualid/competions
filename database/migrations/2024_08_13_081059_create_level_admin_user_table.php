@@ -16,6 +16,8 @@ return new class extends Migration
             $table->foreignId('level_id')->constrained('levels')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('admin_id')->constrained('admins')->cascadeOnDelete(); // Admin assigned to the user for this level
+            
+            $table->index(['level_id', 'user_id'],'fks_level_user');
         });
     }
 

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('transactionable_id');
             $table->string('transactionable_type'); // 'App\Models\User' or 'App\Models\Admin\Admin'
             $table->enum('type', ['earn', 'spend']);
-            $table->integer('amount'); // Number of coins
+            $table->float('amount'); // Number of coins
             $table->string('detail'); // Transaction type from enum
             
             // Timestamps

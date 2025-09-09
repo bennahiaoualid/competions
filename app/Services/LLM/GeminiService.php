@@ -49,7 +49,7 @@ class GeminiService extends BaseLLMService
         ];
     }
 
-    protected function processResponse(array $response): LLMResponse
+    protected function processResponse(array $response, array $options = []): LLMResponse
     {
         if (isset($response['candidates'][0]['content']['parts'][0]['text'])) {
             $content = $response['candidates'][0]['content']['parts'][0]['text'];
@@ -58,26 +58,28 @@ class GeminiService extends BaseLLMService
                 $content,
                 $response,
                 $this->estimateTokens($content),
-                $this->calculateCost($response)
+                $this->calculateCost($response, $options)
             );
         }
 
         return LLMResponse::failure('Invalid response format');
     }
 
-    protected function processChatResponse(array $response): LLMResponse
+    protected function processChatResponse(array $response, array $options = []): LLMResponse
     {
-        return $this->processResponse($response);
+        return $this->processResponse($response, $options);
     }
 
-    protected function getEndpoint(): string
+    protected function getEndpoint(array $options = []): string
     {
-        return "models/{$this->model}:generateContent";
+        $model = $this->getEffectiveModel($options);
+        return "models/{$model}:generateContent";
     }
 
-    protected function getChatEndpoint(): string
+    protected function getChatEndpoint(array $options = []): string
     {
-        return "models/{$this->model}:generateContent";
+        $model = $this->getEffectiveModel($options);
+        return "models/{$model}:generateContent";
     }
 
     private function estimateTokens(string $text): int
@@ -86,13 +88,14 @@ class GeminiService extends BaseLLMService
         return (int) (strlen($text) / 4);
     }
 
-    private function calculateCost(array $response): float
+    private function calculateCost(array $response, array $options = []): float
     {
         // Basic cost calculation for Gemini
         $tokens = $this->estimateTokens($response['candidates'][0]['content']['parts'][0]['text'] ?? '');
+        $effectiveModel = $this->getEffectiveModel($options);
         
         // Example pricing (you should adjust based on actual Gemini pricing)
-        $costPer1kTokens = match($this->model) {
+        $costPer1kTokens = match($effectiveModel) {
             'gemini-1.5-pro' => 0.00375,
             'gemini-1.5-flash' => 0.000075,
             'gemini-pro' => 0.0005,

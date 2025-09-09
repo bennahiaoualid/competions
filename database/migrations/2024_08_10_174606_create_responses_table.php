@@ -24,6 +24,8 @@ return new class extends Migration
             $table->json('flags')->nullable();
             $table->float('penalty')->default(0);
             $table->float('final_score')->nullable();
+            $table->boolean('ai_generated')->default(false); // Flag to indicate AI-generated scores
+            $table->timestamp('ai_score_generated_at')->nullable(); // When AI score was generated
             $table->timestamps();
         });
     }

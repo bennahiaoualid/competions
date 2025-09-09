@@ -389,6 +389,8 @@ return [
             'competition_gift' => 'Competition Gift',
             'question_generate' => 'Question Generation',
             'premium_question_purchase' => 'Premium Question Purchase',
+            'competition_winner_gift' => 'Competition Winner Gift',
+            'ai_auditing_responses' => 'Ai Auditing Reponses',
         ],
         'transaction_types' => [
             'all' => 'All Types',

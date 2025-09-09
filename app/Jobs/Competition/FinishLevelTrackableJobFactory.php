@@ -38,7 +38,8 @@ class FinishLevelTrackableJobFactory
             $this->notificationService,
             $userId, 
             skipTrackingCreation: true
-        );        
+        );  
+        $job->setTrackingId($trackingId);      
         return $job;
     }
 

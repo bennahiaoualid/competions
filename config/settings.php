@@ -87,6 +87,18 @@ return [
             'max' => 1000,
             'message' => 'settings.validation.min_competition_participants'
         ],
+        'second_place_winner_percentage' => [
+            'type' => 'integer',
+            'min' => 0,
+            'max' => 100,
+            'message' => 'settings.validation.second_place_winner_percentage'
+        ],
+        'third_place_winner_percentage' => [
+            'type' => 'integer',
+            'min' => 0,
+            'max' => 100,
+            'message' => 'settings.validation.third_place_winner_percentage'
+        ],
 
         /*
         |--------------------------------------------------------------------------
@@ -123,6 +135,40 @@ return [
             'max' => 100,
             'message' => 'settings.validation.premium_question_cost_percentage'
         ],
+        'global_question_llm_provider' => [
+            'type' => 'string',
+            'in' => ['openai', 'anthropic', 'gemini'],
+            'message' => 'settings.validation.global_question_llm_provider'
+        ],
+        'global_question_model' => [
+            'type' => 'string',
+            'message' => 'settings.validation.global_question_model'
+        ],
+        /*
+        |--------------------------------------------------------------------------
+        | AI Auditing Settings Validation
+        |--------------------------------------------------------------------------
+        */
+        'ai_auditing_cost_per_response' => [
+            'type' => 'float',
+            'min' => 0.01,
+            'message' => 'settings.validation.ai_auditing_cost_per_response'
+        ],
+        'ai_auditing_max_response_auditing_at_one_batch' => [
+            'type' => 'integer',
+            'min' => 50,
+            'max' => 100,
+            'message' => 'settings.validation.ai_auditing_max_response_auditing_at_one_batch'
+        ],
+        'ai_auditing_llm_provider' => [
+            'type' => 'string',
+            'in' => ['openai', 'anthropic', 'gemini'],
+            'message' => 'settings.validation.ai_auditing_llm_provider'
+        ],
+        'ai_auditing_model' => [
+            'type' => 'string',
+            'message' => 'settings.validation.ai_auditing_model'
+        ],
         /*
         |--------------------------------------------------------------------------
         | Notification Settings Validation
@@ -148,9 +194,9 @@ return [
     */
     'defaults' => [
         // Payment Rules
-        'max_daily_transactions' => 10,
-        'min_competition_coins' => 500,
-        'competition_gift' => 500,
+        'max_daily_transactions' => 3,
+        'min_competition_coins' => 100,
+        'competition_gift' => 100,
         'max_daily_amount' => 10000,
         'min_transaction_amount' => 100,
         
@@ -162,13 +208,24 @@ return [
         // Competition Settings
         'max_competition_duration' => 30,
         'min_competition_participants' => 5,
+        'second_place_winner_percentage' => 50, // 50% of competition gift (250 coins if gift is 500)
+        'third_place_winner_percentage' => 20, // 20% of competition gift (100 coins if gift is 500)
         
         // AI Question Generation Settings
         'global_question_generating_cost' => 10, // Base cost for generating a question
         'global_question_custom_difficulty_cost' => 10, // Additional cost for custom difficulty
-        'global_question_custom_subject_cost' => 10, // Additional cost for custom subject
+        'global_question_custom_subject_cost' => 5, // Additional cost for custom subject
         'global_question_max_output_tokens' => 350, // Maximum tokens for AI response
         'global_question_premium_cost_percentage' => 50, // Premium question cost percentage
+        'global_question_llm_provider' => 'gemini', // Default LLM provider
+        'global_question_model' => 'gemini-1.5-flash', // Default AI model
+        
+        // AI Auditing Settings
+        'ai_auditing_cost_per_response' => 0.01, // Cost per response for auditing
+        'ai_auditing_max_response_auditing_at_one_batch' => 80, // Max responses per batch
+        'ai_auditing_llm_provider' => 'gemini', // Default LLM provider for auditing
+        'ai_auditing_model' => 'gemini-1.5-flash', // Default AI model for auditing
+        
         // Notification Settings
         'email_notifications_enabled' => true,
         'push_notifications_enabled' => true

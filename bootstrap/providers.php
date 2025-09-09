@@ -5,5 +5,5 @@ return [
     App\Providers\AuthServiceProvider::class,
     App\Providers\TelescopeServiceProvider::class,
     App\Providers\LLMServiceProvider::class,
-    App\View\composer\SideBarComposer::class,
+    App\Providers\ViewServiceProvider::class,
 ];

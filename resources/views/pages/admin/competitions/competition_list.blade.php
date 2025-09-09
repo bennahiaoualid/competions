@@ -32,7 +32,7 @@
         <x-slot:modalhead>
             {{__("form.competition.add")}}
         </x-slot>
-        <form id="add-form" method="post" action="{{ route('admin.competitions.store') }}" class="space-y-2">
+        <form id="add-form" method="post" action="{{ route('admin.competitions.store') }}" class="space-y-4">
             @csrf
             @method('post')
 
@@ -76,10 +76,95 @@
                               lang="en" value="1" class="mt-1 block w-full" />
                 <x-input-error :messages="$errors->createCompetition->get('levels_number')" class="mt-2" />
             </div>
+
+            <div>
+                <x-input-label for="auditing_time_for_level" :value=" ucwords(__('competition.info.auditing_time_for_level'))" />
+                <x-text-input id="auditing_time_for_level" name="auditing_time_for_level" type="number" min="10" lang="en" value="10" class="mt-1 block w-full" />
+                <x-input-error :messages="$errors->createCompetition->get('auditing_time_for_level')" class="mt-2" />
+            </div>
+
+            <div>
+                <x-input-label for="winner_gifts" :value=" ucwords(__('competition.info.winner_gifts'))" />
+                <x-text-input id="winner_gifts" name="winner_gifts" type="number" min="{{ $competitionGift }}"
+                              lang="en" value="{{ $competitionGift }}" class="mt-1 block w-full" />
+                <x-input-error :messages="$errors->createCompetition->get('winner_gifts')" class="mt-2" />
+            </div>
+
+            <div class="flex items-center justify-between">
+                <div>
+                    <x-toggle-switch 
+                        name="multi_winner" 
+                        label="{{ __('competition.info.multi_winner') }}" 
+                        :checked="old('multi_winner')" />
+                    <x-input-error :messages="$errors->createCompetition->get('multi_winner')" class="mt-2" />
+                </div>
+                <div>
+                    <x-toggle-switch 
+                        name="ai_auditing" 
+                        label="{{ __('competition.info.ai_auditing') }}" 
+                        :checked="old('ai_auditing')" />
+                    <x-input-error :messages="$errors->createCompetition->get('ai_auditing')" class="mt-2" />
+                </div>
+            </div>
+
+            <!-- Dynamic Reward Calculation Display -->
+            <div id="rewardCalculation" class="hidden bg-gray-50 p-4 rounded-lg border">
+                <h4 class="font-medium text-gray-900 mb-3">{{ __('competition.info.reward.calculation') }}</h4>
+                
+                <div class="space-y-2">
+                    <div class="flex gap-2">
+                        <span class="text-gray-600">{{ __('competition.info.reward.first_place') }}:</span>
+                        <span class="font-medium" id="firstPlaceCoins">0</span>
+                        <span class="text-gray-600">{{ __('messages.global.coins') }}</span>
+                    </div>
+                    
+                    <div id="secondPlaceRow" class="flex gap-2">
+                        <span class="text-gray-600">{{ __('competition.info.reward.second_place') }} (<span id="secondPlacePercentage">{{ $secondPlacePercentage ?? 50 }}</span>%):</span>
+                        <span class="font-medium" id="secondPlaceCoins">0</span>
+                        <span class="text-gray-600">{{ __('messages.global.coins') }}</span>
+                    </div>
+                    
+                    <div id="thirdPlaceRow" class="flex gap-2">
+                        <span class="text-gray-600">{{ __('competition.info.reward.third_place') }} (<span id="thirdPlacePercentage">{{ $thirdPlacePercentage ?? 20 }}</span>%):</span>
+                        <span class="font-medium" id="thirdPlaceCoins">0</span>
+                        <span class="text-gray-600">{{ __('messages.global.coins') }}</span>
+                    </div>
+                    
+                    <div class="border-t pt-2 mt-2">
+                        <div class="flex gap-2 font-semibold">
+                            <span class="text-gray-800">{{ __('competition.info.reward.total') }}:</span>
+                            <span class="text-blue-600" id="totalCoins">0</span>
+                            <span class="text-gray-600">{{ __('messages.global.coins') }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Balance Error Modal -->
+            <div id="balanceErrorModal" class="hidden text-center">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
+                    <i class="fas fa-coins text-2xl text-orange-600"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-orange-800 mb-4">
+                    {{__('competition.ai.insufficient_balance_title')}}
+                </h3>
+                
+                <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-orange-700">{{__('competition.ai.required_coins')}}:</span>
+                        <span id="requiredCoins" class="font-semibold text-orange-800">0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-orange-700">{{__('competition.ai.available_coins')}}:</span>
+                        <span id="availableCoins" class="font-semibold text-orange-800">0</span>
+                    </div>
+                </div>
+            </div>
+
         </form>
         <x-slot:modalfooter>
             <div class="flex justify-end">
-                <x-button form="add-form" color_type="success" >{{ __('form.actions.save') }}</x-button>
+                <x-button form="add-form" id="submit-add-form-button" color_type="success" >{{ __('form.actions.save') }}</x-button>
             </div>
         </x-slot>
     </x-modal>
@@ -119,6 +204,20 @@
     </div>
 @endsection
 @section('custom_js')
+    @php
+        $config = [
+            'competitionGift' => $competitionGift ?? 500,
+            'secondPlacePercentage' => $secondPlacePercentage ?? 50,
+            'thirdPlacePercentage' => $thirdPlacePercentage ?? 20,
+            'userBalance' => $userBalance ?? 0,
+        ];
+    @endphp
+
+    <script id="competition-config" type="application/json">
+        @json($config)
+    </script>
+    @vite('resources/js/competition-coins-calculation.js')
+
     <script>
         flatpickr(".date-input", {
             enableTime: true,

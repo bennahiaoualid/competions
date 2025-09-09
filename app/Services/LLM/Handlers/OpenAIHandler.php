@@ -12,7 +12,8 @@ class OpenAIHandler implements LLMHandlerInterface
      * Create a new OpenAI handler instance.
      */
     public function __construct(
-        private OpenAIService $openaiService
+        private OpenAIService $openaiService,
+        private ?string $modelOverride = null
     ) {}
 
     /**
@@ -20,6 +21,11 @@ class OpenAIHandler implements LLMHandlerInterface
      */
     public function generate(string $prompt, array $options = []): LLMResponse
     {
+        // Use model override if provided, otherwise use service default
+        if ($this->modelOverride) {
+            $options['model'] = $this->modelOverride;
+        }
+        
         return $this->openaiService->generate($prompt, $options);
     }
 
@@ -28,6 +34,11 @@ class OpenAIHandler implements LLMHandlerInterface
      */
     public function chat(array $messages, array $options = []): LLMResponse
     {
+        // Use model override if provided, otherwise use service default
+        if ($this->modelOverride) {
+            $options['model'] = $this->modelOverride;
+        }
+        
         return $this->openaiService->chat($messages, $options);
     }
 

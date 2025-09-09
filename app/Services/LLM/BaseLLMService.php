@@ -17,12 +17,14 @@ abstract class BaseLLMService implements LLMServiceInterface
     public function generate(string $prompt, array $options = []): LLMResponse
     {
         try {
-            if (!$this->provider->supports($this->model)) {
-                throw LLMCodeException::modelNotSupported($this->model, $this->provider->getProviderName());
+            $effectiveModel = $this->getEffectiveModel($options);
+            
+            if (!$this->provider->supports($effectiveModel)) {
+                throw LLMCodeException::modelNotSupported($effectiveModel, $this->provider->getProviderName());
             }
 
             $payload = $this->formatPrompt($prompt, $options);
-            $response = $this->provider->makeRequest($this->getEndpoint(), $payload);
+            $response = $this->provider->makeRequest($this->getEndpoint($options), $payload);
 
             if (isset($response['error']) && $response['error']) {
                 throw LLMCodeException::responseProcessingError(
@@ -31,7 +33,7 @@ abstract class BaseLLMService implements LLMServiceInterface
                 );
             }
 
-            return $this->processResponse($response);
+            return $this->processResponse($response, $options);
 
         } catch (LLMCodeException $e) {
             // Re-throw LLM code exceptions
@@ -47,12 +49,14 @@ abstract class BaseLLMService implements LLMServiceInterface
     public function chat(array $messages, array $options = []): LLMResponse
     {
         try {
-            if (!$this->provider->supports($this->model)) {
-                throw LLMCodeException::modelNotSupported($this->model, $this->provider->getProviderName());
+            $effectiveModel = $this->getEffectiveModel($options);
+            
+            if (!$this->provider->supports($effectiveModel)) {
+                throw LLMCodeException::modelNotSupported($effectiveModel, $this->provider->getProviderName());
             }
 
             $payload = $this->formatChat($messages, $options);
-            $response = $this->provider->makeRequest($this->getChatEndpoint(), $payload);
+            $response = $this->provider->makeRequest($this->getChatEndpoint($options), $payload);
 
             if (isset($response['error']) && $response['error']) {
                 throw LLMCodeException::responseProcessingError(
@@ -61,7 +65,7 @@ abstract class BaseLLMService implements LLMServiceInterface
                 );
             }
 
-            return $this->processChatResponse($response);
+            return $this->processChatResponse($response, $options);
 
         } catch (LLMCodeException $e) {
             // Re-throw LLM code exceptions
@@ -89,11 +93,19 @@ abstract class BaseLLMService implements LLMServiceInterface
         return $this->provider->isAvailable();
     }
 
+    /**
+     * Get the effective model to use, considering options override
+     */
+    protected function getEffectiveModel(array $options): string
+    {
+        return $options['model'] ?? $this->model;
+    }
+
     // Abstract methods to be implemented by specific services
     abstract protected function formatPrompt(string $prompt, array $options = []): array;
     abstract protected function formatChat(array $messages, array $options = []): array;
-    abstract protected function processResponse(array $response): LLMResponse;
-    abstract protected function processChatResponse(array $response): LLMResponse;
-    abstract protected function getEndpoint(): string;
-    abstract protected function getChatEndpoint(): string;
+    abstract protected function processResponse(array $response, array $options = []): LLMResponse;
+    abstract protected function processChatResponse(array $response, array $options = []): LLMResponse;
+    abstract protected function getEndpoint(array $options = []): string;
+    abstract protected function getChatEndpoint(array $options = []): string;
 } 

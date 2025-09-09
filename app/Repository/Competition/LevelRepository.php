@@ -4,11 +4,8 @@ namespace App\Repository\Competition;
 
 use App\Interface\Competition\LevelRepositoryInterface;
 use App\Models\Admin\Admin;
-use App\Models\Competition\Competition;
 use App\Models\Competition\Level;
-use App\Models\Competition\Question;
 use App\Models\Competition\Response;
-use App\Models\User; // Assuming User model exists and is needed for types
 use App\Traits\RegisterLogs;
 use Carbon\Carbon;
 use Exception;
@@ -155,4 +152,55 @@ class LevelRepository implements LevelRepositoryInterface
     {
         return Admin::availableAsLevelManager()->where('id', $adminID)->exists();
     }
+
+    /** @inheritDoc */
+    public function getResponseAuditCounts(int $levelId, bool $ai_auditing): array
+    {
+        if($ai_auditing){
+            $select_raw = 
+                'COUNT(CASE WHEN r.admin_id IS NULL AND r.ai_generated IS false THEN 1 END) AS not_audited,
+                COUNT(CASE WHEN r.admin_id IS NOT NULL AND r.ai_generated IS false THEN 1 END) AS audited,
+                COUNT(CASE WHEN r.admin_id IS NULL AND r.ai_generated IS true THEN 1 END) AS not_confirmed,
+                COUNT(CASE WHEN r.admin_id IS NOT NULL AND r.ai_generated IS true THEN 1 END) AS confirmed';
+        }else{
+            $select_raw = 
+                'COUNT(CASE WHEN r.admin_id IS NULL THEN 1 END) AS not_audited,
+                COUNT(CASE WHEN r.admin_id IS NOT NULL THEN 1 END) AS audited';
+        }
+        $row = DB::table('questions as q')
+            ->join('responses as r', 'r.question_id', '=', 'q.id')
+            ->where('q.level_id', $levelId)
+            ->selectRaw($select_raw)
+            ->first();
+
+            return [
+            'audited' => (int) ($row->audited ?? 0),
+            'not_audited' => (int) ($row->not_audited ?? 0),
+            'confirmed' => (int) ($row->confirmed ?? 0),
+            'not_confirmed' => (int) ($row->not_confirmed ?? 0),
+        ];
+    }
+    /** @inheritDoc */
+    public function reAssignUsersResponsesAudtingPermission(int $levelId, int $creatorId)
+    {
+        $users_ids = DB::table('responses as r')
+            ->join('questions as q', 'r.question_id', '=', 'q.id')
+            ->whereNull('r.admin_id')
+            ->where('q.level_id', $levelId)
+            ->select('r.user_id')
+            ->distinct()
+            ->pluck('user_id');
+
+        if($users_ids->isEmpty()){
+            return 0;
+        }else{
+            return DB::table('level_admin_user')
+                ->whereIn('user_id',$users_ids)
+                ->where('level_id',$levelId)
+                ->update(["admin_id" => $creatorId]);
+        }
+
+        
+    }
+
 }
