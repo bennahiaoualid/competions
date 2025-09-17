@@ -216,6 +216,9 @@ return [
         'multi_winner' => 'المرابحة المتعددة',
         'ai_auditing' => 'التدقيق الذكاء الاصطناعي',
         'auditing_time_for_level' => 'وقت مراجعة المرحلة',
+        'perfect_response.*' => 'الاجابة',
+        'perfect_response' => 'الاجابة'
+
 
     ],
 

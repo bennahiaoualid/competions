@@ -77,6 +77,8 @@ class QuestionService
                         'duration' => $data['duration'][$i],
                         'level_id' => $level->id,
                         'max_score' => $data['max_score'][$i],
+                        'perfect_response' => $data['perfect_response'][$i],
+
                     ];
                 })->toArray();
                 

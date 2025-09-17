@@ -8,6 +8,9 @@
             <th class="px-2 bg-slate-300 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-center" style="width: auto">
                 {{__('competition.question.question_text')}}
             </th>
+            <th class="px-2 bg-slate-300 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-center" style="width: auto">
+                {{__('competition.question.response')}}
+            </th>
             <th class="px-2 bg-slate-300 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-center" style="width: 100px">
                 {{__('competition.question.max_score')}}
             </th>
@@ -51,6 +54,10 @@
                             <td class="px-1">
                                 <x-text-area name="question_text"  class="mt-1 block w-full" >{{ trim($question->question_text) }}</x-text-area>
                                 <x-input-error :messages="$errors->getBag('updateQuestion' . $question->id)->get('question_text')" class="mt-2" />
+                            </td>
+                            <td class="px-1">
+                                <x-text-area name="perfect_response"  class="mt-1 block w-full" >{{ trim($question->perfect_response) }}</x-text-area>
+                                <x-input-error :messages="$errors->getBag('updateQuestion' . $question->id)->get('perfect_response')" class="mt-2" />
                             </td>
                             <td class="px-1 align-top">
                                 <x-text-input name="max_score" type="number" min="1"

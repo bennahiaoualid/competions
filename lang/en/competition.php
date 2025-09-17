@@ -91,6 +91,7 @@ return [
         
         'try_later' => 'try later',
         'explanation' => 'explain the correct answer',
+        'response' => 'perfect response',
         'type' => [
             'ai' => 'AI generated question',
             'premium' => 'premium question',

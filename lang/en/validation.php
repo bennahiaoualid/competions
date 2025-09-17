@@ -205,7 +205,11 @@ return [
         'winner_gifts' => 'winner gifts',
         'multi_winner' => 'multi winner',
         'ai_auditing' => 'ai auditing',
-        'auditing_time_for_level' => 'auditing time for level after finish'
+        'auditing_time_for_level' => 'auditing time for level after finish',
+        'perfect_response' => 'response',
+        'perfect_response.*' => 'response',
+
+
     ],
 
 ];

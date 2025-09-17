@@ -36,6 +36,8 @@ class UpdateQuestionRequest extends FormRequest
             'question_text' => 'required|string|min:3|max:400',
             'duration' => 'required|integer|min:30',
             'max_score' => 'required|integer|min:1',
+            'perfect_response' => 'required|string|min:3|max:400',
+
         ];
     }
     public function withValidator($validator)

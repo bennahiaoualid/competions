@@ -78,7 +78,22 @@
 @endsection
 
 @section('custom_js')
+    @php
+        $config = [
+            'number' => __('messages.global.no'),
+            'question_text' => __('competition.question.question_text'),
+            'reponse' => __('competition.question.response'),
+            'max_score' => __('competition.question.max_score'),
+            'duration' => __('competition.question.duration') .' ( '. __('messages.global.second').' )',
+        ];
+    @endphp
+
+    <script id="config-data" type="application/json">
+        @json($config)
+    </script>
     <script>
+        const config = JSON.parse(document.getElementById('config-data').textContent);
+
         const generateQuestionsBtn = document.getElementById('generate_questions');
         const questionsNumber = document.getElementById('questions_number');
         const questionsContainer = document.getElementById('questions_container');
@@ -92,16 +107,19 @@
                             <thead>
                                 <tr>
                                     <th class="px-2 bg-slate-300 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-center" style="width: 60px">
-                                        {{__('messages.global.no')}}
+                                        ${config.number}
                                     </th>
                                     <th class="px-2 bg-slate-300 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-center" style="width: auto">
-                                        {{__('competition.question.question_text')}}
+                                        ${config.question_text}
+                                    </th>
+                                    <th class="px-2 bg-slate-300 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-center" style="width: auto">
+                                        ${config.reponse}
                                     </th>
                                     <th class="px-2 bg-slate-300 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-center" style="width: 100px">
-                                        {{__('competition.question.max_score')}}
+                                        ${config.max_score}
                                     </th>
                                     <th class="px-2 bg-slate-300 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-center" style="width: 120px">
-                                        {{__('competition.question.duration') .' ( '. __('messages.global.second').' )'}}
+                                        ${config.duration}
                                     </th>
                                 </tr>
                             </thead>
@@ -116,6 +134,10 @@
                             <td class="px-2">
                                 <x-text-area name="question_text[]" class="mt-1 block w-full"></x-text-area>
                                 <x-input-error :messages="$errors->createQuestion->get('question_text.${i}')" class="mt-2" />
+                            </td>
+                            <td class="px-2">
+                                <x-text-area name="perfect_response[]" class="mt-1 block w-full"></x-text-area>
+                                <x-input-error :messages="$errors->createQuestion->get('perfect_response.${i}')" class="mt-2" />
                             </td>
                             <td class="px-2">
                                 <x-text-input name="max_score[]" type="number" min="1" max="999" lang="en" value="1" class="mt-1 block w-full" />
