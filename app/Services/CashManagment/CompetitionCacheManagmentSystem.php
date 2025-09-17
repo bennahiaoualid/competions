@@ -2,12 +2,59 @@
 
 namespace App\Services\CashManagment;
 
+use App\Helpers\CompetitionsOrder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Database\Eloquent\Model;
 
 class CompetitionCacheManagmentSystem
 {
+    public function __construct()
+    {
+        
+    }
 
+    /**
+     * Get cached detail order
+     * @param string $key
+     * @param Model $model level or competition object
+     * @param bool $limit
+     * @param bool $isCompetition
+     * @param int $competitionId needed in tag so we can flush all competition order with levels
+     * @param bool $paginate
+     * @param bool $is_Auditing indecate if level being audtited so order will changed a lot
+     * @return array 
+     */
+    public function getComptitionUsersOreder($model, $limit, $isCompetition, $compeitionId, $paginate, $is_Auditing = false)
+    {
+        $cacheTags = $this->getCacheTags('competition_users_order',$compeitionId);
+        if($is_Auditing){
+            $cacheDuration = $this->getCacheDuration('getComptitionUsersOrederAuditing');
+        }else{
+            $cacheDuration = $this->getCacheDuration('getComptitionUsersOreder');
+        }
+        $cacheKey = $this->buildCacheKey('getComptitionUsersOreder',
+                        [
+                            'model_id' => $model->id,
+                            'limit' => $limit,
+                            'is_competition' => $isCompetition,
+                            'paginate' => $paginate
+                        ]
+                    );
+        return Cache::tags($cacheTags)
+            ->remember(
+            $cacheKey,
+            $cacheDuration,
+            function () use ($model, $limit, $isCompetition, $paginate) {
+                return CompetitionsOrder::getCompetitorsOrder(
+                    $model,
+                    limit: $limit,
+                    isCompetition: $isCompetition,
+                    paginate: $paginate
+                );
+            }
+        );
+    }
 
     public function getUsersCountForAdminAuditing($adminId) 
     {
@@ -38,12 +85,21 @@ class CompetitionCacheManagmentSystem
         });
     }
 
-        /**
-     * Invalidate user coin transactions cache
+    /**
+     * Invalidate users audting info 
      */
     public function invalidateUsersAuditingInfo($adminId): void
     {
         $cacheTags = $this->getCacheTags('users_responses_auditing_system', $adminId);
+        Cache::tags($cacheTags)->flush();
+    }
+
+    /**
+     * Invalidate comptition users order
+     */
+    public function invalidateComptitionUsersOreder($compeitionId): void
+    {
+        $cacheTags = $this->getCacheTags('competition_users_order', $compeitionId);
         Cache::tags($cacheTags)->flush();
     }
 
@@ -94,6 +150,9 @@ class CompetitionCacheManagmentSystem
     {
         $cacheDurations = [
             'getUsersCountForAdminAuditing' => 3600 , // 1 hours
+            'getComptitionUsersOreder' => 3600, // 1 hours
+            'getComptitionUsersOrederAuditing' => 300, // 5 minut
+
         ];
 
         return $cacheDurations[$method] ?? 600; // Default 10 minutes

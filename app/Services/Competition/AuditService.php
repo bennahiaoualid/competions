@@ -131,12 +131,15 @@ class AuditService
 
             if ($affected > 0) {
                 $this->flasher->success(__('messages.validation.success.updated_records', ['count' => $affected]));
+                // Invalidate sidebar counters for current admin
+                $this->cashService->invalidateUsersAuditingInfo(Auth::id());
+                // invalidate users order
+                $this->cashService->invalidateComptitionUsersOreder($level->competition_id);
             } else {
                 $this->flasher->info(__('messages.validation.info.nothing_to_update'));
             }
 
-            // Invalidate sidebar counters for current admin
-            $this->cashService->invalidateUsersAuditingInfo(Auth::id());
+            
 
             return $affected;
         } catch (\Throwable $e) {

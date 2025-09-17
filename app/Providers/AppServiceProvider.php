@@ -130,7 +130,8 @@ class AppServiceProvider extends ServiceProvider
             return new UserCompetitionService(
                 $app->make(UserCompetitionRepositoryInterface::class),
                 $app->make(TransactionManagerInterface::class),
-                $app->make(FlasherInterface::class)
+                $app->make(FlasherInterface::class),
+                $app->make(CompetitionCacheManagmentSystem::class)
             );
         });
 
@@ -268,7 +269,8 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(SystemSettingService::class),
                 $app->make(JobTrackingService::class),
                 $app->make(AuditService::class),
-                $app->make(OptimizedCompetitionNotificationService::class)
+                $app->make(OptimizedCompetitionNotificationService::class),
+                $app->make(CompetitionCacheManagmentSystem::class)
             );
         });
     }

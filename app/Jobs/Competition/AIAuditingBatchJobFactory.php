@@ -11,6 +11,7 @@ use App\Services\LLM\LLMHandlerFactory;
 use App\Services\Competition\AuditService;
 use App\Jobs\Competition\AIAuditingBatchJob;
 use App\Services\Monitoring\JobTrackingService;
+use App\Services\CashManagment\CompetitionCacheManagmentSystem;
 use App\Services\Notification\OptimizedCompetitionNotificationService;
 
 class AIAuditingBatchJobFactory
@@ -20,7 +21,8 @@ class AIAuditingBatchJobFactory
         private SystemSettingService $systemSettingService,
         private JobTrackingService $jobTrackingService,
         private AuditService $auditService,
-        private OptimizedCompetitionNotificationService $notification
+        private OptimizedCompetitionNotificationService $notification,
+        private CompetitionCacheManagmentSystem $cashService,
     ) {}
 
     /**
@@ -44,6 +46,7 @@ class AIAuditingBatchJobFactory
             systemSettingService: $this->systemSettingService,
             auditService: $this->auditService,
             notification: $this->notification,
+            cashService:$this->cashService,
             userId: $userId,
             skipTrackingCreation: false,
             prompt: null
@@ -84,6 +87,7 @@ class AIAuditingBatchJobFactory
             systemSettingService: $this->systemSettingService,
             auditService: $this->auditService,
             notification: $this->notification,
+            cashService:$this->cashService,
             userId: $userId,
             skipTrackingCreation: true, // Skip creating new tracking record for retry
             prompt: $payload['prompt'] ?? null // Use stored prompt for retry performance

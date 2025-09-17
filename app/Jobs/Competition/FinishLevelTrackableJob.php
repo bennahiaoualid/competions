@@ -17,6 +17,7 @@ use App\Jobs\Competition\FinishLevelTrackableJobFactory;
 use App\Services\Notification\OptimizedCompetitionNotificationService;
 use App\Jobs\Competition\AIAuditingJob;
 use App\Exceptions\StopJobRetriesException;
+use App\Models\Competition\Competition;
 
 class FinishLevelTrackableJob extends BaseTrackableJob
 {
@@ -60,7 +61,7 @@ class FinishLevelTrackableJob extends BaseTrackableJob
 
         $level = $this->level->load('competition.users', 'competition.auditors');
 
-        DB::transaction(function () use ($level) {
+        $updated = DB::transaction(function () use ($level) {
             // Core level finishing operations
             $this->levelRepository->insertMissingResponsesForLevel($level);
             $this->assignAuditorsToUsersInPivot($this->levelRepository);
@@ -75,23 +76,33 @@ class FinishLevelTrackableJob extends BaseTrackableJob
                 // Send notification to competition users
                 $this->notificationService->levelFinished($level->competition, $level);
             }
+            return $updated;
         });
 
-        // AFTER level is successfully finished, optionally dispatch AI auditing
-        if ($level->competition->ai_auditing) {
-            Log::info('Dispatching AI auditing job for level', [
-                'level_id' => $level->id,
-                'competition_id' => $level->competition_id,
-                'user_count' => $level->competition->users->count()
-            ]);
-            
-            dispatch(new AIAuditingJob($level));
+        if($updated){
+            // AFTER level is successfully finished, optionally dispatch AI auditing
+            if ($level->competition->ai_auditing) {
+                Log::info('Dispatching AI auditing job for level', [
+                    'level_id' => $level->id,
+                    'competition_id' => $level->competition_id,
+                    'user_count' => $level->competition->users->count()
+                ]);
+                
+                dispatch(new AIAuditingJob($level));
+            }
+
+            // update comptition status if level is the last one
+            if($this->levelRepository->isLevelTheLast($level->competition, $level->id))
+            {
+                $level->competition()->update(['status'=> Competition::STATUS_COMPLETED]);
+            }
+            // Reset the running flag on success
+            $this->safeResetRunningFlag();
+
         }
 
-        // Reset the running flag on success
-        $this->safeResetRunningFlag();
-
         return $this->getResultValues();
+  
     }
 
     protected function getPayloadData(): array

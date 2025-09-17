@@ -32,10 +32,11 @@ class DeductCoins implements ShouldQueue
         $user = Admin::find($event->userId);
         
         if ($user && $user->coinBalance) {
-            $user->coinBalance->decrement('balance', $event->cost);
+            $cost = round($event->cost,2);
+            $user->coinBalance->decrement('balance', $cost);
             
             // Create spend transaction record
-            $this->coinTransactionService->createAiAudtingResponsesTransaction($user, $event->cost);
+            $this->coinTransactionService->createAiAudtingResponsesTransaction($user, $cost);
             
             // TODO: Create user notification
         }

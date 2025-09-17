@@ -4,6 +4,7 @@ namespace App\Repository\Competition;
 
 use App\Interface\Competition\LevelRepositoryInterface;
 use App\Models\Admin\Admin;
+use App\Models\Competition\Competition;
 use App\Models\Competition\Level;
 use App\Models\Competition\Response;
 use App\Traits\RegisterLogs;
@@ -201,6 +202,14 @@ class LevelRepository implements LevelRepositoryInterface
         }
 
         
+    }
+
+    /** @inheritDoc */
+    public function isLevelTheLast(Competition $competition, int $levelId) : bool
+    {
+        $lastLevel = $competition->levels()->latest('start_date')->first();
+        return $lastLevel->id === $levelId;
+
     }
 
 }

@@ -23,6 +23,7 @@ use App\Exceptions\AIQuestionGeneration\LLMCodeException;
 use App\Exceptions\AIQuestionGeneration\AIAuditingException;
 use App\Exceptions\AIQuestionGeneration\LLMConnectionException;
 use App\Models\Competition\Response;
+use App\Services\CashManagment\CompetitionCacheManagmentSystem;
 use App\Services\Notification\OptimizedCompetitionNotificationService;
 
 class AIAuditingBatchJob extends BaseTrackableJob
@@ -34,6 +35,7 @@ class AIAuditingBatchJob extends BaseTrackableJob
     protected SystemSettingService $systemSettingService;
     protected JobTrackingService $jobTrackingService;
     protected OptimizedCompetitionNotificationService $notification;
+    protected CompetitionCacheManagmentSystem $cashService;
     protected AuditService $auditService;
     protected array $questionUserCounts = []; // Track user counts per question for validation
     protected Collection $responses; // Store responses to avoid double DB queries
@@ -52,6 +54,7 @@ class AIAuditingBatchJob extends BaseTrackableJob
         SystemSettingService $systemSettingService,
         AuditService $auditService,
         OptimizedCompetitionNotificationService $notification,
+        CompetitionCacheManagmentSystem $cashService,
         ?int $userId = null,
         bool $skipTrackingCreation = false,
         ?string $prompt = null
@@ -61,6 +64,8 @@ class AIAuditingBatchJob extends BaseTrackableJob
         $this->prompt = $prompt ?? $this->buildAuditingPrompt();
         $this->auditService = $auditService;
         $this->notification = $notification;
+        $this->cashService = $cashService;
+
 
         // run build prompot to set the correct value of paylaod
         
@@ -78,9 +83,6 @@ class AIAuditingBatchJob extends BaseTrackableJob
      */
     protected function executeJob(): array
     {
-        /*if($this->batchNumber == 1){
-            throw new Exception('lklklo');
-        }*/
         try {
             Log::info("Starting AI auditing batch job {$this->batchNumber}/{$this->totalBatches}", [
                 'level_id' => $this->level->id,
@@ -138,6 +140,9 @@ class AIAuditingBatchJob extends BaseTrackableJob
                 $admin = Admin::find($this->userId);
                 if(($this->batchNumber === $this->totalBatches) && $admin){
                     $this->notification->confirmAIAuditingLevelRequested($this->level, $admin);
+                    //ivalidate users order older cash 
+                    // in audting time the cash duration would be 5 min instead of 60 min
+                    $this->cashService->invalidateComptitionUsersOreder($this->level->competition_id);
                 }
                 // calculate the cost and dispatch deducation coins event
                 $total_cost = round(

@@ -4,6 +4,7 @@ namespace App\Interface\Competition;
 
 use App\Models\Competition\Level;
 use Illuminate\Support\Collection;
+use App\Models\Competition\Competition;
 
 interface LevelRepositoryInterface
 {
@@ -36,4 +37,12 @@ interface LevelRepositoryInterface
      * @param int $creatorId
      */
     public function reAssignUsersResponsesAudtingPermission(int $levelId, int $creatorId);
+
+    /**
+     * check if the level is the last one in a competition
+     *
+     * @param int $levelId
+     * @return bool
+     */
+    public function isLevelTheLast(Competition $competition, int $levelId) : bool;
 }

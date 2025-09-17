@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Collection;
 use App\Contracts\TransactionManagerInterface;
 use App\Interface\User\UserCompetitionRepositoryInterface;
+use App\Services\CashManagment\CompetitionCacheManagmentSystem;
 use App\Traits\UserResponseCalculation;
 
 class UserCompetitionService
@@ -22,7 +23,8 @@ class UserCompetitionService
     public function __construct(
         protected UserCompetitionRepositoryInterface $userCompetitionRepository,
         protected TransactionManagerInterface $transactionManager,
-        protected FlasherInterface $flasher
+        protected FlasherInterface $flasher,
+        protected CompetitionCacheManagmentSystem $competition_cache_managment_system,
     ) {
     }
 
@@ -52,18 +54,13 @@ class UserCompetitionService
      */
     public function competitionDetail(Competition $competition): array
     {
-        if($competition->status == Competition::STATUS_COMPLETED){
-            $results = $this->getCashedDetailOrder(
-                key: "competition_detail_{$competition->id}",
-                model: $competition,
-                limit: true,
-                isCompetition: true,
-                paginate: false
-            );
-        }
-        else{
-            $results = CompetitionsOrder::getCompetitorsOrder($competition, limit: true, isCompetition: true, paginate: false);
-        }
+        $results = $this->competition_cache_managment_system->getComptitionUsersOreder(
+            model: $competition,
+            limit: true,
+            isCompetition: true,
+            compeitionId:$competition->id,
+            paginate: false
+        );
         return [
             'competition' => $competition->load('levels'),
             'users' => $results['users'],
@@ -78,18 +75,25 @@ class UserCompetitionService
      */
     public function levelDetail(Level $level): array
     {
-        if($level->status == Level::STATUS_FINISHED){
-            $results = $this->getCashedDetailOrder(
-                key: "level_detail_{$level->id}",
-                model: $level,
-                limit: true,
-                isCompetition: false,
-                paginate: false
-            );
+        // check if level is bieng audited
+        $competition = $level->competition;
+        if($level->finished_at && now()->lte($level->finished_at->addMinutes($competition->auditing_time_for_level)))
+        {
+            $is_Auditing = true;
+        }else{
+            $is_Auditing = false;
+
         }
-        else{
-            $results = CompetitionsOrder::getCompetitorsOrder($level, limit: true, isCompetition: false, paginate: false);
-        }
+        
+        $results = $this->competition_cache_managment_system->getComptitionUsersOreder(
+            model: $level,
+            limit: true,
+            isCompetition: false,
+            compeitionId:$competition->id,
+            paginate: false,
+            is_Auditing: $is_Auditing
+        );
+
         return [
             'level' => $level,
             'users' => $results['users'],
@@ -247,32 +251,5 @@ class UserCompetitionService
             'users' => $results['users'],
             'audit_finish' => $results['audit_finish'],
         ];
-    }
-
-    /* private functions */
-
-    /**
-     * Get cached detail order
-     * @param string $key
-     * @param Model $model
-     * @param bool $limit
-     * @param bool $isCompetition
-     * @param bool $paginate
-     * @return array 
-     */
-    private function getCashedDetailOrder($key, $model, $limit, $isCompetition, $paginate)
-    {
-        return Cache::remember(
-            $key,
-            now()->addHours(1),
-            function () use ($model, $limit, $isCompetition, $paginate) {
-                return CompetitionsOrder::getCompetitorsOrder(
-                    $model,
-                    limit: $limit,
-                    isCompetition: $isCompetition,
-                    paginate: $paginate
-                );
-            }
-        );
     }
 }
