@@ -2,15 +2,14 @@
 
 namespace App\Services\Notification;
 
-use App\Models\Payment\PaymentTransaction;
-use App\Models\Payment\PaymentReviewRequest;
 use App\Models\User;
 use App\Models\Admin\Admin;
-use App\Notifications\Payment\PaymentNotification;
-use App\Jobs\Notifications\BatchPaymentNotificationJob;
-use App\Jobs\Notifications\BatchPaymentBroadcastJob;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use App\Enums\NotificationClassTypes;
+use App\Models\Payment\PaymentTransaction;
+use App\Jobs\Notifications\BatchBroadcastJob;
+use App\Jobs\Notifications\BatchNotificationJob;
 
 class PaymentNotificationService
 {
@@ -112,11 +111,11 @@ class PaymentNotificationService
         $eventType = $notificationData['event_type'];
         
         // Database notifications (always sent)
-        BatchPaymentNotificationJob::dispatch($adminIds, $notificationData, Admin::class);
+        BatchNotificationJob::dispatch($adminIds, $notificationData, NotificationClassTypes::PAYMENT->value, Admin::class);
         
         // Broadcast notifications only for specific event types
         if ($this->shouldBroadcast($eventType)) {
-            BatchPaymentBroadcastJob::dispatch($adminIds, $notificationData, Admin::class);
+            BatchBroadcastJob::dispatch($adminIds, $notificationData, NotificationClassTypes::PAYMENT, Admin::class);
         }
     }
 
@@ -136,10 +135,10 @@ class PaymentNotificationService
 
         $notificationData = $this->prepareUserNotificationData($transaction, $eventType);
 
-        BatchPaymentNotificationJob::dispatch([$payer->id], $notificationData, $transaction->payable_type);
+        BatchNotificationJob::dispatch([$payer->id], $notificationData, NotificationClassTypes::PAYMENT->value, $transaction->payable_type);
 
         if ($this->shouldBroadcast($eventType)) {
-            BatchPaymentBroadcastJob::dispatch([$payer->id], $notificationData, $transaction->payable_type);
+            BatchBroadcastJob::dispatch([$payer->id], $notificationData, NotificationClassTypes::PAYMENT);
         }
 
     }

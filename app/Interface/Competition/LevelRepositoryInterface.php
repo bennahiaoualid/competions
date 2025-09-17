@@ -4,6 +4,7 @@ namespace App\Interface\Competition;
 
 use App\Models\Competition\Level;
 use Illuminate\Support\Collection;
+use App\Models\Competition\Competition;
 
 interface LevelRepositoryInterface
 {
@@ -19,5 +20,29 @@ interface LevelRepositoryInterface
     
     public function assignAuditorsToUsersInPivot(Level $level, Collection $users, Collection $auditors): void;
 
-    public function isAdminAllowedToBeLevelManager($adminId):bool;
+    public function isAdminAllowedToBeLevelManager($adminID) : bool;
+
+    /**
+     * Get counts of audited and not audited responses for a level (by level's questions)
+     *
+     * @param int $levelId
+     * @return array{audited:int,not_audited:int,confirmed:int,not_confirmed:int}
+     */
+    public function getResponseAuditCounts(int $levelId, bool $ai_auditing): array;
+
+    /**
+     * re-assing users responses that not audited yet audting permmsion to the comptition creator
+     *
+     * @param int $levelId
+     * @param int $creatorId
+     */
+    public function reAssignUsersResponsesAudtingPermission(int $levelId, int $creatorId);
+
+    /**
+     * check if the level is the last one in a competition
+     *
+     * @param int $levelId
+     * @return bool
+     */
+    public function isLevelTheLast(Competition $competition, int $levelId) : bool;
 }

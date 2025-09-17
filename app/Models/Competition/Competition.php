@@ -60,6 +60,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @method static Builder<static>|Competition whereIsSuspended($value)
  * @method static Builder<static>|Competition whereLastSyncedAt($value)
  * @method static Builder<static>|Competition whereParticipantsSyncStatus($value)
+ * @property int $winner_gifts Number of coins the winner gets
+ * @property bool $multi_winner If 2nd and 3rd place also get rewards
+ * @property bool $ai_auditing If auditing in this competition will be admins or AI
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, AdminApproval> $adminApprovals
+ * @property-read int|null $admin_approvals_count
+ * @method static Builder<static>|Competition whereAiAuditing($value)
+ * @method static Builder<static>|Competition whereMultiWinner($value)
+ * @method static Builder<static>|Competition whereWinnerGifts($value)
+ * @property int $auditing_time_for_level Minutes after level end before auto-assign/confirm AI audit
+ * @method static Builder<static>|Competition whereAuditingTimeForLevel($value)
  * @mixin \Eloquent
  */
 class Competition extends Model
@@ -93,7 +103,11 @@ class Competition extends Model
         'status',
         'participants_sync_status',
         'last_synced_at',
-        'is_suspended'
+        'is_suspended',
+        'winner_gifts',
+        'multi_winner',
+        'ai_auditing',
+        'auditing_time_for_level'
     ];
 
     /**
@@ -110,6 +124,10 @@ class Competition extends Model
             'age_end' => 'integer',
             'levels_number' => 'integer',
             'last_synced_at' => 'datetime',
+            'winner_gifts' => 'integer',
+            'multi_winner' => 'boolean',
+            'ai_auditing' => 'boolean',
+            'auditing_time_for_level' => 'integer',
         ];
     }
 

@@ -3,7 +3,7 @@
 namespace App\Jobs\Notifications;
 
 use App\Models\User;
-use App\Models\Admin\Admin;
+use App\Enums\NotificationClassTypes;
 use Illuminate\Support\Str;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -11,24 +11,35 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use App\Events\Notifications\PaymentNotificationEvent;
-
-class BatchPaymentBroadcastJob implements ShouldQueue
+/**
+ * This job is used to broadcast notifications to users.
+ * @param array $userIds
+ * @param array $notificationData
+ * @param NotificationClassTypes $notificationType
+ * @param string $notifiableType
+ */
+class BatchBroadcastJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected array $userIds;
     protected array $notificationData;
     protected string $notifiableType = User::class;
+    protected NotificationClassTypes $notificationType;
 
     public $timeout = 300; // 5 minutes
     public $tries = 3;
     public $backoff = 60;
 
-    public function __construct(array $userIds, array $notificationData, string $notifiableType = User::class)
-    {
+    public function __construct(
+        array $userIds, 
+        array $notificationData, 
+        NotificationClassTypes $notificationType,
+        string $notifiableType = User::class
+    ) {
         $this->userIds = $userIds;
         $this->notificationData = $notificationData;    
+        $this->notificationType = $notificationType;
         $this->notifiableType = $notifiableType;
         $this->onQueue('notifications'); 
     }
@@ -56,39 +67,53 @@ class BatchPaymentBroadcastJob implements ShouldQueue
                 'created_at' => now()->toISOString(),
             ];
 
+            // Get the event class from the enum
+            $eventClass = $this->notificationType->getBroadcastEventClass();
+
             // Broadcast to each user individually with proper channel names
             foreach ($this->userIds as $userId) {
-                broadcast(new PaymentNotificationEvent($userId, $broadcastData, $this->notifiableType));
+                $this->broadcastToUser($userId, $broadcastData, $eventClass);
             }
 
             $duration = microtime(true) - $startTime;
             
-            Log::info('Batch payment broadcast completed', [
+            Log::info('Batch broadcast completed', [
                 'userCount' => count($this->userIds),
                 'duration' => round($duration, 3),
                 'eventType' => $this->notificationData['event_type'] ?? 'unknown',
+                'notificationType' => $this->notificationType->value,
                 'notifiableType' => $this->notifiableType
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Batch payment broadcast failed', [
+            Log::error('Batch broadcast failed', [
                 'userIds' => $this->userIds,
                 'error' => $e->getMessage(),
                 'eventType' => $this->notificationData['event_type'] ?? 'unknown',
+                'notificationType' => $this->notificationType->value,
                 'notifiableType' => $this->notifiableType
             ]);
             throw $e;
         }
     }
 
-
+    /**
+     * Broadcast to a specific user using the appropriate event class
+     */
+    protected function broadcastToUser(int $userId, array $broadcastData, string $eventClass): void
+    {
+        // Use dynamic instantiation instead of if-else
+        $event = new $eventClass($userId, $broadcastData, $this->notifiableType);
+        broadcast($event);
+    }
 
     public function failed(\Throwable $exception): void
     {
-        Log::error('Batch payment broadcast job failed permanently', [
+        Log::error('Batch broadcast job failed permanently', [
             'userIds' => $this->userIds,
             'error' => $exception->getMessage(),
             'eventType' => $this->notificationData['event_type'] ?? 'unknown',
+            'notificationType' => $this->notificationType->value,
             'notifiableType' => $this->notifiableType
         ]);
     }
@@ -99,6 +124,14 @@ class BatchPaymentBroadcastJob implements ShouldQueue
     public function getUserIdsForTest(): array
     {
         return $this->userIds;
+    }
+
+    /**
+     * Get the notification type for testing.
+     */
+    public function getNotificationTypeForTest(): NotificationClassTypes
+    {
+        return $this->notificationType;
     }
 
     /**

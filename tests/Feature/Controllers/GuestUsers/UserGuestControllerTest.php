@@ -520,7 +520,7 @@ class UserGuestControllerTest extends TestCase
         $this->actingAs($this->user);
         
         // Ensure user has enough coins for AI question generation
-        $this->user->coinBalance()->create(['balance' => 100.0]);
+        $this->user->coinBalance->addCoins(100);
         
         $response = $this->post(route('user.global_questions.ai_question_generation.store'), [
             'subject' => AISubjectEnum::MATHEMATICS->value,
@@ -592,10 +592,7 @@ class UserGuestControllerTest extends TestCase
     {
         Bus::fake();
         $this->actingAs($this->user);
-        
-        // Ensure user has insufficient coins
-        $this->user->coinBalance()->create(['balance' => 0.0]);
-        
+                
         $response = $this->post(route('user.global_questions.ai_question_generation.store'), [
             'subject' => AISubjectEnum::MATHEMATICS->value,
             'difficulty' => AIDifficultyEnum::EASY->value,

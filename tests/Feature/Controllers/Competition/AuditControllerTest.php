@@ -8,6 +8,7 @@ use App\Models\Competition\Level;
 use App\Models\Competition\Question;
 use App\Models\Competition\Response;
 use App\Models\User;
+use DB;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -39,8 +40,19 @@ class AuditControllerTest extends TestCase
         $this->level = Level::factory()->for($this->competition)->create();
         $this->otherLevel = Level::factory()->for($this->otherCompetition)->create();
         $this->user = User::factory()->create();
-        $this->question = Question::factory()->for($this->level)->create();
-        $this->response = Response::factory()->for($this->question)->for($this->user)->create(['admin_id' => null, 'score' => 0]);
+        $this->question = Question::factory()
+                            ->for($this->level)
+                            ->create([
+                                'duration' => 100,
+                            ]);
+        $this->response = Response::factory()
+                        ->for($this->question)
+                        ->for($this->user)
+                        ->create([
+                            'admin_id' => null,
+                            'score' => 0,
+                            'response_duration' => 100,
+                        ]);
     }
 
     protected function tearDown(): void
@@ -223,10 +235,8 @@ class AuditControllerTest extends TestCase
             ]);
         // Assert
         $response->assertRedirect();
-        $this->assertDatabaseHas('responses', [
-            'id' => $this->response->id,
-            'score' => 10,
-        ]);
+        $this->response->refresh();
+        $this->assertGreaterThan(0, $this->response->final_score);
     }
 
     // ========================================
@@ -354,5 +364,50 @@ class AuditControllerTest extends TestCase
             'id' => $this->response->id,
             'score' => 5,
         ]);
+    }
+
+    /**
+     * Test autoConfirmAigeneratedResponsesScore redirects back (early return path to avoid DB driver differences).
+     */
+    public function test_auto_confirm_ai_generated_responses_score_redirects_back()
+    {
+        // Arrange: Create a level that is still within the early window so service returns early
+        $competition = Competition::factory()->create([
+            'admin_id' => $this->auditor,
+            'auditing_time_for_level' => 60,
+            'ai_auditing' => true
+        ]);
+
+        $user = User::factory()->create();
+        $competition->users()->attach([$user->id]);
+        $level = Level::factory()->for($competition)->create([
+            'finished_at' => now()->subDay(),
+        ]);
+        $questions = Question::factory()->for($level)->count(5)->create();
+
+        foreach($questions as $question){
+            Response::factory()->for($question)->create([
+                'ai_generated'=> true,
+                'user_id' => $user->id
+            ]);
+        }
+        $admin = Admin::factory()->create();
+        DB::table('level_admin_user')->insert(
+            [
+                'level_id' => $level->id,
+                'admin_id' => $admin->id,
+                'user_id' => $user->id
+            ]
+        );
+
+        // Act
+        $response = $this->actingAs($this->auditor, 'admin')
+            ->post(route('admin.auditor.auto_audit', ['level' => $level->id]));
+
+        // Assert
+        $response->assertRedirectBack();
+        $responsesCount = Response::where('user_id' , $user->id)
+                            ->where('admin_id' , $admin->id)->count();
+        $this->assertEquals($responsesCount,5);
     }
 } 

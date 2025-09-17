@@ -41,6 +41,17 @@ use Illuminate\Support\Facades\Auth;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|GlobalQuestion whereScore($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|GlobalQuestion whereTextDirection($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|GlobalQuestion whereUpdatedAt($value)
+ * @property bool $ai
+ * @property int|null $user_id
+ * @property-read \App\Models\User|null $generatedByUser
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $premiumOwners
+ * @property-read int|null $premium_owners_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|GlobalQuestion aiGenerated()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|GlobalQuestion availableToUser(\App\Models\User $user)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|GlobalQuestion premium()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|GlobalQuestion whereAi($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|GlobalQuestion whereExplanation($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|GlobalQuestion whereUserId($value)
  * @mixin \Eloquent
  */
 class GlobalQuestion extends Model

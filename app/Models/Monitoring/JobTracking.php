@@ -54,6 +54,8 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|JobTracking whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|JobTracking whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|JobTracking whereUserId($value)
+ * @property string|null $payload_hash
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|JobTracking wherePayloadHash($value)
  * @mixin \Eloquent
  */
 class JobTracking extends Model
@@ -61,7 +63,7 @@ class JobTracking extends Model
     protected $table = 'job_trackings';
 
     protected $fillable = [
-        'job_id', 'job_class', 'job_type', 'status', 'payload', 'result',
+        'job_id', 'job_class', 'job_type', 'status', 'payload_hash', 'payload', 'result',
         'error_message', 'attempts', 'max_attempts', 'started_at',
         'completed_at', 'failed_at', 'user_id', 'entity_type', 'entity_id'
     ];

@@ -9,17 +9,27 @@ use App\Models\User;
 use App\Models\Admin\Admin;
 use App\Helpers\UserNotifyEmail;
 use App\Models\Competition\Level;
+use Illuminate\Support\Facades\DB;
+use App\Contracts\FlasherInterface;
 use Illuminate\Support\Facades\Auth;
+use App\Services\SystemSettingService;
 use App\Models\Competition\Competition;
+use App\Services\Admin\AdminApprovalService;
+use App\Contracts\TransactionManagerInterface;
+use App\Services\Monitoring\JobTrackingService;
 use App\Services\Competition\CompetitionService;
+use App\Services\Payment\CoinTransactionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Jobs\Competetion\SyncCompetitionParticipants;
-use App\Jobs\Notifications\BatchCompetitionNotificationJob;
+use App\Exceptions\AIQuestionGeneration\PaidServiceException;
+use App\Interface\Competition\CompetitionRepositoryInterface;
+use App\Services\Notification\OptimizedCompetitionNotificationService;
 
 class CompetitionServiceTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** @var CompetitionService */
     protected $service;
     protected $competitionRepository;
     protected $transactionManager;
@@ -27,30 +37,37 @@ class CompetitionServiceTest extends TestCase
     protected $jobTrackingService;
     protected $notificationService;
     protected $approvalService;
+    protected $coinTransactionService;
+    protected $systemSettingService;
     protected $mainAdmin;
     protected $userNotify;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->competitionRepository = Mockery::mock(\App\Interface\Competition\CompetitionRepositoryInterface::class);
-        $this->transactionManager = Mockery::mock(\App\Contracts\TransactionManagerInterface::class);
-        $this->flasher = Mockery::mock(\App\Contracts\FlasherInterface::class);
-        $this->jobTrackingService = Mockery::mock(\App\Services\Monitoring\JobTrackingService::class);
-        $this->notificationService = Mockery::mock(\App\Services\Notification\OptimizedCompetitionNotificationService::class);
-        $this->approvalService = Mockery::mock(\App\Services\Admin\AdminApprovalService::class);
+        $this->competitionRepository = Mockery::mock(CompetitionRepositoryInterface::class);
+        $this->transactionManager = Mockery::mock(TransactionManagerInterface::class);
+        $this->flasher = Mockery::mock(FlasherInterface::class);
+        $this->jobTrackingService = Mockery::mock(JobTrackingService::class);
+        $this->notificationService = Mockery::mock(OptimizedCompetitionNotificationService::class);
+        $this->approvalService = Mockery::mock(AdminApprovalService::class);
+        $this->coinTransactionService = Mockery::mock(CoinTransactionService::class);
+        $this->systemSettingService = Mockery::mock(SystemSettingService::class);
         $this->service = new CompetitionService(
             $this->competitionRepository,
             $this->transactionManager,
             $this->flasher,
             $this->jobTrackingService,
             $this->notificationService,
-            $this->approvalService
+            $this->approvalService,
+            $this->systemSettingService,
+            $this->coinTransactionService
         );
         $this->userNotify = Mockery::mock('alias:'.UserNotifyEmail::class);
 
         $this->mainAdmin = Admin::factory()->create(['name' => 'main admin']);
         Auth::shouldReceive('id')->andReturn($this->mainAdmin->id);
+        Auth::shouldReceive('user')->andReturn($this->mainAdmin);
         Bus::fake();
     }
 
@@ -70,15 +87,79 @@ class CompetitionServiceTest extends TestCase
 
     public function test_create_competition_success()
     {
-        $data = Competition::factory()->make(['admin_id' => $this->mainAdmin->id])->toArray();
+        $this->mainAdmin->coinBalance->update(['balance' => 500]);
+        $data = Competition::factory()
+                    ->make([
+                        'admin_id' => $this->mainAdmin->id,
+                        'winner_gifts' => 100,
+                        'multi_winner' => false,
+                        'ai_auditing' => false,
+                    ])->toArray();
+        $competitionGift = 50;
+        $this->systemSettingService
+                        ->shouldReceive('getValueAsInt')
+                        ->with('min_competition_coins')
+                        ->andReturn($competitionGift);
+
         $this->transactionManager->shouldReceive('run')->andReturnUsing(fn($cb) => $cb());
         $this->flasher->shouldReceive('crudSuccess')->with('saved')->once();
         $this->notificationService->shouldReceive('competitionCreated')->once();
+        $this->coinTransactionService->shouldReceive('createCompetitionWinnerGiftTransaction')->once();
         $result = $this->service->createCompetition($data);
 
         $this->assertTrue($result);
         $this->assertDatabaseHas('competitions', ['title' => $data['title']]);
         Bus::assertDispatched(SyncCompetitionParticipants::class);
+    }
+
+    public function test_create_competition_fail_competition_gift_less_than_min_competition_coins()
+    {
+        $this->mainAdmin->coinBalance->update(['balance' => 500]);
+        $data = Competition::factory()
+                    ->make([
+                        'admin_id' => $this->mainAdmin->id,
+                        'winner_gifts' => 100,
+                        'multi_winner' => false,
+                        'ai_auditing' => false,
+                    ])->toArray();
+        $competitionGift = 200;
+        $this->systemSettingService
+                        ->shouldReceive('getValueAsInt')
+                        ->with('min_competition_coins')
+                        ->andReturn($competitionGift);
+
+        $this->flasher->shouldReceive('error')
+                ->with(__('messages.validation.not_allow.competition_create_less_gift', ['gift' => $competitionGift]))
+                ->once();
+        $result = $this->service->createCompetition($data);
+
+        $this->assertFalse($result);
+        $this->assertDatabaseMissing('competitions', ['title' => $data['title']]);
+        Bus::assertNotDispatched(SyncCompetitionParticipants::class);
+    }
+
+    public function test_create_competition_fail_insufficient_balance()
+    {
+        $this->mainAdmin->coinBalance->update(['balance' => 0]);
+        $data = Competition::factory()
+                    ->make([
+                        'admin_id' => $this->mainAdmin->id,
+                        'winner_gifts' => 100,
+                        'multi_winner' => false,
+                        'ai_auditing' => false,
+                    ])->toArray();
+        $competitionGift = 50;
+        $this->systemSettingService
+                        ->shouldReceive('getValueAsInt')
+                        ->with('min_competition_coins')
+                        ->andReturn($competitionGift);
+
+        $this->flasher->shouldReceive('error')
+        ->with(__('messages.validation.not_allow.service_insufficient_balance'))
+        ->once();
+        $result = $this->service->createCompetition($data);
+
+        $this->assertFalse($result);
     }
 
     public function test_create_competition_handles_exception()
@@ -369,6 +450,7 @@ class CompetitionServiceTest extends TestCase
         $competition->users()->attach(User::factory()->count(3)->create()->pluck('id'));
         $competition->auditors()->attach(Admin::factory()->count(2)->create()->pluck('id'));
         $competition = $competition->fresh();
+        /** @var Competition $competition */
         $competition = \Mockery::mock($competition)->makePartial();
         $competition->shouldReceive('isAllLevelAfterNow')->andReturn(true);
         $this->transactionManager->shouldReceive('run')->andReturnUsing(fn($cb) => $cb());
@@ -389,6 +471,7 @@ class CompetitionServiceTest extends TestCase
             'levels_number' => 2,
             'status' => 'pending',
         ]);
+        /** @var Competition $competition */
         $competition = \Mockery::mock($competition)->makePartial();
         $competition->shouldReceive('start_date')->andReturn(now()->addDay());
         $this->flasher->shouldReceive('error')->once();
@@ -462,6 +545,7 @@ class CompetitionServiceTest extends TestCase
         $competition->users()->attach(User::factory()->count(3)->create()->pluck('id'));
         $competition->auditors()->attach(Admin::factory()->count(2)->create()->pluck('id'));
         $competition = $competition->fresh();
+        /** @var Competition $competition */
         $competition = \Mockery::mock($competition)->makePartial();
         $competition->shouldReceive('isAllLevelAfterNow')->andReturn(false);
         $this->flasher->shouldReceive('error')->once();
@@ -482,6 +566,7 @@ class CompetitionServiceTest extends TestCase
         $competition->users()->attach(User::factory()->count(3)->create()->pluck('id'));
         $competition->auditors()->attach(Admin::factory()->count(2)->create()->pluck('id'));
         $competition = $competition->fresh();
+        /** @var Competition $competition */
         $competition = \Mockery::mock($competition)->makePartial();
         $competition->shouldReceive('isAllLevelAfterNow')->andReturn(true);
         $this->transactionManager->shouldReceive('run')->andThrow(new \Exception('DB error'));

@@ -96,20 +96,18 @@ class PaymentService
      */
     public function createPayment(array $data): PaymentTransaction
     {
-        return $this->transactionManager->run(function () use ($data) {
-            $payment = PaymentTransaction::create($data);
-            
-            // Log the creation
-            $this->logPaymentAction($payment, 'created', null, $data);
-            
-            // Fire cache invalidation event
-            $this->fireCacheInvalidationEvent($payment);
-            
-            // Send notification to accountants
-            $this->notificationService->transactionCreated($payment);
-            
-            return $payment;
-        });
+        $payment = PaymentTransaction::create($data);
+        
+        // Log the creation
+        $this->logPaymentAction($payment, 'created', null, $data);
+        
+        // Fire cache invalidation event
+        $this->fireCacheInvalidationEvent($payment);
+
+        // Send notification to accountants
+        $this->notificationService->transactionCreated($payment);
+        
+        return $payment;
     }
 
     /**
@@ -337,7 +335,7 @@ class PaymentService
                 }
 
                 $proofPath = $imageResult['path'];
-                
+
                 // Create payment transaction
                 $payment = $this->createPayment([
                     'payable_id' => Auth::id(),

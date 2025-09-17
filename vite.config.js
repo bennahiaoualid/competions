@@ -19,6 +19,7 @@ export default defineConfig({
                 'resources/js/sidebar.js',
                 'resources/js/notifications/NotificationManager.js',
                 'resources/js/notifications/init.js',
+                'resources/js/competition-coins-calculation.js',
             ],
             refresh: true,
         }),

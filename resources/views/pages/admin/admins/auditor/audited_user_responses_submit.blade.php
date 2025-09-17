@@ -41,15 +41,36 @@
         @method('post')
 
     @foreach($questions as $question)
-            <div class="mb-6 border-2 border-primary rounded-md py-2 px-4 " id="response_{{  $question->response?->id }}">
+            @php
+                $response = $question->responses->first(); // There should be only one response for the given user.
+                switch ($response?->status) {
+                    case 'audited':
+                    case 'confirmed':
+                        $borderColor = 'border-success';
+                        break;
+                    case 'need_auditing':
+                        $borderColor = 'border-danger';
+                        break;
+                    case 'need_confirmation':
+                        $borderColor = 'border-warning';
+                        break;
+                    default:
+                        $borderColor = 'border-primary';
+                        break;
+                }
+            @endphp
+            <div class="mb-6 border-2 {{ $borderColor }} rounded-md py-2 px-4 " id="response_{{  $question->response?->id }}">
+                @if ($response)
+                <div class="flex justify-end my-2">
+                    <x-status-widget :status="$response->status"
+                        :text="__('competition.info.auditor.'.$response->status)" />
+                </div>
+                @endif
+                
                 <h2 class="text-lg font-semibold">
                     {{ __('competition.question.the_question') .' '. $loop->index + 1  . ' : ' }}
                     <span class="ms-2 text-base text-gray-700"> {{ $question->question_text }}</span>
                 </h2>
-
-                @php
-                    $response = $question->responses->first(); // There should be only one response for the given user.
-                @endphp
 
                 <p class="mt-2 md:mt-4">
                     <strong>{{__('competition.response.user_response')}} :</strong>
@@ -93,17 +114,10 @@
                             <x-text-input id="response_duration_{{ $response->id }}" type="number" lang="en" value="{{ $response->response_duration }}" class="mt-1 block w-full" disabled />
                         </div>
                         {{-- final score calcualtion --}}
-                        @if($response->admin_id == null)
-                            <div>
-                                <x-input-label for="final_score_{{ $response->id }}" :value=" ucwords(__('competition.response.final_score'))" />
-                                <x-text-input id="final_score_{{ $response->id }}" type="number" lang="en" value="0" class="mt-1 block w-full" disabled />
-                            </div>
-                        @else
-                            <div>
-                                <x-input-label for="final_score_{{ $response->id }}" :value=" ucwords(__('competition.response.final_score'))" />
-                                <x-text-input id="final_score_{{ $response->id }}" type="number" lang="en" value="{{ $response->final_score }}" class="mt-1 block w-full" disabled />
-                            </div>
-                        @endif
+                        <div>
+                            <x-input-label for="final_score_{{ $response->id }}" :value=" ucwords(__('competition.response.final_score'))" />
+                            <x-text-input id="final_score_{{ $response->id }}" type="number" lang="en" value="{{ $response->final_score ?? 0 }}" class="mt-1 block w-full" disabled />
+                        </div>
                     </div>
                     <div class="flex flex-wrap gap-2 mt-2 md:mt-4">
                         @foreach (json_decode($response->flags ?? '[]') as $flag)
@@ -116,7 +130,13 @@
             </div>
         @endforeach
         <div class="flex justify-end">
-            <x-button form="responses_score" color_type="success" class="my-1" >{{ __('form.actions.save') }}</x-button>
+            <x-button 
+                form="responses_score" 
+                color_type="success" 
+                class="my-1"
+                :disabled="$is_all_audited">
+                {{ __('form.actions.save') }}
+            </x-button>
         </div>
     </form>
     <x-pagination :paginator="$questions" />

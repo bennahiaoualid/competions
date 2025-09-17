@@ -7,6 +7,44 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
+/**
+ * 
+ *
+ * @property int $id
+ * @property int $coin_pricing_id
+ * @property string $name Name of the offer
+ * @property string|null $description Description of the offer
+ * @property int $discount_percentage Discount percentage (5-90% range)
+ * @property \Illuminate\Support\Carbon|null $start_date When the offer starts
+ * @property \Illuminate\Support\Carbon|null $end_date When the offer ends
+ * @property bool $expired Whether this offer is expired
+ * @property int|null $created_by_admin_id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Payment\CoinPricing $coinPricing
+ * @property-read Admin|null $createdByAdmin
+ * @property-read string $formatted_discount
+ * @property-read string $status
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinOffer active()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinOffer expired()
+ * @method static \Database\Factories\Payment\CoinOfferFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinOffer forCoinPricing(int $coinPricingId)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinOffer newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinOffer newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinOffer query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinOffer whereCoinPricingId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinOffer whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinOffer whereCreatedByAdminId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinOffer whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinOffer whereDiscountPercentage($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinOffer whereEndDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinOffer whereExpired($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinOffer whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinOffer whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinOffer whereStartDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CoinOffer whereUpdatedAt($value)
+ * @mixin \Eloquent
+ */
 class CoinOffer extends Model
 {
     use HasFactory;

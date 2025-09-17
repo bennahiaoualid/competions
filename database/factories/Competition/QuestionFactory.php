@@ -31,6 +31,7 @@ class QuestionFactory extends Factory
 
         return [
             'question_text' => $this->faker->realText(100) . '?',
+            'perfect_response' => $this->faker->realText(50), // Perfect answer for AI auditing
             'max_score' => $this->faker->numberBetween(5, 20),
             'duration' => $this->faker->numberBetween(30, 120), // Duration in seconds for a question
             'level_id' => $levelId,

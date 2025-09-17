@@ -91,4 +91,111 @@ class AuditRepository implements AuditRepositoryInterface
         }
         return true;
     }
+
+    /**
+     * Assign admins to responses for a specific level using a single bulk update.
+     * either update ai generated score response as confirmed(each response take admin_id as the admin who related to user in laeav_admin_user)
+     * or set the non generated ai score admin_id to the competition creator
+     * @param int $levelId the level id
+     * Returns the number of affected rows.
+     */
+    public function assignAuditorsToResponsesForLevel(int $levelId): int
+    {
+        
+        $driver = DB::connection()->getDriverName();
+
+        if ($driver === 'mysql') {
+            // MySQL version with JOIN syntax
+            $sql = "
+                UPDATE responses r
+                JOIN questions q ON q.id = r.question_id
+                JOIN level_admin_user lau ON lau.user_id = r.user_id AND lau.level_id = q.level_id
+                SET r.admin_id = lau.admin_id
+                WHERE r.admin_id IS NULL AND ai_generated = 1
+                AND q.level_id = ?
+            ";
+            
+            return DB::affectingStatement($sql, [$levelId]);
+        } else {
+            // SQLite version with subquery
+            $sql = "
+                UPDATE responses 
+                SET admin_id = (
+                    SELECT lau.admin_id 
+                    FROM questions q
+                    JOIN level_admin_user lau ON lau.user_id = responses.user_id AND lau.level_id = q.level_id
+                    WHERE q.id = responses.question_id AND q.level_id = ?
+                )
+                WHERE admin_id IS NULL 
+                AND ai_generated = 1
+                AND EXISTS (
+                    SELECT 1 
+                    FROM questions q2 
+                    WHERE q2.id = responses.question_id AND q2.level_id = ?
+                )
+            ";
+        }
+            
+        return DB::affectingStatement($sql, [$levelId, $levelId]);
+    }
+
+    /** @inheritDoc */
+    public function bulkUpdateResponses(array $bulkData, $batch_users_ids, $batch_questions_ids): void
+    {
+        if (empty($bulkData)) {
+            return;
+        }
+    
+        // Properly escape IDs
+        $batchUserIds = array_map('intval', $batch_users_ids);
+        $batchQuestionIds = array_map('intval', $batch_questions_ids);
+        $batchUserIdsStr = implode(',', $batchUserIds);
+        $batchQuestionIdsStr = implode(',', $batchQuestionIds);
+        
+        $ai_score_generated_at = now()->toDateTimeString();
+    
+        // First: Update responses with valid scores
+        $caseStatements = [];
+        $finalScoreCases = [];
+        $ids = [];
+        
+        foreach ($bulkData as $data) {
+            $id = (int) $data['id'];
+            $score = (float) $data['score'];
+            $finalScore = (float) $data['final_score'];
+            $ids[] = $id;
+            $caseStatements[] = "WHEN {$id} THEN {$score}";
+            $finalScoreCases[] = "WHEN {$id} THEN {$finalScore}";
+        }
+        
+        if (!empty($ids)) {
+            $idList = implode(',', $ids);
+            $scoreCases = implode(' ', $caseStatements);
+            $finalScoreCasesStr = implode(' ', $finalScoreCases);
+            
+            DB::statement("
+                UPDATE responses 
+                SET 
+                    score = CASE id {$scoreCases} END,
+                    final_score = CASE id {$finalScoreCasesStr} END,
+                    ai_generated = true,
+                    ai_score_generated_at = ?
+                WHERE id IN ({$idList})
+            ", [$ai_score_generated_at]);
+        }
+    
+        // Second: Update empty responses (exclude already processed ones)
+        DB::statement("
+            UPDATE responses 
+            SET 
+                final_score = 0,
+                ai_generated = true,
+                ai_score_generated_at = ?
+            WHERE question_id IN ({$batchQuestionIdsStr}) 
+            AND user_id IN ({$batchUserIdsStr})
+            AND (response_text IS NULL OR response_text = '' OR TRIM(response_text) = '')
+            AND admin_id IS NULL
+            AND id NOT IN (" . (empty($ids) ? '0' : implode(',', $ids)) . ")
+        ", [$ai_score_generated_at]);
+    }
 } 

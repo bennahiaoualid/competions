@@ -19,7 +19,7 @@ class CoinTransactionService
     /**
      * Create an earn transaction
      */
-    public function createEarnTransaction($transactionable, CoinTransactionTypeEnum $detail, int $amount, ?string $processedAt = null): CoinTransaction
+    public function createEarnTransaction($transactionable, CoinTransactionTypeEnum $detail, float $amount, ?string $processedAt = null): CoinTransaction
     {
         return $this->createTransaction($transactionable, 'earn', $detail, $amount, $processedAt);
     }
@@ -27,7 +27,7 @@ class CoinTransactionService
     /**
      * Create a spend transaction
      */
-    public function createSpendTransaction($transactionable, CoinTransactionTypeEnum $detail, int $amount, ?string $processedAt = null): CoinTransaction
+    public function createSpendTransaction($transactionable, CoinTransactionTypeEnum $detail, float $amount, ?string $processedAt = null): CoinTransaction
     {
         return $this->createTransaction($transactionable, 'spend', $detail, $amount, $processedAt);
     }
@@ -35,7 +35,7 @@ class CoinTransactionService
     /**
      * Create a transaction for purchased coins
      */
-    public function createPurchasedTransaction($transactionable, int $amount, ?string $processedAt = null): CoinTransaction
+    public function createPurchasedTransaction($transactionable, float $amount, ?string $processedAt = null): CoinTransaction
     {
         return $this->createEarnTransaction($transactionable, CoinTransactionTypeEnum::PURCHASED, $amount, $processedAt);
     }
@@ -43,7 +43,7 @@ class CoinTransactionService
     /**
      * Create a transaction for competition gift
      */
-    public function createCompetitionGiftTransaction($transactionable, int $amount, ?string $processedAt = null): CoinTransaction
+    public function createCompetitionGiftTransaction($transactionable, float $amount, ?string $processedAt = null): CoinTransaction
     {
         return $this->createEarnTransaction($transactionable, CoinTransactionTypeEnum::COMPETITION_GIFT, $amount, $processedAt);
     }
@@ -51,15 +51,31 @@ class CoinTransactionService
     /**
      * Create a transaction for question generation
      */
-    public function createQuestionGenerateTransaction($transactionable, int $amount, ?string $processedAt = null): CoinTransaction
+    public function createQuestionGenerateTransaction($transactionable, float $amount, ?string $processedAt = null): CoinTransaction
     {
         return $this->createSpendTransaction($transactionable, CoinTransactionTypeEnum::QUESTION_GENERATE, $amount, $processedAt);
     }
 
     /**
+     * Create a transaction for users ai audting responses
+     */
+    public function createAiAudtingResponsesTransaction($transactionable, float $amount, ?string $processedAt = null): CoinTransaction
+    {
+        return $this->createSpendTransaction($transactionable, CoinTransactionTypeEnum::Ai_Auditing_Reponses, $amount, $processedAt);
+    }
+
+    /**
+     * Create a transaction for competition winner gift
+     */
+    public function createCompetitionWinnerGiftTransaction($transactionable, float $amount, ?string $processedAt = null): CoinTransaction
+    {
+        return $this->createSpendTransaction($transactionable, CoinTransactionTypeEnum::COMPETITION_WINNER_GIFT, $amount, $processedAt);
+    }
+
+    /**
      * Create a transaction for premium question purchase
      */
-    public function createPremiumQuestionPurchaseTransaction($transactionable, int $amount, ?string $processedAt = null): CoinTransaction
+    public function createPremiumQuestionPurchaseTransaction($transactionable, float $amount, ?string $processedAt = null): CoinTransaction
     {
         return $this->createSpendTransaction($transactionable, CoinTransactionTypeEnum::PREMIUM_QUESTION_PURCHASE, $amount, $processedAt);
     }
@@ -67,7 +83,7 @@ class CoinTransactionService
     /**
      * Base method to create any transaction
      */
-    protected function createTransaction($transactionable, string $type, CoinTransactionTypeEnum $detail, int $amount, ?string $processedAt = null): CoinTransaction
+    protected function createTransaction($transactionable, string $type, CoinTransactionTypeEnum $detail, float $amount, ?string $processedAt = null): CoinTransaction
     {
             $coinTransaction = CoinTransaction::create([
                 'transactionable_id' => $transactionable->id,

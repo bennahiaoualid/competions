@@ -5,7 +5,7 @@
     'disabled' => false,
 ])
 <label class="flex items-center {{ $disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer' }}">
-    <div class="mr-3 text-sm text-gray-700">{{ $label }}</div>
+    <div class="me-3 text-sm text-gray-700">{{ $label }}</div>
     <div class="relative">
         <input type="hidden" name="{{ $name }}" value="0">
         <input

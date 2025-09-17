@@ -41,6 +41,12 @@ return [
     ],
     'system' => [
         'settings' => 'إعدادات النظام',
+        'settings_overview' => 'نظرة عامة على الإعدادات',
+        'settings_payment' => 'إعدادات الدفع',
+        'settings_system' => 'تكوين النظام',
+        'settings_notifications' => 'إعدادات الإشعارات',
+        'settings_ai_question_generation' => 'توليد الأسئلة بالذكاء الاصطناعي',
+        'settings_ai_auditing' => 'التدقيق بالذكاء الاصطناعي',
     ],
     'home' => 'الرئيسية',
     'log_out' => 'تسجيل الخروج',

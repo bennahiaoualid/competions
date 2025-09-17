@@ -2,21 +2,25 @@
 
 namespace App\Http\Controllers\Competition;
 
+use Illuminate\View\View;
+use App\Models\Admin\Admin;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\RedirectResponse;
+use App\Services\SystemSettingService;
+use App\Models\Competition\Competition;
+use Illuminate\Support\Facades\Redirect;
+use App\Services\Competition\CompetitionService;
 use App\Http\Requests\Competition\StoreCompetitionRequest;
 use App\Http\Requests\Competition\UpdateCompetitionRequest;
-use App\Models\Admin\Admin;
-use App\Models\Competition\Competition;
-use App\Services\Competition\CompetitionService;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\View\View;
+use App\Models\SystemSetting;
 
 class CompetitionController extends Controller
 {
     public function __construct(
-        protected CompetitionService $competitionService
+        protected CompetitionService $competitionService,
+        protected SystemSettingService $systemSettingService
     ) {
     }
 
@@ -26,7 +30,18 @@ class CompetitionController extends Controller
      */
     public function index(): View
     {
-        return view("pages.admin.competitions.competition_list");
+        $competitionGift = $this->systemSettingService->getValueAsInt('min_competition_coins');
+        $secondPlacePercentage = $this->systemSettingService->getValueAsInt('second_place_winner_percentage', 50);
+        $thirdPlacePercentage = $this->systemSettingService->getValueAsInt('third_place_winner_percentage', 20);
+        // Get current admin's coin balance
+        $userBalance = Auth::user()->coinBalance->balance ?? 0;
+        
+        return view("pages.admin.competitions.competition_list", compact(
+            'competitionGift',
+            'secondPlacePercentage', 
+            'thirdPlacePercentage',
+            'userBalance'
+        ));
     }
 
     /**
@@ -54,7 +69,11 @@ class CompetitionController extends Controller
             abort(404, 'Competition not found.');
         }
         $admins = Admin::availableAsLevelManager()->get();
-        return view("pages.admin.competitions.edit.competition_edit", compact("competition", "admins"));
+        
+        // Get current admin's coin balance for edit form
+        $userBalance = Auth::user()->coinBalance->balance ?? 0;
+        
+        return view("pages.admin.competitions.edit.competition_edit", compact("competition", "admins", "userBalance"));
     }
 
     /**

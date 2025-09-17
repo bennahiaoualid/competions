@@ -27,11 +27,16 @@ return [
             'active' =>  'جارية',
             'pending' =>  'غير نشط',
             'finished' =>  'منتهية',
+            'finish_processing' => 'جاري انهاء المرحلة'
         ],
         'coming' =>  'المسابقات القادمة',
         'active' =>  'المسابقات الجارية',
         'finished' =>  'المسابقات المنتهية',
         'levels_number' => 'عدد المراحل',
+        'winner_gifts' => 'عدد العملات للفائز',
+        'multi_winner' => 'مكافأة المركز الثاني والثالث',
+        'ai_auditing' => 'تقييم الاجابات بالذكاء الاصطناعي',
+        'auditing_time_for_level' => 'الوقت المسموح لمراجعة المرحلة بعد الانتهاء (دقيقة)',
         'competitor' => 'المتسابق',
         'competitors' => 'المتسابقين',
         'competitors_not_in' => 'المتسابقين الذين ليسوا مشتركين',
@@ -43,7 +48,22 @@ return [
             'not_in' => 'مسؤولين ليسوا في قائمة المصححين',
             'all_audited' => 'تم التصحيح',
             'not_audited' => 'لم يتم التصحيح',
+            'need_confirmation' => 'يحتاج تأكيد',
+            'need_auditing' => 'يحتاج تقييم',
+            'audited' => 'تم التقييم',
+            'confirmed' => 'تم التأكيد',
+
+            'needs_confirmation' => 'يحتاج التأكيد',
             'in_competition' => 'مصحح في المسابقات'
+        ],
+        'reward' => [
+            'calculation' => 'حساب المكافأة',
+            'first_place' => 'المركز الاول',
+            'second_place' => 'المركز الثاني',
+            'third_place' => 'المركز الثالث',
+            'total' => 'المجموع',
+            'coins' => 'عملات',
+            'percentage' => 'نسبة',
         ]
     ],
     'level' => [
@@ -54,6 +74,7 @@ return [
         'duration' => 'المدة',
         'questions_number' => 'عدد الاسئلة',
         'admin' => 'مسؤول المرحلة',
+        'finished_at' => 'إنتهى في',
         'only_manager_change' => 'تغيير مسؤول المرحلة فقط (استخدام نظام الموافقة)'
     ],
     'question' => [
@@ -117,6 +138,12 @@ return [
         'your_answers' => 'إجاباتك',
         'total_time' => 'الوقت الإجمالي',
         'void_choice' => 'اختيار فارغ',
+        'response_count' => [
+            'audited' => 'اجابة تم تدقيقها',
+            'not_audited' => 'اجابات تحتاج لتدقيق يدوي',
+            'confirmed' => 'اجابات مدققة بال Ai تم تاكيدها',
+            'not_confirmed' => 'اجابات مدققة ب AI تحتاج تاكيد',
+        ]
         
     ],
     'result' => [
@@ -194,9 +221,12 @@ return [
         'question_generation_success_message' => 'تم توليد سؤالك بالذكاء الاصطناعي بنجاح! يمكنك الآن مشاهدته والإجابة عليه.',
         'view_question' => 'عرض السؤال',
         'close' => 'إغلاق',
+        'ai_audting_cost_for_level' => 'تكلفة تصحيح الاجابات باستخدام AI لهاته المرحلة',
+
         
         // New exception-specific translations
         'insufficient_balance_title' => 'رصيد غير كافي',
+        'insufficient_balance_level_finish' => 'لا تمتلك الرصيد الكافي من العملات لانهاء هاته المرحلة',
         'service_unavailable_title' => 'الخدمة غير متاحة مؤقتاً',
         'llm_error' => 'خطأ في إعدادات خدمة الذكاء الاصطناعي',
         'process_error' => 'خطأ في عملية توليد السؤال',

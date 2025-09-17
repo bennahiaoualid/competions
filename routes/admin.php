@@ -93,6 +93,7 @@ Route::group(
             Route::delete('/competitions/level/{level}/delete', [\App\Http\Controllers\Competition\LevelController::class, "delete"])->name("competitions.level.delete");
             Route::post('/competitions/level/{level}/activate', [\App\Http\Controllers\Competition\LevelController::class, "activateLevel"])->name("competitions.level.activate");
             Route::post('/competitions/level/{level}/finish', [\App\Http\Controllers\Competition\LevelController::class, "finishLevel"])->name("competitions.level.finish");
+            Route::post('/competitions/level/{level}/re-assign-users-responses', [\App\Http\Controllers\Competition\LevelController::class, "reAssignUsersResponses"])->name("competitions.level.re-assign-user-responses");
 
             //questions
             Route::get('/competitions/level/{level}/question', [\App\Http\Controllers\Competition\QuestionController::class, "all"])->name("competitions.level.questions");
@@ -113,6 +114,7 @@ Route::group(
             Route::get('/competitions/audit/competitions', [AuditController::class, "auditCompetitions"])->name("auditor.competitions");
             Route::post('/competitions/audit/competitions', [AuditController::class, "auditCompetitions"])->name("auditor.competition.filtred");
             Route::get('/competitions/level/{level}/audit', [AuditController::class, "auditUsers"])->name("auditor.users");
+            Route::post('/competitions/level/{level}/auto-audit', [AuditController::class, "autoConfirmAigeneratedResponsesScore"])->name("auditor.auto_audit");
             Route::get('/competitions/auditing/level/{level}/{user_id}', [AuditController::class, "auditUserResponses"])->name("auditor.users.responses");
             Route::post('/competitions/auditing/level/{level}/{user}/store', [AuditController::class, "submitAudit"])->name("auditor.users.responses.audit_score");
 
@@ -141,7 +143,11 @@ Route::group(
             // System Settings routes (Owner only)
             Route::prefix('system')->name('system.')->group(function () {
                 Route::middleware(['role:owner'])->group(function () {
-                    Route::get('/settings', [\App\Http\Controllers\Admin\SystemSettingController::class, 'index'])->name('settings.index');
+                    Route::get('/settings/payment', [\App\Http\Controllers\Admin\SystemSettingController::class, 'payment'])->name('settings.payment');
+                    Route::get('/settings/system', [\App\Http\Controllers\Admin\SystemSettingController::class, 'system'])->name('settings.system');
+                    Route::get('/settings/notifications', [\App\Http\Controllers\Admin\SystemSettingController::class, 'notifications'])->name('settings.notifications');
+                    Route::get('/settings/ai-question-generation', [\App\Http\Controllers\Admin\SystemSettingController::class, 'aiQuestionGeneration'])->name('settings.ai-question-generation');
+                    Route::get('/settings/ai-auditing', [\App\Http\Controllers\Admin\SystemSettingController::class, 'aiAuditing'])->name('settings.ai-auditing');
                     Route::put('/settings/{key}', [\App\Http\Controllers\Admin\SystemSettingController::class, 'update'])->name('settings.update');
                     Route::post('/settings/refresh-cache', [\App\Http\Controllers\Admin\SystemSettingController::class, 'refreshCache'])->name('settings.refresh-cache');
                 });

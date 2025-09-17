@@ -34,7 +34,7 @@ class SystemSettingService
     public function getValue(string $key, $default = null)
     {
         $setting = $this->getSetting($key);
-        return $setting ? $setting->setting_value : $default;
+        return $setting ? $setting->setting_value : config("settings.defaults.{$key}");
     }
 
     /**
@@ -225,7 +225,7 @@ class SystemSettingService
     public function refreshCache(): void
     {
         $this->clearCache();
-        $this->allSettings = $this->getAllSettingsFromCache(); // This will rebuild the cache
+        self::$allSettings = $this->getAllSettingsFromCache(); // This will rebuild the cache
     }
 
     /**

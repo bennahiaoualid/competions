@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('balanceable_id');
             $table->string('balanceable_type'); // 'App\Models\User' or 'App\Models\Admin\Admin'
-            $table->integer('balance')->default(0);
-            $table->integer('total_earned')->default(0);
-            $table->integer('total_spent')->default(0);
+            $table->float('balance')->default(0);
+            $table->float('total_earned')->default(0);
+            $table->float('total_spent')->default(0);
             $table->timestamps();
             
             // Indexes (only custom indexes, not unique constraints)

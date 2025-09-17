@@ -84,6 +84,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, Competition> $competitions
  * @property-read \Illuminate\Database\Eloquent\Collection<int, DeletionRequest> $deletionRequests
  * @property-read int|null $deletion_requests_count
+ * @property-read CoinBalance|null $coinBalance
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, CoinTransaction> $coinTransactions
+ * @property-read int|null $coin_transactions_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\GuestUsers\GlobalQuestion> $ownedPremiumQuestions
+ * @property-read int|null $owned_premium_questions_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, PaymentTransaction> $paymentTransactions
+ * @property-read int|null $payment_transactions_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\GuestUsers\UserPremiumQuestion> $premiumQuestions
+ * @property-read int|null $premium_questions_count
  * @mixin \Eloquent
  */
 #[ObservedBy([UserObserver::class])]

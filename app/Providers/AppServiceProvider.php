@@ -9,12 +9,14 @@ use App\Contracts\FlasherInterface;
 use App\Services\Admin\AdminService;
 use App\Services\Notification\Flasher;
 use App\Services\SystemSettingService;
+use App\Services\LLM\LLMHandlerFactory;
 use Illuminate\Support\ServiceProvider;
 use App\Services\Payment\PaymentService;
 use Illuminate\Validation\Rules\Password;
 use App\Services\Competition\AuditService;
 use App\Services\Competition\LevelService;
 use App\Services\Admin\AdminProfileService;
+use App\Services\Admin\AdminApprovalService;
 use App\Services\Payment\CoinPricingService;
 use App\Services\Competition\QuestionService;
 use App\Services\Database\TransactionManager;
@@ -34,6 +36,7 @@ use App\Repository\GuestUsers\UserGuestRepository;
 use App\Repository\User\UserCompetitionRepository;
 use App\Services\GuestUsers\GlobalQuestionService;
 use App\Factories\Monitoring\RestoreHandlerFactory;
+use App\Jobs\Competition\AIAuditingBatchJobFactory;
 use App\Services\Monitoring\DeletionRecordsService;
 use App\Repository\Competition\CompetitionRepository;
 use App\Factories\Monitoring\HardDeleteHandlerFactory;
@@ -41,6 +44,7 @@ use App\Services\CashManagment\PaymentCacheManagement;
 use App\Interface\Competition\AuditRepositoryInterface;
 use App\Interface\Competition\LevelRepositoryInterface;
 use App\Interface\Admin\AdminProfileRepositoryInterface;
+use App\Jobs\Competition\FinishLevelTrackableJobFactory;
 use App\Services\Notification\PaymentNotificationService;
 use App\Services\ProcessManagement\DelayedProcessService;
 use App\Interface\GuestUsers\UserGuestRepositoryInterface;
@@ -49,8 +53,9 @@ use App\Interface\User\UserCompetitionRepositoryInterface;
 use App\Repository\Monitoring\DatabaseJobTrackingStrategy;
 use App\Repository\Monitoring\InMemoryJobTrackingStrategy;
 use App\Interface\Competition\CompetitionRepositoryInterface;
+use App\Services\CashManagment\CompetitionCacheManagmentSystem;
 use App\Services\Notification\OptimizedCompetitionNotificationService;
-
+use App\View\Composers\SidebarComposer;
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -87,7 +92,9 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(FlasherInterface::class),
                 $app->make(JobTrackingService::class),
                 $app->make(OptimizedCompetitionNotificationService::class),
-                $app->make(\App\Services\Admin\AdminApprovalService::class)
+                $app->make(AdminApprovalService::class),
+                $app->make(SystemSettingService::class),
+                $app->make(CoinTransactionService::class)
             );
         });
 
@@ -99,7 +106,10 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(TransactionManagerInterface::class),
                 $app->make(FlasherInterface::class),
                 $app->make(OptimizedCompetitionNotificationService::class),
-                $app->make(\App\Services\Admin\AdminApprovalService::class)
+                $app->make(AdminApprovalService::class),
+                $app->make(JobTrackingService::class),
+                $app->make(FinishLevelTrackableJobFactory::class),
+                $app->make(SystemSettingService::class)
             );
         });
 
@@ -120,7 +130,8 @@ class AppServiceProvider extends ServiceProvider
             return new UserCompetitionService(
                 $app->make(UserCompetitionRepositoryInterface::class),
                 $app->make(TransactionManagerInterface::class),
-                $app->make(FlasherInterface::class)
+                $app->make(FlasherInterface::class),
+                $app->make(CompetitionCacheManagmentSystem::class)
             );
         });
 
@@ -130,7 +141,8 @@ class AppServiceProvider extends ServiceProvider
             return new AuditService(
                 $app->make(AuditRepositoryInterface::class),
                 $app->make(TransactionManagerInterface::class),
-                $app->make(FlasherInterface::class)
+                $app->make(FlasherInterface::class),
+                $app->make(CompetitionCacheManagmentSystem::class)
             );
         });
 
@@ -240,6 +252,27 @@ class AppServiceProvider extends ServiceProvider
 
         // approval assignment service (bind - system integration)
         $this->app->bind(\App\Services\Approval\ApprovalAssignmentService::class);
+
+        // In AppServiceProvider.php boot() method or register() method
+        $this->app->bind(FinishLevelTrackableJobFactory::class, function ($app) {
+            return new FinishLevelTrackableJobFactory(
+                $app->make(LevelRepositoryInterface::class),
+                $app->make(OptimizedCompetitionNotificationService::class),
+                $app->make(JobTrackingService::class)
+            );
+        });
+
+        // AI Auditing Batch Job Factory
+        $this->app->bind(AIAuditingBatchJobFactory::class, function ($app) {
+            return new AIAuditingBatchJobFactory(
+                $app->make(LLMHandlerFactory::class),
+                $app->make(SystemSettingService::class),
+                $app->make(JobTrackingService::class),
+                $app->make(AuditService::class),
+                $app->make(OptimizedCompetitionNotificationService::class),
+                $app->make(CompetitionCacheManagmentSystem::class)
+            );
+        });
     }
 
     /**

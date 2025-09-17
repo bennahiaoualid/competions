@@ -103,7 +103,8 @@
                         <i class="fas fa-clipboard-check me-3"></i>
                     </x-slot:icon>
                     <span class="sidebar-text">{{__('links.competition.auditing_responses')}}</span>
-                    <span class="block ms-2 py-0.5 px-2 rounded-md bg-primary text-white sidebar-badge">{{ $assignedUserCount }}</span>
+                    <span class="block mx-2 py-0.5 px-2 rounded-md bg-danger text-white sidebar-badge">{{ $needsManualAuditCount }}</span>
+                    <span class="block py-0.5 px-2 rounded-md bg-warning text-white sidebar-badge">{{ $needsAIConfirmationCount }}</span>
                 </x-nav-link>
             </li>
 
@@ -160,14 +161,22 @@
 
             {{-- System Settings --}}
             @role('owner')
-                <li class="mb-2">
-                    <x-nav-link href="{{route('admin.system.settings.index')}}" :active="request()->routeIs('admin.system.settings.*')" :sub="false">
-                        <x-slot:icon>
-                            <i class="fas fa-cogs me-3"></i>
-                        </x-slot:icon>
+                <x-nav-dropdown :title="__('links.system.settings')"
+                                :active="request()->is(App::currentLocale() . '/admin/system/settings*')" :sub="false"
+                                :links="[
+                        ['url' => route('admin.system.settings.payment'), 'title' => __('links.system.settings_payment') , 'active' => request()->routeIs('admin.system.settings.payment'), 'subnav' => true],
+                        ['url' => route('admin.system.settings.system'), 'title' => __('links.system.settings_system') , 'active' => request()->routeIs('admin.system.settings.system'), 'subnav' => true],
+                        ['url' => route('admin.system.settings.notifications'), 'title' => __('links.system.settings_notifications') , 'active' => request()->routeIs('admin.system.settings.notifications'), 'subnav' => true],
+                        ['url' => route('admin.system.settings.ai-question-generation'), 'title' => __('links.system.settings_ai_question_generation') , 'active' => request()->routeIs('admin.system.settings.ai-question-generation'), 'subnav' => true],
+                        ['url' => route('admin.system.settings.ai-auditing'), 'title' => __('links.system.settings_ai_auditing') , 'active' => request()->routeIs('admin.system.settings.ai-auditing'), 'subnav' => true],
+                    ]">
+                    <x-slot:icon>
+                        <i class="fas fa-cogs me-3"></i>
+                    </x-slot:icon>
+                    <x-slot:titleUi>
                         <span class="sidebar-text">{{__('links.system.settings')}}</span>
-                    </x-nav-link>
-                </li>
+                    </x-slot:titleUi>
+                </x-nav-dropdown>
             @endrole
 
 

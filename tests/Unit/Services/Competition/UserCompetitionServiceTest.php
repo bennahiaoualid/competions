@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Services\User;
+namespace Tests\Unit\Services\Competition;
 
 use Mockery;
 use Exception;
@@ -18,22 +18,25 @@ use Illuminate\Foundation\Testing\WithFaker;
 use App\Services\User\UserCompetitionService;
 use App\Contracts\TransactionManagerInterface;
 use App\Interface\User\UserCompetitionRepositoryInterface;
+use App\Services\CashManagment\CompetitionCacheManagmentSystem;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 class UserCompetitionServiceTest extends TestCase
 {
     use WithFaker;
-    /** @var UserCompetitionRepositoryInterface | Mockery\MockInterface */
+    /** @var UserCompetitionRepositoryInterface|Mockery\MockInterface */
     protected $userCompetitionRepository;
-    /** @var TransactionManagerInterface | Mockery\MockInterface */
+    /** @var TransactionManagerInterface|Mockery\MockInterface */
     protected $transactionManager;
-    /** @var FlasherInterface | Mockery\MockInterface */
+    /** @var FlasherInterface|Mockery\MockInterface */
     protected $flasher;
+    /** @var CompetitionCacheManagmentSystem|Mockery\MockInterface */
+    protected $cacheSystem;
     /** @var UserCompetitionService */
     protected $userCompetitionService;
-    /** @var Competition | Mockery\MockInterface */
+    /** @var Competition|Mockery\MockInterface */
     protected $competition;
-    /** @var Level | Mockery\MockInterface */
+    /** @var Level|Mockery\MockInterface */
     protected $level;
     protected $userId;
 
@@ -45,12 +48,14 @@ class UserCompetitionServiceTest extends TestCase
         $this->userCompetitionRepository = Mockery::mock(UserCompetitionRepositoryInterface::class);
         $this->transactionManager = Mockery::mock(TransactionManagerInterface::class);
         $this->flasher = Mockery::mock(FlasherInterface::class);
+        $this->cacheSystem = Mockery::mock(CompetitionCacheManagmentSystem::class);
 
         // Create service instance
         $this->userCompetitionService = new UserCompetitionService(
             $this->userCompetitionRepository,
             $this->transactionManager,
-            $this->flasher
+            $this->flasher,
+            $this->cacheSystem
         );
 
         // Setup test data

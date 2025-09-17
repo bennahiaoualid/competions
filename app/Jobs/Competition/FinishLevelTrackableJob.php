@@ -8,27 +8,33 @@ use App\Enums\JobTypeEnum;
 use App\Helpers\UserNotifyEmail;
 use App\Models\Competition\Level;
 use Illuminate\Support\Facades\DB;
-use App\Contracts\FlasherInterface;
 use App\Jobs\Base\BaseTrackableJob;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Monitoring\JobTracking;
-use App\Services\Monitoring\JobTrackingService;
 use App\Interface\Competition\LevelRepositoryInterface;
+use App\Jobs\Competition\FinishLevelTrackableJobFactory;
+use App\Services\Notification\OptimizedCompetitionNotificationService;
+use App\Jobs\Competition\AIAuditingJob;
+use App\Exceptions\StopJobRetriesException;
+use App\Models\Competition\Competition;
 
 class FinishLevelTrackableJob extends BaseTrackableJob
 {
     private Level $level;
-    private FlasherInterface $flasher;
     private LevelRepositoryInterface $levelRepository;
+    private OptimizedCompetitionNotificationService $notificationService;
 
     public function __construct(
         Level $level,
+        LevelRepositoryInterface $levelRepository,
+        OptimizedCompetitionNotificationService $notificationService,
         ?int $userId = null,
         bool $skipTrackingCreation = false,
-
     ) {
         $this->level = $level;
+        $this->levelRepository = $levelRepository;
+        $this->notificationService = $notificationService;
         
         parent::__construct(
             userId: $userId,
@@ -41,22 +47,62 @@ class FinishLevelTrackableJob extends BaseTrackableJob
 
     protected function executeJob(): array
     {
-        $this->levelRepository = app(LevelRepositoryInterface::class);
-        $level = $this->level->load('competition.users', 'competition.auditors');
-
-        DB::transaction(function () use ($level) {
-            $this->levelRepository->insertMissingResponsesForLevel($level);
-            $this->assignUsersToAuditors($this->levelRepository);
-
-            $updated = $this->levelRepository->update($level, ['status' => "2"]);
-
-            if ($updated) {
-                UserNotifyEmail::auditorsFinishLevel($level->competition, $level);
+        // Lock and re-check to guarantee single execution
+        DB::transaction(function () {
+            $locked = Level::where('id', $this->level->id)->lockForUpdate()->first();
+            if (!$locked) {
+                throw new StopJobRetriesException('Level not found');
             }
-            
+            if ($locked->finish_job_running !== true) {
+                // Ensure flag is set under lock if not already
+                $locked->update(['finish_job_running' => true]);
+            }
         });
 
+        $level = $this->level->load('competition.users', 'competition.auditors');
+
+        $updated = DB::transaction(function () use ($level) {
+            // Core level finishing operations
+            $this->levelRepository->insertMissingResponsesForLevel($level);
+            $this->assignAuditorsToUsersInPivot($this->levelRepository);
+
+            $updated = $this->levelRepository->update($level, [
+                'status' => Level::STATUS_FINISHED,
+                'finished_at' => now()
+            ]);
+            
+            if ($updated) {
+                UserNotifyEmail::auditorsFinishLevel($level->competition, $level);
+                // Send notification to competition users
+                $this->notificationService->levelFinished($level->competition, $level);
+            }
+            return $updated;
+        });
+
+        if($updated){
+            // AFTER level is successfully finished, optionally dispatch AI auditing
+            if ($level->competition->ai_auditing) {
+                Log::info('Dispatching AI auditing job for level', [
+                    'level_id' => $level->id,
+                    'competition_id' => $level->competition_id,
+                    'user_count' => $level->competition->users->count()
+                ]);
+                
+                dispatch(new AIAuditingJob($level));
+            }
+
+            // update comptition status if level is the last one
+            if($this->levelRepository->isLevelTheLast($level->competition, $level->id))
+            {
+                $level->competition()->update(['status'=> Competition::STATUS_COMPLETED]);
+            }
+            // Reset the running flag on success
+            $this->safeResetRunningFlag();
+
+        }
+
         return $this->getResultValues();
+  
     }
 
     protected function getPayloadData(): array
@@ -93,6 +139,9 @@ class FinishLevelTrackableJob extends BaseTrackableJob
             'failed_at' => now(),
         ], $this->getCustomMessage()['error']);
 
+        // Reset the running flag on failure as well
+        $this->safeResetRunningFlag();
+
         Log::error('FinishLevelTrackableJob failed: ' . $e->getMessage(), [
             'level_id' => $this->level->id,
             'competition_id' => $this->level->competition_id,
@@ -102,24 +151,17 @@ class FinishLevelTrackableJob extends BaseTrackableJob
 
     public static function fromTrackingPayload(array $payload, ?int $userId, string $trackingId): ?static
     {
-        $level = Level::find($payload['level_id']);
+        // Create factory directly without service container
+        $factory = new FinishLevelTrackableJobFactory(
+            new \App\Repository\Competition\LevelRepository(),
+            new \App\Services\Notification\OptimizedCompetitionNotificationService(),
+            new \App\Services\Monitoring\JobTrackingService()
+        );
         
-        if (!$level || $level->status == Level::STATUS_FINISHED) {
-            Log::warning("FinishLevelTrackableJob retrying failed: level not found", [
-                'payload' => $payload,
-                'tracking_id' => $trackingId,
-            ]);
-            $service = app(JobTrackingService::class);
-            $service->deleteJob($trackingId);
-            return null;
-        }
-
-        $job = new static($level, $userId, skipTrackingCreation: true);
-        $job->trackingId = $trackingId;
-        return $job;
+        return $factory->createFromPayload($payload, $userId, $trackingId);
     }
 
-    protected function assignUsersToAuditors(LevelRepositoryInterface $levelRepository): void
+    protected function assignAuditorsToUsersInPivot(LevelRepositoryInterface $levelRepository): void
     {
         $users = $this->level->competition->users;
         $auditors = $this->level->competition->auditors;
@@ -143,13 +185,15 @@ class FinishLevelTrackableJob extends BaseTrackableJob
         return $this->level;
     }
 
-    public function getLevelRepository(): LevelRepositoryInterface
+    private function safeResetRunningFlag(): void
     {
-        return $this->levelRepository;
+        try {
+            Level::where('id', $this->level->id)->update(['finish_job_running' => false]);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to reset finish_job_running flag', [
+                'level_id' => $this->level->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
-
-    public function getFlasher(): FlasherInterface
-    {
-        return $this->flasher;
-    }
-} 
+}

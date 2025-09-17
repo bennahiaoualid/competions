@@ -434,7 +434,10 @@ return [
             'purchased' => 'تم الشراء',
             'competition_gift' => 'هدية المسابقة',
             'question_generate' => 'إنشاء السؤال',
-            'premium_question_purchase' => 'شراء السؤال المميز',
+            'premium_question_purchase' => 'شراء السؤال مدفوع',
+            'competition_winner_gift' => 'هدية الفائز في المسابقة',
+            'ai_auditing_responses' => 'تصحيح الاجابات ب AI'
+
         ],
         'transaction_types' => [
             'all' => 'جميع الأنواع',

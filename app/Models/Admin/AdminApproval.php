@@ -13,7 +13,7 @@ use Database\Factories\Admin\AdminApprovalFactory;
  * AdminApproval Model
  * 
  * Handles approval requests for admin assignments to various entities
- * 
+ *
  * @property int $id
  * @property int $admin_id
  * @property string $entity_type
@@ -24,6 +24,25 @@ use Database\Factories\Admin\AdminApprovalFactory;
  * @property \Illuminate\Support\Carbon $updated_at
  * @property-read Admin $admin
  * @property-read Model|\Eloquent $entity
+ * @method static Builder<static>|AdminApproval approved()
+ * @method static Builder<static>|AdminApproval byStatus(string $status)
+ * @method static Builder<static>|AdminApproval byType(string $type)
+ * @method static \Database\Factories\Admin\AdminApprovalFactory factory($count = null, $state = [])
+ * @method static Builder<static>|AdminApproval forAdmin(int $adminId)
+ * @method static Builder<static>|AdminApproval newModelQuery()
+ * @method static Builder<static>|AdminApproval newQuery()
+ * @method static Builder<static>|AdminApproval pending()
+ * @method static Builder<static>|AdminApproval query()
+ * @method static Builder<static>|AdminApproval rejected()
+ * @method static Builder<static>|AdminApproval whereAdminId($value)
+ * @method static Builder<static>|AdminApproval whereCreatedAt($value)
+ * @method static Builder<static>|AdminApproval whereEntityId($value)
+ * @method static Builder<static>|AdminApproval whereEntityType($value)
+ * @method static Builder<static>|AdminApproval whereId($value)
+ * @method static Builder<static>|AdminApproval whereStatus($value)
+ * @method static Builder<static>|AdminApproval whereType($value)
+ * @method static Builder<static>|AdminApproval whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class AdminApproval extends Model
 {

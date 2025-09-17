@@ -27,11 +27,17 @@ return [
             'active' =>  'active',
             'pending' =>  'pending',
             'finished' =>  'finished',
+            'finish_processing' => 'finishing level in progress'
+
         ],
         'coming' =>  'coming competitions',
         'active' =>  'active competitions',
         'finished' =>  'finished competitions',
         'levels_number' => 'levels number',
+        'winner_gifts' => 'number of coins for the winner',
+        'multi_winner' => '2nd and 3rd place rewards',
+        'ai_auditing' => 'auditing responses with AI',
+        'auditing_time_for_level' => 'auditing time for level after finish (minutes)',
         'competitor' => 'competitor',
         'competitors' => 'competitors',
         'competitors_not_in' => 'competitors not in competition',
@@ -43,9 +49,22 @@ return [
             'not_in' => 'admins Not Auditors',
             'all_audited' => 'audited done',
             'not_audited' => 'not audited',
+            'need_confirmation' => 'need confirmation',
+            'need_auditing' => 'need auditing',
+            'audited' => 'audited',
+            'confirmed' => 'confirmed',
+            'needs_confirmation' => 'needs confirmation',
             'in_competition' => 'auditing in competitions'
+        ],
+        'reward' => [
+            'calculation' => 'Reward Calculation',
+            'first_place' => '1st Place',
+            'second_place' => '2nd Place',
+            'third_place' => '3rd Place',
+            'total' => 'Total',
+            'coins' => 'coins',
+            'percentage' => 'percentage',
         ]
-
     ],
     'level' => [
         'level' => 'level',
@@ -55,7 +74,8 @@ return [
         'duration' => 'duration',
         'questions_number' => 'questions number',
         'admin' => 'level responsible',
-        'only_manager_change' => 'Only change level manager (use approval workflow)'
+        'only_manager_change' => 'Only change level manager (use approval workflow)',
+        'finished_at' => 'finished at',
     ],
     'question' => [
         'the_question' => 'question',
@@ -119,6 +139,12 @@ return [
         'your_answers' => 'Your Answers',
         'total_time' => 'Total Time',
         'void_choice' => 'Void Choice',
+        'response_count' => [
+            'audited' => 'responses that audited',
+            'not_audited' => 'responses needs manual audit',
+            'confirmed' => 'ai audit responses that confirmd',
+            'not_confirmed' => 'ai audit responses that need confirmation',
+        ]
     ],
     'result' => [
         'level' => 'the level results',
@@ -195,9 +221,11 @@ return [
         'question_generation_success_message' => 'Your AI question has been generated successfully! You can now view and answer it.',
         'view_question' => 'View Question',
         'close' => 'Close',
+        'ai_audting_cost_for_level' => 'Ai Audting Coins Cost For this Level',
         
         // New exception-specific translations
         'insufficient_balance_title' => 'Insufficient Balance',
+        'insufficient_balance_level_finish' => 'You dont have enough coins to finish this level',
         'service_unavailable_title' => 'Service Temporarily Unavailable',
         'llm_error' => 'AI service configuration error',
         'process_error' => 'Question generation process error',

@@ -21,8 +21,15 @@ class MonitoringController extends Controller
 
     public function jobRetry(string $jobId)
     {
-        $this->jobTrackingService->retryFailedJob($jobId);
-        return redirect()->back()->with('success', __('messages.job_tracking.retry_success'));
+        $result = $this->jobTrackingService->retryFailedJob($jobId);
+        if($result){
+            $this->flasher->crudSuccess('job_retry');
+
+        }else{
+            $this->flasher->crudFailure('job_retry');
+
+        }
+        return redirect()->back();
     }   
 
     public function jobDelete(string $jobId)

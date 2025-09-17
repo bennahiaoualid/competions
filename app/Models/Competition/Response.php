@@ -44,6 +44,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Response whereKeystrokes($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Response wherePenalty($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Response whereSanpshotAdmin($value)
+ * @property bool $ai_generated
+ * @property \Illuminate\Support\Carbon|null $ai_score_generated_at
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Response whereAiGenerated($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Response whereAiScoreGeneratedAt($value)
+ * @property-read mixed $status
  * @mixin \Eloquent
  */
 class Response extends Model
@@ -64,7 +69,9 @@ class Response extends Model
         'response_duration',
         'keystrokes',
         'penalty',
-        'flags'
+        'flags',
+        'ai_generated',
+        'ai_score_generated_at'
     ];
 
     /**
@@ -81,6 +88,8 @@ class Response extends Model
             'keystrokes' => 'integer',
             'penalty' => 'float',
             'flags' => 'array',
+            'ai_generated' => 'boolean',
+            'ai_score_generated_at' => 'datetime',
         ];
     }
 
@@ -98,5 +107,22 @@ class Response extends Model
     public function user() :BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function getStatusAttribute()
+    {
+        if ($this->admin_id) {
+            if($this->ai_generated){
+                return 'confirmed';
+            }else{
+                return 'audited';
+            }
+        }else{
+            if($this->ai_generated){
+                return 'need_confirmation';
+            }else{
+                return 'need_auditing';
+            }
+        }
     }
 }

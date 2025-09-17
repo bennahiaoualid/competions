@@ -6,6 +6,39 @@ use App\Models\Admin\Admin;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+/**
+ * 
+ *
+ * @property int $id
+ * @property int $payment_transaction_id
+ * @property string $request_reason
+ * @property string $status
+ * @property int|null $reviewed_by_admin_id
+ * @property \Illuminate\Support\Carbon|null $reviewed_at
+ * @property string|null $review_observation
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Payment\PaymentTransaction $paymentTransaction
+ * @property-read Admin|null $reviewer
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentReviewRequest approved()
+ * @method static \Database\Factories\Payment\PaymentReviewRequestFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentReviewRequest newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentReviewRequest newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentReviewRequest overdue48h()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentReviewRequest pending()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentReviewRequest query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentReviewRequest rejected()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentReviewRequest whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentReviewRequest whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentReviewRequest wherePaymentTransactionId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentReviewRequest whereRequestReason($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentReviewRequest whereReviewObservation($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentReviewRequest whereReviewedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentReviewRequest whereReviewedByAdminId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentReviewRequest whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentReviewRequest whereUpdatedAt($value)
+ * @mixin \Eloquent
+ */
 class PaymentReviewRequest extends Model
 {
     use HasFactory;

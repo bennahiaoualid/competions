@@ -88,6 +88,17 @@
                                 :value="$competition->levels_number" readonly />
                 </div>
 
+                <div>
+                    <x-input-label for="auditing_time_for_level" :value=" ucwords(__('competition.info.auditing_time_for_level'))" />
+                    <x-text-input 
+                    id="auditing_time_for_level" 
+                    name="auditing_time_for_level" 
+                    type="number" min="10" 
+                    lang="en" class="mt-1 block w-full" 
+                    :value="$competition->auditing_time_for_level" />
+                    <x-input-error :messages="$errors->updateCompetition->get('auditing_time_for_level')" class="mt-2" />
+                </div>
+
                 <div class="flex justify-end">
                     @if($competition->canEdit())
                         <x-button color_type="success" class="my-1" >{{ __('form.actions.update') }}</x-button>

@@ -18,9 +18,13 @@ return [
             'title' => 'Notification Settings',
             'description' => 'Manage notification settings and preferences',
         ],
-        'ai' => [
+        'service_global_question' => [
             'title' => 'AI Question Generation',
             'description' => 'Manage AI question generation costs and settings',
+        ],
+        'service_ai_auditing' => [
+            'title' => 'AI Auditing',
+            'description' => 'Manage AI auditing costs and settings',
         ],
     ],
     
@@ -47,7 +51,23 @@ return [
             'unit' => 'coins',
             'help' => 'Set the platform contribution to competition rewards'
         ],
+         // Competition Settings
+        'second_place_winner_percentage' => [
+            'name' => 'Second Place Winner Percentage',
+            'description' => 'Percentage of competition gift coins for 2nd place winner',
+            'message' => 'Second place gets {value}% of competition gift',
+            'unit' => '%',
+            'help' => 'Set the percentage of competition gift coins that 2nd place winner receives'
+        ],
+        'third_place_winner_percentage' => [
+            'name' => 'Third Place Winner Percentage',
+            'description' => 'Percentage of competition gift coins for 3rd place winner',
+            'message' => 'Third place gets {value}% of competition gift',
+            'unit' => '%',
+            'help' => 'Set the percentage of competition gift coins that 3rd place winner receives'
+        ],
     ],
+    
     
     // System Configuration
     'system' => [
@@ -76,14 +96,14 @@ return [
     
     // Notification Settings
     'notifications' => [
-        'email_notifications_enabled' => [
+        'email_enabled' => [
             'name' => 'Email Notifications',
             'description' => 'Enable or disable email notifications',
             'message' => 'Email notifications are {value}',
             'unit' => 'status',
             'help' => 'Control whether email notifications are sent'
         ],
-        'push_notifications_enabled' => [
+        'push_enabled' => [
             'name' => 'Push Notifications',
             'description' => 'Enable or disable push notifications',
             'message' => 'Push notifications are {value}',
@@ -94,40 +114,86 @@ return [
     
     // AI Question Generation Settings
     'ai' => [
-        'global_question_generating_cost' => [
-            'name' => 'Question Generation Base Cost',
-            'description' => 'Base cost in coins for generating an AI question',
-            'message' => 'Base cost: {value} coins',
-            'unit' => 'coins',
-            'help' => 'Set the base cost for AI question generation'
+        'service_global_question' =>[
+            'generating_cost' => [
+                'name' => 'Question Generation Base Cost',
+                'description' => 'Base cost in coins for generating an AI question',
+                'message' => 'Base cost: {value} coins',
+                'unit' => 'coins',
+                'help' => 'Set the base cost for AI question generation'
+            ],
+            'custom_difficulty_cost' => [
+                'name' => 'Custom Difficulty Cost',
+                'description' => 'Additional cost for selecting a specific difficulty level',
+                'message' => 'Custom difficulty cost: {value} coins',
+                'unit' => 'coins',
+                'help' => 'Additional cost when user selects a specific difficulty instead of random'
+            ],
+            'custom_subject_cost' => [
+                'name' => 'Custom Subject Cost',
+                'description' => 'Additional cost for selecting a specific subject',
+                'message' => 'Custom subject cost: {value} coins',
+                'unit' => 'coins',
+                'help' => 'Additional cost when user selects a specific subject instead of random'
+            ],
+            'max_output_tokens' => [
+                'name' => 'Maximum Output Tokens',
+                'description' => 'Maximum number of tokens for AI question generation',
+                'message' => 'Maximum tokens: {value}',
+                'unit' => 'tokens',
+                'help' => 'Set the maximum token limit for AI responses'
+            ],
+            'premium_cost_percentage' => [
+                'name' => 'Premium Question Cost Percentage',
+                'description' => 'if genrating cost is 100 coins, and premium cost percentage is 50%, then premium cost will be 50 coins',
+                'message' => 'Premium cost percentage: {value}%',
+                'unit' => '%',
+                'help' => 'Set the percentage of the base cost for premium questions'
+            ],
+            'llm_provider' => [
+                'name' => 'LLM Provider',
+                'description' => 'AI provider for question generation service',
+                'message' => 'Using {value} provider',
+                'unit' => 'provider',
+                'help' => 'Select the AI provider for question generation'
+            ],
+            'model' => [
+                'name' => 'AI Model',
+                'description' => 'AI model for question generation service',
+                'message' => 'Using {value} model',
+                'unit' => 'model',
+                'help' => 'Select the AI model for question generation'
+            ]
         ],
-        'global_question_custom_difficulty_cost' => [
-            'name' => 'Custom Difficulty Cost',
-            'description' => 'Additional cost for selecting a specific difficulty level',
-            'message' => 'Custom difficulty cost: {value} coins',
-            'unit' => 'coins',
-            'help' => 'Additional cost when user selects a specific difficulty instead of random'
-        ],
-        'global_question_custom_subject_cost' => [
-            'name' => 'Custom Subject Cost',
-            'description' => 'Additional cost for selecting a specific subject',
-            'message' => 'Custom subject cost: {value} coins',
-            'unit' => 'coins',
-            'help' => 'Additional cost when user selects a specific subject instead of random'
-        ],
-        'global_question_max_output_tokens' => [
-            'name' => 'Maximum Output Tokens',
-            'description' => 'Maximum number of tokens for AI question generation',
-            'message' => 'Maximum tokens: {value}',
-            'unit' => 'tokens',
-            'help' => 'Set the maximum token limit for AI responses'
-        ],
-        'global_question_premium_cost_percentage' => [
-            'name' => 'Premium Question Cost Percentage',
-            'description' => 'if genrating cost is 100 coins, and premium cost percentage is 50%, then premium cost will be 50 coins',
-            'message' => 'Premium cost percentage: {value}%',
-            'unit' => '%',
-            'help' => 'Set the percentage of the base cost for premium questions'
+        'service_ai_auditing' => [
+            'cost_per_response' => [
+                'name' => 'Cost Per Response',
+                'description' => 'Cost in coins for auditing each response',
+                'message' => 'Cost per response: {value} coins',
+                'unit' => 'coins',
+                'help' => 'Set the cost for auditing each competition response'
+            ],
+            'max_response_auditing_at_one_batch' => [
+                'name' => 'Max Responses Per Batch',
+                'description' => 'Maximum number of responses to audit in one batch',
+                'message' => 'Max {value} responses per batch',
+                'unit' => 'responses',
+                'help' => 'Maximum responses to process in a single AI auditing batch'
+            ],
+            'llm_provider' => [
+                'name' => 'LLM Provider',
+                'description' => 'AI provider for auditing service',
+                'message' => 'Using {value} provider',
+                'unit' => 'provider',
+                'help' => 'Select the AI provider for response auditing'
+            ],
+            'model' => [
+                'name' => 'AI Model',
+                'description' => 'AI model for auditing service',
+                'message' => 'Using {value} model',
+                'unit' => 'model',
+                'help' => 'Select the AI model for response auditing'
+            ]
         ],
     ],
     
@@ -181,10 +247,18 @@ return [
         'max_daily_transactions' => 'Daily transaction limit must be between 1 and 10',
         'min_competition_coins' => 'Minimum competition coins must be between 100 and 10,000',
         'competition_gift' => 'Competition gift must be between 50 and 5,000',
+        'second_place_winner_percentage' => 'Second place winner percentage must be between 0 and 100',
+        'third_place_winner_percentage' => 'Third place winner percentage must be between 0 and 100',
         'maintenance_mode' => 'Maintenance mode must be either true or false',
         'max_file_upload_size' => 'Maximum file upload size must be between 10485760 and 104857600',
         'session_timeout' => 'Session timeout must be between 1 and 1440',
         'email_notifications_enabled' => 'Email notifications must be either true or false',
+        'global_question_llm_provider' => 'LLM provider must be one of: openai, anthropic, gemini',
+        'global_question_model' => 'AI model is required',
+        'ai_auditing_cost_per_response' => 'Cost per response must be 0 or greater',
+        'ai_auditing_max_response_auditing_at_one_batch' => 'Max responses per batch must be between 50 and 100',
+        'ai_auditing_llm_provider' => 'LLM provider must be one of: openai, anthropic, gemini',
+        'ai_auditing_model' => 'AI model is required',
     ],
     
     // Help Text

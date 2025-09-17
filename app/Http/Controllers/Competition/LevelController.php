@@ -47,10 +47,7 @@ class LevelController extends Controller
         $result = $this->levelService->getEditData($encodedId);
         
         if ($result['status'] === 'success') {
-            return view("pages.admin.competitions.edit.level_edit", [
-                'level' => $result['level'],
-                'admins' => $result['admins']
-            ]);
+            return view("pages.admin.competitions.edit.level_edit", $result['data']);
         }
         
         return Redirect::back();
@@ -114,6 +111,17 @@ class LevelController extends Controller
     public function finishLevel(Level $level): RedirectResponse
     {
         $this->levelService->finishLevel($level);
+        return Redirect::back();
+    }
+
+    /**
+     * Finishes a level and returns a response.
+     * @param Level $level The level instance resolved by route model binding.
+     * @return RedirectResponse
+     */
+    public function reAssignUsersResponses(Level $level): RedirectResponse
+    {
+        $this->levelService->assignAuditorsToResponsesForLevel($level);
         return Redirect::back();
     }
 }

@@ -4,6 +4,7 @@ namespace App\Traits;
 
 use Exception;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 Trait RegisterLogs
 {
@@ -13,7 +14,7 @@ Trait RegisterLogs
      * @param string $title The incoming request containing admin data.
      * @param Exception $exception The incoming request containing admin data.
      */
-    function registerLogs(string $title,Exception $exception): void
+    function registerLogs(string $title,Throwable $exception): void
     {
 
         Log::error($title . $exception->getMessage(), [

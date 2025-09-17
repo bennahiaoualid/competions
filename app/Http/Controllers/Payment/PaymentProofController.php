@@ -17,10 +17,11 @@ class PaymentProofController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        if (!Storage::disk('local')->exists($transaction->proof_image_path)) {
+        // Check if proof_image_path exists and is not null
+        if (!$transaction->proof_image_path || !Storage::disk('local')->exists($transaction->proof_image_path)) {
             abort(404);
         }
 
-        return response()->file(Storage::disk('local')->path($transaction->proof_image_path));
+        return Storage::disk('local')->response($transaction->proof_image_path);
     }
 }

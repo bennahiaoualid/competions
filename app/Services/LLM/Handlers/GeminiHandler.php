@@ -12,7 +12,8 @@ class GeminiHandler implements LLMHandlerInterface
      * Create a new Gemini handler instance.
      */
     public function __construct(
-        private GeminiService $geminiService
+        private GeminiService $geminiService,
+        private ?string $modelOverride = null
     ) {}
 
     /**
@@ -20,6 +21,11 @@ class GeminiHandler implements LLMHandlerInterface
      */
     public function generate(string $prompt, array $options = []): LLMResponse
     {
+        // Use model override if provided, otherwise use service default
+        if ($this->modelOverride) {
+            $options['model'] = $this->modelOverride;
+        }
+        
         return $this->geminiService->generate($prompt, $options);
     }
 
@@ -28,6 +34,11 @@ class GeminiHandler implements LLMHandlerInterface
      */
     public function chat(array $messages, array $options = []): LLMResponse
     {
+        // Use model override if provided, otherwise use service default
+        if ($this->modelOverride) {
+            $options['model'] = $this->modelOverride;
+        }
+        
         return $this->geminiService->chat($messages, $options);
     }
 

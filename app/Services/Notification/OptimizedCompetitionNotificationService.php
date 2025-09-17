@@ -3,13 +3,14 @@
 namespace App\Services\Notification;
 
 use App\Models\User;
-use App\Models\Competition\Level;
 use App\Models\Admin\Admin;
-use App\Models\Admin\AdminApproval;
+use App\Models\Competition\Level;
 use Illuminate\Support\Collection;
+use App\Models\Admin\AdminApproval;
+use App\Enums\NotificationClassTypes;
 use App\Models\Competition\Competition;
-use App\Jobs\Notifications\BatchBroadcastNotificationJob;
-use App\Jobs\Notifications\BatchCompetitionNotificationJob;
+use App\Jobs\Notifications\BatchBroadcastJob;
+use App\Jobs\Notifications\BatchNotificationJob;
 
 class OptimizedCompetitionNotificationService
 {
@@ -50,12 +51,13 @@ class OptimizedCompetitionNotificationService
         $notificationData = $this->prepareNotificationData($competition, $eventType, $level, $additionalData);
         
         $notifiableType = $this->getNotifiableType($eventType);
+
         // Dispatch single batch job for database notifications
-        BatchCompetitionNotificationJob::dispatch($userIds, $notificationData, $notifiableType);
+        BatchNotificationJob::dispatch($userIds, $notificationData, NotificationClassTypes::COMPETITION->value, $notifiableType);
         
         // Dispatch single batch job for broadcast notifications (if needed for real-time events)
         if ($this->shouldBroadcast($eventType)) {
-            BatchBroadcastNotificationJob::dispatch($userIds, $notificationData);
+            BatchBroadcastJob::dispatch($userIds, $notificationData, NotificationClassTypes::COMPETITION);
         }
     }
 
@@ -88,7 +90,9 @@ class OptimizedCompetitionNotificationService
         return in_array($eventType, [
             'activated',
             'level_activated',
-            'level_finished'
+            'level_finished',
+            'audit_level_requested',
+            'confirm_ai_auditing_level_requested'
         ]);
     }
 
@@ -183,6 +187,8 @@ class OptimizedCompetitionNotificationService
             case 'level_updated':
             case 'level_finished':
             case 'level_manager_requested':
+            case 'audit_level_requested':
+            case 'confirm_ai_auditing_level_requested':
                 return array_merge($baseData, [
                     'level_name' => $level->name,
                 ]);
@@ -213,6 +219,8 @@ class OptimizedCompetitionNotificationService
                 return 'info';
             case 'auditor_requested':
             case 'level_manager_requested':
+            case 'audit_level_requested':
+            case 'confirm_ai_auditing_level_requested':
                 return 'warning';
             default:
                 return 'info';
@@ -233,6 +241,9 @@ class OptimizedCompetitionNotificationService
             case 'auditor_requested':
             case 'level_manager_requested':
                 return route('admin.approvals.index');
+            case 'audit_level_requested':
+            case 'confirm_ai_auditing_level_requested':
+                return route("admin.auditor.users", ["level" => $level]);
             default:
                 return route('competitions.detail', $competition);
         }
@@ -252,6 +263,22 @@ class OptimizedCompetitionNotificationService
     public function auditorRequestedBulk(Competition $competition, Collection $admins): void
     {
         $this->notifyUsers($admins, $competition, 'auditor_requested');
+    }
+
+    /**
+     * Notify admin about audit level request
+     */
+    public function auditLevelRequested(Level $level, Admin $admin): void
+    {
+        $this->notifyUsers(collect([$admin]), $level->competition, 'audit_level_requested', $level);
+    }
+
+    /**
+     * Notify admin about confirm AI auditing level request
+     */
+    public function confirmAIAuditingLevelRequested(Level $level, Admin $admin): void
+    {
+        $this->notifyUsers(collect([$admin]), $level->competition, 'confirm_ai_auditing_level_requested', $level);
     }
 
     /**
@@ -280,10 +307,10 @@ class OptimizedCompetitionNotificationService
         ];
 
         // Database notification only for approved, broadcast for rejected
-        BatchCompetitionNotificationJob::dispatch([$competition->admin_id], $notificationData, Admin::class);
+        BatchNotificationJob::dispatch([$competition->admin_id], $notificationData, NotificationClassTypes::COMPETITION->value, Admin::class);
         
         if ($decision === 'rejected') {
-            BatchBroadcastNotificationJob::dispatch([$competition->admin_id], $notificationData, Admin::class);
+            BatchBroadcastJob::dispatch([$competition->admin_id], $notificationData, NotificationClassTypes::COMPETITION, Admin::class);
         }
     }
 

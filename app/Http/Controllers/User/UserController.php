@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Models\User;
-use App\Models\Monitoring\DeletionRequest;
 use App\Services\User\UserService;
 use App\Traits\CrudOperationNotificationAlert;
 use App\Traits\RoleManipulation;
@@ -14,7 +13,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
-use Illuminate\Support\Facades\Auth;
 
 
 class UserController extends Controller

@@ -35,16 +35,17 @@ class LLMHandlerFactory
      * and can be easily extended for additional providers.
      *
      * @param string|null $provider The provider name (defaults to config default)
+     * @param string|null $model The model to use (overrides default)
      * @return LLMHandlerInterface The appropriate LLM handler
      * @throws \InvalidArgumentException If the provider type is not supported or not available
      */
-    public function make(?string $provider = null): LLMHandlerInterface
+    public function make(?string $provider = null, ?string $model = null): LLMHandlerInterface
     {
         $provider = $provider ?? config('llm.default_provider', 'gemini');
         
         return match (strtolower($provider)) {
-            'openai' => $this->createOpenAIHandler(),
-            'gemini' => $this->createGeminiHandler(),
+            'openai' => $this->createOpenAIHandler($model),
+            'gemini' => $this->createGeminiHandler($model),
             default => throw new \InvalidArgumentException("Unsupported LLM provider: {$provider}")
         };
     }
@@ -71,22 +72,22 @@ class LLMHandlerFactory
     /**
      * Create OpenAI handler
      */
-    private function createOpenAIHandler(): OpenAIHandler
+    private function createOpenAIHandler(?string $model = null): OpenAIHandler
     {
         if ($this->openaiService === null) {
             throw LLMConnectionException::apiKeyMissing('openai');
         }
-        return new OpenAIHandler($this->openaiService);
+        return new OpenAIHandler($this->openaiService, $model);
     }
 
     /**
      * Create Gemini handler
      */
-    private function createGeminiHandler(): GeminiHandler
+    private function createGeminiHandler(?string $model = null): GeminiHandler
     {
         if ($this->geminiService === null) {
             throw LLMConnectionException::apiKeyMissing('gemini');
         }
-        return new GeminiHandler($this->geminiService);
+        return new GeminiHandler($this->geminiService, $model);
     }
 } 
