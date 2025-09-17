@@ -538,6 +538,7 @@ class GlobalQuestionControllerTest extends TestCase
         return [
             'question_text' => 'Test question for global users?',
             'duration' => 60,
+            'explanation' => null,
             'score' => 10,
             'choice' => [
                 'Correct answer',

@@ -29,7 +29,7 @@ class AuditServiceTest extends TestCase
     protected $transactionManagerMock;
     /** @var FlasherInterface | Mockery\MockInterface */
     protected $flasherMock;
-     /** @var CompetitionCacheManagmentSystem | Mockery\MockInterface */
+    /** @var CompetitionCacheManagmentSystem | Mockery\MockInterface */
     protected $competitionCache;
     /** @var Level | Mockery\MockInterface */
     protected Level $level;
@@ -74,28 +74,28 @@ class AuditServiceTest extends TestCase
 
     public function test_audit_user_responses_returns_expected_array()
     {
-        
+
         // Create mock questions with responses
         $response1 = (object) ['admin_id' => 1];
         $response2 = (object) ['admin_id' => null];
-        
+
         $question1 = (object) ['responses' => collect([$response1])];
         $question2 = (object) ['responses' => collect([$response2])];
-        
+
         $questions = collect([$question1, $question2]);
 
         $this->repositoryMock->shouldReceive('getUser')
             ->once()
             ->with('user-identifier')
             ->andReturn($this->user);
-        
-            $this->repositoryMock->shouldReceive('getLevelQuestionsWithUserResponses')
+
+        $this->repositoryMock->shouldReceive('getLevelQuestionsWithUserResponses')
             ->once()
             ->with($this->level->id, $this->user->id)
             ->andReturn($questions);
-        
+
         $result = $this->service->auditUserResponses($this->level, 'user-identifier');
-        
+
         $this->assertEquals($this->level, $result['level']);
         $this->assertEquals($this->user, $result['user']);
         $this->assertEquals($questions, $result['questions']);
@@ -214,7 +214,7 @@ class AuditServiceTest extends TestCase
         $this->flasherMock->shouldReceive('notify')
             ->with('Audit submitted successfully', 'success')
             ->once();
-        
+
         $this->flasherMock->shouldReceive('notify')
             ->with('3 responses updated', 'info')
             ->once();
@@ -284,7 +284,7 @@ class AuditServiceTest extends TestCase
         // Mock flasher calls
         $this->flasherMock->shouldReceive('notify')
             ->with('Audit submitted successfully', 'success')
-            ->once(); 
+            ->once();
 
         $this->competitionCache->shouldReceive('invalidateUsersAuditingInfo')
             ->with(Mockery::any())
@@ -390,7 +390,7 @@ class AuditServiceTest extends TestCase
         // Assert
         $this->assertFalse($result);
     }
- 
+
     // New tests for assignAuditorsToResponsesForLevel
     public function test_assign_auditors_returns_false_when_level_cannot_edit()
     {
@@ -433,6 +433,7 @@ class AuditServiceTest extends TestCase
         $competition = (object) ['auditing_time_for_level' => 30];
         $this->level->shouldReceive('getAttribute')->with('finished_at')->andReturn($finishedAt);
         $this->level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
+        $this->level->shouldReceive('getAttribute')->with('competition_id')->andReturn(1);
 
 
         $this->repositoryMock->shouldReceive('assignAuditorsToResponsesForLevel')
@@ -443,6 +444,9 @@ class AuditServiceTest extends TestCase
         $this->flasherMock->shouldReceive('success')->once();
 
         $this->competitionCache->shouldReceive('invalidateUsersAuditingInfo')
+            ->with(Mockery::any())
+            ->once();
+        $this->competitionCache->shouldReceive('invalidateComptitionUsersOreder')
             ->with(Mockery::any())
             ->once();
 
@@ -461,6 +465,7 @@ class AuditServiceTest extends TestCase
         $competition = (object) ['auditing_time_for_level' => 30];
         $this->level->shouldReceive('getAttribute')->with('finished_at')->andReturn($finishedAt);
         $this->level->shouldReceive('getAttribute')->with('competition')->andReturn($competition);
+        $this->level->shouldReceive('getAttribute')->with('competition_id')->andReturn(1);
 
 
         $this->repositoryMock->shouldReceive('assignAuditorsToResponsesForLevel')
@@ -469,10 +474,6 @@ class AuditServiceTest extends TestCase
             ->andReturn(0);
 
         $this->flasherMock->shouldReceive('info')->once();
-
-        $this->competitionCache->shouldReceive('invalidateUsersAuditingInfo')
-            ->with(Mockery::any())
-            ->once();
 
         $result = $this->service->assignAuditorsToResponsesForLevel($this->level);
 
@@ -564,7 +565,7 @@ class AuditServiceTest extends TestCase
 
         $this->repositoryMock->shouldReceive('bulkUpdateResponses')
             ->once()
-            ->with(Mockery::any(),Mockery::any(),Mockery::any());
+            ->with(Mockery::any(), Mockery::any(), Mockery::any());
 
         // Execute transaction
         $this->transactionManagerMock->shouldReceive('run')
@@ -645,4 +646,4 @@ class AuditServiceTest extends TestCase
         $this->assertGreaterThanOrEqual(3, count($result['errors']));
         $this->assertNotEmpty($result['notifications']);
     }
-} 
+}
