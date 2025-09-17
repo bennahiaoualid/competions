@@ -50,8 +50,8 @@
         </x-alert>
     @endif
     
-    <div class="w-full max-w-4xl text-center mx-auto">
-        <h3 class="text-xl mb-2 capitalize">{{__("form.question.add")}}</h3>
+    <div class="flex justify-end items-center gap-4">
+        <h3 class="text-xl capitalize">{{__("competition.question.number")}}</h3>
         <div class="flex gap-6 items-center justify-center">
             <x-text-input id="questions_number" name="questions_number" type="number" min="1" max="10" value="1" class="mt-1 block w-full"  />
             <x-button type="button" id="generate_questions">

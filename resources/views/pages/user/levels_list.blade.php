@@ -7,13 +7,7 @@
                 {{__('competition.level.name')}}
             </th>
             <th class="px-6 bg-slate-300 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-center">
-                {{__('competition.info.start_date')}}
-            </th>
-            <th class="px-6 bg-slate-300 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-center">
                 {{__('competition.info.status.state')}}
-            </th>
-            <th class="px-6 bg-slate-300 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-center">
-                {{__('competition.level.questions_number')}}
             </th>
             <th class="px-6 bg-slate-300 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-center">
 
@@ -24,19 +18,19 @@
         <tbody>
         @foreach($competition->levels as $level)
         <tr>
-            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700 ">
+            <td class="border-t-0 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap px-4 text-start text-blueGray-700 ">
                 {{$level->name}}
             </td>
-            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 ">
-                {{Carbon\Carbon::parse($level->start_date)->inUserTimezone()}}
-            </td>
-            <td class="border-t-0 px-6 align-center border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                <x-status-widget :status="$level->status"
-                                :text="__('competition.info.status.'.$level->status)" />
-            </td>
-            <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                {{$level->questions_number}}
-            </td>
+            @if ($level->status === 'pending')
+                <td class="border-t-0 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap px-4 ">
+                    {{$level->start_date_period}}
+                </td>
+            @else
+                <td class="border-t-0 align-center border-l-0 border-r-0 text-xs whitespace-nowrap px-4">
+                    <x-status-widget :status="$level->status"
+                                    :text="__('competition.info.status.'.$level->status)" />
+                </td>
+            @endif
             <td>
                 <x-button :islink="true" color_type="info" size="sm" title="{{__('messages.global.detail')}}"
                         :outline="true" href='{{route("competitions.level", ["level" => $level])}}' target="_blank">

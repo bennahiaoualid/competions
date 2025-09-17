@@ -196,4 +196,11 @@ class Level extends Model
         return $responses == 0;
     }
 
+    /** getters */
+    public function getStartDatePeriodAttribute()
+    {
+        return $this->start_date->diffForHumans(now());
+    }
+    
+
 }
