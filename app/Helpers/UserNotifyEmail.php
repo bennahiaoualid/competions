@@ -21,7 +21,7 @@ class UserNotifyEmail
             'competition' => $competition->title,
             'type' => 'new_competition',
             'object' => 'competition',
-            'link' => route('competitions.detail', ['competition' => $competition])
+            'link' => route('competitions.detail', ['slug' => $competition->slug])
         ];
 
         // Process users in chunks to avoid memory issues and too many individual jobs
@@ -51,7 +51,7 @@ class UserNotifyEmail
             'competition' => $competition->title,
             'type' => 'update_competition',
             'object' => 'competition',
-            'link' => route('competitions.detail', ['competition' => $competition])
+            'link' => route('competitions.detail', ['slug' => $competition->slug])
         ];
 
         $competition->users->chunk(100)->each(function ($usersChunk) use ($commonData) {
@@ -79,7 +79,7 @@ class UserNotifyEmail
             'competition' => $competition->title,
             'type' => 'activate_competition',
             'object' => 'competition',
-            'link' => route('competitions.detail', ['competition' => $competition])
+            'link' => route('competitions.detail', ['slug' => $competition->slug])
         ];
 
         $competition->users->chunk(100)->each(function ($usersChunk) use ($commonData) {

@@ -49,11 +49,12 @@ class UserCompetitionService
 
     /**
      * Get competition detail with competitors order
-     * @param Competition $competition
+     * @param string $competitionSlug
      * @return array competition:competition, users:collection of users and audit_finish:bool if the audit is finished
      */
-    public function competitionDetail(Competition $competition): array
+    public function competitionDetail(string $competitionSlug): array
     {
+        $competition = $this->competition_cache_managment_system->getCompetitionDetail($competitionSlug);
         $results = $this->competition_cache_managment_system->getComptitionUsersOreder(
             model: $competition,
             limit: true,
@@ -62,7 +63,7 @@ class UserCompetitionService
             paginate: false
         );
         return [
-            'competition' => $competition->load('levels'),
+            'competition' => $competition,
             'users' => $results['users'],
             'audit_finish' => $results['audit_finish']
         ];

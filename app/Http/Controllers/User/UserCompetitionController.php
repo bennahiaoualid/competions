@@ -44,12 +44,12 @@ class UserCompetitionController extends Controller
 
     /**
      * Display competition details
-     * @param Competition $competition
+     * @param string $competitionSlug
      * @return View
      */
-    public function competitionDetail(Competition $competition): View
+    public function competitionDetail(string $competitionSlug): View
     {
-        $data = $this->userCompetitionService->competitionDetail($competition);
+        $data = $this->userCompetitionService->competitionDetail($competitionSlug);
         return view('pages.user.competition_detail', $data);
     }
 

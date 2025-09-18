@@ -3,6 +3,7 @@
 namespace App\Services\CashManagment;
 
 use App\Helpers\CompetitionsOrder;
+use App\Models\Competition\Competition;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
@@ -56,6 +57,27 @@ class CompetitionCacheManagmentSystem
         );
     }
 
+    public function getCompetitionDetail($compeitionSlug)
+    {
+        $cacheTags = $this->getCacheTags('competition_detail',$compeitionSlug);
+        //dd($cacheTags);
+        $cacheDuration = $this->getCacheDuration('getCompetitionDetail');
+        $cacheKey = $this->buildCacheKey('getCompetitionDetail',[
+            'slug' => $compeitionSlug
+        ]);
+
+        return Cache::tags($cacheTags)
+            ->remember(
+            $cacheKey,
+            $cacheDuration,
+            function () use ($compeitionSlug) {
+                return Competition::with('levels')->where('slug' , $compeitionSlug)->firstOrFail();
+            }
+        );
+
+
+    }
+
     public function getUsersCountForAdminAuditing($adminId) 
     {
         $cacheTags = $this->getCacheTags('users_responses_auditing_system', $adminId);
@@ -103,6 +125,13 @@ class CompetitionCacheManagmentSystem
         Cache::tags($cacheTags)->flush();
     }
 
+        /**
+     * Invalidate comptition users order
+     */
+    public function invalidateComptitionDetail($compeitionSlug): void
+    {
+        Cache::tags('competition_detail_'.$compeitionSlug)->flush();
+    }
         /**
      * Build cache key based on method and parameters
      */
@@ -152,6 +181,7 @@ class CompetitionCacheManagmentSystem
             'getUsersCountForAdminAuditing' => 3600 , // 1 hours
             'getComptitionUsersOreder' => 3600, // 1 hours
             'getComptitionUsersOrederAuditing' => 300, // 5 minut
+            'getCompetitionDetail' => 3600 // 1 hours
 
         ];
 

@@ -245,7 +245,7 @@ class OptimizedCompetitionNotificationService
             case 'confirm_ai_auditing_level_requested':
                 return route("admin.auditor.users", ["level" => $level]);
             default:
-                return route('competitions.detail', $competition);
+                return route('competitions.detail', ['slug' => $competition->slug]);
         }
     }
 

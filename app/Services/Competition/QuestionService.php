@@ -47,25 +47,22 @@ class QuestionService
             }
             
             if(!$level->canEditQuestion()){
-                $this->flasher->notify(
+                $this->flasher->error(
                     __('messages.validation.not_allow.question_update'),
-                    "error"
                 );
                 return false;
             }
             
             if($level->status != Level::STATUS_PENDING){
-                $this->flasher->notify(
+                $this->flasher->error(
                     __('messages.validation.not_allow.active_level_update'),
-                    "error"
                 );
                 return false;
             }
 
             if(!$this->validateQuestionsNumber($level,count($data['question_text']))){
-                $this->flasher->notify(
+                $this->flasher->error(
                     __('messages.validation.not_allow.question_update_max_number',['number' => $level->questions_number]),
-                    "error"
                 );
                 return false;
             }
@@ -86,11 +83,11 @@ class QuestionService
                 return true;
             });
 
-            $this->flasher->notifyCrudResult(true, "saved");
+            $this->flasher->crudSuccess("saved");
             return $result;
         } catch (Exception $exception) {
             $this->registerLogs('Questions creation error: ', $exception);
-            $this->flasher->notifyCrudResult(false, "saved");
+            $this->flasher->crudFailure("saved");
             return false;
         }
     }
@@ -112,16 +109,14 @@ class QuestionService
             }
             
             if(!$level->canEditQuestion()){
-                $this->flasher->notify(
+                $this->flasher->error(
                     __('messages.validation.not_allow.question_update'),
-                    "error"
                 );
                 return false;
             }
             if($level->status != Level::STATUS_PENDING){
-                $this->flasher->notify(
+                $this->flasher->error(
                     __('messages.validation.not_allow.active_level_update'),
-                    "error"
                 );
                 return false;
             }
@@ -130,11 +125,11 @@ class QuestionService
                 return $question->update($data);
             });
 
-            $this->flasher->notifyCrudResult(true, "saved");
+            $this->flasher->crudSuccess("saved");
             return $result;
         } catch (Exception $exception) {
             $this->registerLogs('Questions update error: ', $exception);
-            $this->flasher->notifyCrudResult(false, "saved");
+            $this->flasher->crudFailure("saved");
             return false;
         }
     }

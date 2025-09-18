@@ -8,16 +8,13 @@ use Carbon\Carbon;
 use Tests\TestCase;
 use App\Models\User;
 use App\Models\Admin\Admin;
-use App\Models\SystemSetting;
 use App\Helpers\UserNotifyEmail;
 use App\Models\Competition\Level;
 use Illuminate\Support\Collection;
 use App\Contracts\FlasherInterface;
 use App\Enums\AdminApprovalTypeEnum;
-use Illuminate\Support\Facades\Auth;
 use App\Services\SystemSettingService;
 use App\Models\Competition\Competition;
-use Database\Seeders\SystemSettingSeeder;
 use App\Services\Competition\LevelService;
 use App\Services\Admin\AdminApprovalService;
 use App\Contracts\TransactionManagerInterface;
@@ -26,6 +23,7 @@ use App\Jobs\Competition\FinishLevelTrackableJob;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Interface\Competition\LevelRepositoryInterface;
 use App\Jobs\Competition\FinishLevelTrackableJobFactory;
+use App\Services\CashManagment\CompetitionCacheManagmentSystem;
 use App\Services\Notification\OptimizedCompetitionNotificationService;
 
 class LevelServiceTest extends TestCase
@@ -51,6 +49,8 @@ class LevelServiceTest extends TestCase
     protected $approvalService;
     /** @var Level|\Mockery\MockInterface */
     protected $level_partial;
+    /** @var CompetitionCacheManagmentSystem|\Mockery\MockInterface */
+    protected $competititonCacheSystem;
     /** @var Competition|\Mockery\MockInterface */
     protected $competition_partial;
 
@@ -72,6 +72,8 @@ class LevelServiceTest extends TestCase
         $this->jobTrackingService = Mockery::mock(JobTrackingService::class);
         $this->finishLevelFactory = Mockery::mock(FinishLevelTrackableJobFactory::class);
         $this->systemSettingService = Mockery::mock(SystemSettingService::class);
+        $this->competititonCacheSystem = Mockery::mock(CompetitionCacheManagmentSystem::class);
+
         $this->levelService = new LevelService(
             $this->levelRepository,
             $this->transactionManager,
@@ -80,7 +82,8 @@ class LevelServiceTest extends TestCase
             $this->approvalService,
             $this->jobTrackingService,
             $this->finishLevelFactory,
-            $this->systemSettingService
+            $this->systemSettingService,
+            $this->competititonCacheSystem
         );
 
         $this->level_partial = Mockery::mock(Level::class)->makePartial();
@@ -167,6 +170,9 @@ class LevelServiceTest extends TestCase
             ->andReturnUsing(function ($callback) {
                 return $callback();
             });
+
+        $this->competititonCacheSystem->shouldReceive('invalidateComptitionDetail')->with(Mockery::any())->once();
+
     
         // Mock the approval service
         $admin = Mockery::mock(Admin::class);
@@ -344,6 +350,8 @@ class LevelServiceTest extends TestCase
             ->shouldReceive('levelUpdated')
             ->with($competition, $level)
             ->once();
+        $this->competititonCacheSystem->shouldReceive('invalidateComptitionDetail')->with(Mockery::any())->once();
+
             
         $this->flasher
             ->shouldReceive('crudSuccess')
@@ -408,6 +416,9 @@ class LevelServiceTest extends TestCase
             ->shouldReceive('levelUpdated')
             ->with($competition, $level)
             ->once();
+        
+        $this->competititonCacheSystem->shouldReceive('invalidateComptitionDetail')->with(Mockery::any())->once();
+
 
         $this->flasher
             ->shouldReceive('crudSuccess')
@@ -475,6 +486,8 @@ class LevelServiceTest extends TestCase
             ->with($updatedData['admin_id'], Level::class, $level->id, AdminApprovalTypeEnum::LEVEL_MANAGER->value)
             ->once()
             ->andReturn($getApprovalStatus);
+        $this->competititonCacheSystem->shouldReceive('invalidateComptitionDetail')->with(Mockery::any())->once();
+
 
         $admin = Mockery::mock(Admin::class);
         $admin->shouldReceive('getAttribute')->with('name')->andReturn('admin');

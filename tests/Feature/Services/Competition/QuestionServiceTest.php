@@ -5,11 +5,9 @@ namespace Tests\Feature\Services\Competition;
 use Tests\TestCase;
 use App\Models\Admin\Admin;
 use App\Models\Competition\Level;
-use App\Contracts\FlasherInterface;
 use App\Models\Competition\Question;
 use Illuminate\Support\Facades\Auth;
 use App\Services\Competition\QuestionService;
-use App\Contracts\TransactionManagerInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
@@ -62,9 +60,10 @@ class QuestionServiceTest extends TestCase
             'question_text' => ['Q1', 'Q2'],
             'duration' => [30, 40],
             'max_score' => [10, 20],
+            'perfect_response' =>['this is perfect response','002'],
         ];
         $this->transactionManager->shouldReceive('run')->andReturnUsing(fn($cb) => $cb());
-        $this->flasher->shouldReceive('notifyCrudResult')->once()->with(true, 'saved');
+        $this->flasher->shouldReceive('crudSuccess')->once()->with('saved');
         $service = $this->service;
         $result = $service->create($data, $level);
         $this->assertTrue($result);
@@ -86,10 +85,12 @@ class QuestionServiceTest extends TestCase
             'question_text' => ['Q1'],
             'duration' => [30],
             'max_score' => [10],
+            'perfect_response' => ['this is perfect response'],
+
         ];
-        $this->flasher->shouldReceive('notify')
+        $this->flasher->shouldReceive('error')
         ->once()
-        ->with(__('messages.validation.not_allow.question_update'), 'error');
+        ->with(__('messages.validation.not_allow.question_update'));
         $service = $this->service;
         // Simulate cannot edit
         $level->canEditQuestion = fn() => false;
@@ -104,10 +105,12 @@ class QuestionServiceTest extends TestCase
             'question_text' => ['Q1'],
             'duration' => [30],
             'max_score' => [10],
+            'perfect_response' => ['this is perfect response'],
+
         ];
-        $this->flasher->shouldReceive('notify')
+        $this->flasher->shouldReceive('error')
             ->once()
-            ->with(__('messages.validation.not_allow.active_level_update'), 'error');
+            ->with(__('messages.validation.not_allow.active_level_update'));
         $service = $this->service;
         // Simulate can edit
         $level->canEditQuestion = fn() => true;
@@ -121,10 +124,12 @@ class QuestionServiceTest extends TestCase
             'question_text' => ['Q1'],
             'duration' => [30],
             'max_score' => [10],
+            'perfect_response' => ['this is perfect response'],
+
         ];
-        $this->flasher->shouldReceive('notify')
+        $this->flasher->shouldReceive('error')
             ->once()
-            ->with(__('messages.validation.not_allow.question_update_max_number', ['number' => $this->mainLevel->questions_number]), 'error');
+            ->with(__('messages.validation.not_allow.question_update_max_number', ['number' => $this->mainLevel->questions_number]));
 
         $this->assertFalse($this->service->create($data, $this->mainLevel));
     }
@@ -133,9 +138,13 @@ class QuestionServiceTest extends TestCase
     {
         $question = Question::factory()->create(['level_id' => $this->mainLevel->id]);
 
-        $data = ['question_text' => 'Updated', 'duration' => 50, 'max_score' => 30];
+        $data = [
+            'question_text' => 'Updated', 
+            'duration' => 50, 'max_score' => 30, 
+            'perfect_response' => 'this is perfect response',
+        ];
         $this->transactionManager->shouldReceive('run')->andReturnUsing(fn($cb) => $cb());
-        $this->flasher->shouldReceive('notifyCrudResult')->once()->with(true, 'saved');
+        $this->flasher->shouldReceive('crudSuccess')->once()->with('saved');
         
         $result = $this->service->update($question, $data);
         
@@ -147,9 +156,9 @@ class QuestionServiceTest extends TestCase
     {
         $this->mainLevel->update(['admin_id' => (Admin::factory()->create())->id]);
         $question = Question::factory()->create(['level_id' => $this->mainLevel->id]);
-        $this->flasher->shouldReceive('notify')
+        $this->flasher->shouldReceive('error')
             ->once()
-            ->with(__('messages.validation.not_allow.question_update'), 'error');
+            ->with(__('messages.validation.not_allow.question_update'));
         $data = ['question_text' => 'Updated', 'duration' => 50, 'max_score' => 30];
 
         $result = $this->service->update($question, $data);
@@ -162,9 +171,9 @@ class QuestionServiceTest extends TestCase
         $this->mainLevel->update(['status' => 'active']);
         $question = Question::factory()->create(['level_id' => $this->mainLevel->id]);
 
-        $this->flasher->shouldReceive('notify')
+        $this->flasher->shouldReceive('error')
             ->once()
-            ->with(__('messages.validation.not_allow.active_level_update'), 'error');
+            ->with(__('messages.validation.not_allow.active_level_update'));
         $data = ['question_text' => 'Updated', 'duration' => 50, 'max_score' => 30];
         
         $result = $this->service->update($question, $data);

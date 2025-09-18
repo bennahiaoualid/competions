@@ -4,6 +4,8 @@ namespace App\Models\Competition;
 
 use App\Models\User;
 use App\Models\Admin\Admin;
+use Spatie\Sluggable\HasSlug;
+use Spatie\Sluggable\SlugOptions;
 use App\Models\Admin\AdminApproval;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
@@ -74,7 +76,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  */
 class Competition extends Model
 {
-    use HasFactory;
+    use HasFactory, HasSlug;
 
     const STATUS_PENDING = 'pending';
     const STATUS_ACTIVE = 'active';
@@ -107,7 +109,8 @@ class Competition extends Model
         'winner_gifts',
         'multi_winner',
         'ai_auditing',
-        'auditing_time_for_level'
+        'auditing_time_for_level',
+        'slug'
     ];
 
     /**
@@ -260,5 +263,26 @@ class Competition extends Model
             return $query->where('status', '=',  $state );
         }
         return $query;
+    }
+
+    /**
+     * Get the options for generating the slug.
+     */
+    public function getSlugOptions() : SlugOptions
+    {
+        return SlugOptions::create()
+            ->generateSlugsFrom('title')
+            ->saveSlugsTo('slug')
+            ->doNotGenerateSlugsOnUpdate();
+    }
+
+    /**
+     * Get the route key for the model.
+     *
+     * @return string
+     */
+    public function getRouteKeyName()
+    {
+        return 'slug';
     }
 }

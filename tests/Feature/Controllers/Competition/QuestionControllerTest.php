@@ -43,7 +43,8 @@ class QuestionControllerTest extends TestCase
         $data = [
             'question_text' => ['New Question 1', 'New Question 2'],
             'duration' => [30, 45],
-            'max_score' => [10, 15]
+            'max_score' => [10, 15],
+            'perfect_response' => ["001","002"],
         ];
 
         // Act
@@ -130,7 +131,9 @@ class QuestionControllerTest extends TestCase
         $data = [
             'question_text' => 'Updated Question',
             'duration' => 45,
-            'max_score' => 15
+            'max_score' => 15,
+            'perfect_response' =>"001",
+
         ];
 
         // Act

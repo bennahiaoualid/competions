@@ -23,6 +23,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Jobs\Competetion\SyncCompetitionParticipants;
 use App\Exceptions\AIQuestionGeneration\PaidServiceException;
 use App\Interface\Competition\CompetitionRepositoryInterface;
+use App\Services\CashManagment\CompetitionCacheManagmentSystem;
 use App\Services\Notification\OptimizedCompetitionNotificationService;
 
 class CompetitionServiceTest extends TestCase
@@ -39,6 +40,7 @@ class CompetitionServiceTest extends TestCase
     protected $approvalService;
     protected $coinTransactionService;
     protected $systemSettingService;
+    protected $cacheSystem;
     protected $mainAdmin;
     protected $userNotify;
 
@@ -53,6 +55,8 @@ class CompetitionServiceTest extends TestCase
         $this->approvalService = Mockery::mock(AdminApprovalService::class);
         $this->coinTransactionService = Mockery::mock(CoinTransactionService::class);
         $this->systemSettingService = Mockery::mock(SystemSettingService::class);
+        $this->cacheSystem = Mockery::mock(CompetitionCacheManagmentSystem::class);
+
         $this->service = new CompetitionService(
             $this->competitionRepository,
             $this->transactionManager,
@@ -61,7 +65,8 @@ class CompetitionServiceTest extends TestCase
             $this->notificationService,
             $this->approvalService,
             $this->systemSettingService,
-            $this->coinTransactionService
+            $this->coinTransactionService,
+            $this->cacheSystem
         );
         $this->userNotify = Mockery::mock('alias:'.UserNotifyEmail::class);
 
@@ -188,6 +193,7 @@ class CompetitionServiceTest extends TestCase
             'competition' => $competition,
             'resyncCompetitionParticipants' => true
         ]);
+        $this->cacheSystem->shouldReceive('invalidateComptitionDetail')->with(Mockery::any())->once();
 
         $result = $this->service->updateCompetition($competition, $data);
 
@@ -214,6 +220,7 @@ class CompetitionServiceTest extends TestCase
                         ->with($competition)
                         ->andReturnNull();
 
+        $this->cacheSystem->shouldReceive('invalidateComptitionDetail')->with(Mockery::any())->once();
 
         $result = $this->service->updateCompetition($competition, $data);
 

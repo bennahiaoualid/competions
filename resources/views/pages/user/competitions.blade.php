@@ -46,7 +46,7 @@
 
                 <div class="flex justify-between items-center">
                     <p class="py-1 px-2 border border-sky-600 text-sky-600" class="">{{$competition->start_date->inUserTimezone()}}</p>
-                    <x-button :islink="true" href="{{route('competitions.detail',['competition'=>$competition])}}">
+                    <x-button :islink="true" href="{{route('competitions.detail',['slug'=>$competition->slug])}}">
                         {{__('messages.global.details')}}
                     </x-button>
                 </div>

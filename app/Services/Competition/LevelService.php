@@ -20,6 +20,7 @@ use App\Services\Monitoring\JobTrackingService;
 use App\Exceptions\AdminAlreadyDecidedException;
 use App\Interface\Competition\LevelRepositoryInterface;
 use App\Exceptions\AdminNotAvailableAsLevelManagerException;
+use App\Services\CashManagment\CompetitionCacheManagmentSystem;
 use App\Services\Notification\OptimizedCompetitionNotificationService;
 use App\Services\SystemSettingService;
 
@@ -35,7 +36,8 @@ class LevelService
         protected AdminApprovalService $approvalService,
         protected JobTrackingService $jobTrackingService,
         protected FinishLevelTrackableJobFactory $finishLevelFactory,
-        protected SystemSettingService $systemSettingService
+        protected SystemSettingService $systemSettingService,
+        protected CompetitionCacheManagmentSystem $competitionCacheManagment,
     ) {
     }
 
@@ -82,6 +84,8 @@ class LevelService
 
             // Send notification to competition users
             $this->notificationService->levelCreated($competition, $level);
+            // ivalidate compeition detail data cache
+            $this->competitionCacheManagment->invalidateComptitionDetail($competition->slug);
 
             $this->flasher->crudSuccess('saved');
             return true;
@@ -252,6 +256,8 @@ class LevelService
 
             // Send notification to competition users
             $this->notificationService->levelUpdated($competition, $level);
+              // ivalidate compeition detail data cache
+            $this->competitionCacheManagment->invalidateComptitionDetail($competition->slug);
 
             
 

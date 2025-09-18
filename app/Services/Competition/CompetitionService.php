@@ -23,6 +23,7 @@ use App\Interface\Competition\CompetitionRepositoryInterface;
 use App\Traits\CrudOperationNotificationAlert; // For notifications
 use App\Services\Notification\OptimizedCompetitionNotificationService;
 use App\Models\User; // For Auth::user() type hinting if specific methods are used
+use App\Services\CashManagment\CompetitionCacheManagmentSystem;
 
 class CompetitionService
 {
@@ -42,7 +43,8 @@ class CompetitionService
         protected OptimizedCompetitionNotificationService $notificationService,
         protected AdminApprovalService $approvalService,
         protected SystemSettingService $systemSettingService,
-        protected CoinTransactionService $coinTransactionService
+        protected CoinTransactionService $coinTransactionService,
+        protected CompetitionCacheManagmentSystem $competitionCacheManagment,
     ) {
     }
 
@@ -181,6 +183,8 @@ class CompetitionService
                 }
                 // Send notification to competition users
                 $this->notificationService->competitionUpdated($competition);
+                // ivalidate compeition detail data cache
+                $this->competitionCacheManagment->invalidateComptitionDetail($competition->slug);
                 return true;
             });
 
@@ -417,7 +421,6 @@ class CompetitionService
                 $this->flasher->error(__('messages.validation.not_allow.competition_activate_level_pass'));
                 return false;
             }
-
             $result = $this->transactionManager->run(function () use ($competition) {
                 $competition->start_date = now();
                 $competition->update(['status' => Competition::STATUS_ACTIVE]);
@@ -428,7 +431,6 @@ class CompetitionService
                 
                 return true;
             });
-
             $this->flasher->crudSuccess('activated');
             return $result;
         } catch (Exception $exception) {

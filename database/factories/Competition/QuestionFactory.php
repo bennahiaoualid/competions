@@ -35,6 +35,7 @@ class QuestionFactory extends Factory
             'max_score' => $this->faker->numberBetween(5, 20),
             'duration' => $this->faker->numberBetween(30, 120), // Duration in seconds for a question
             'level_id' => $levelId,
+            'perfect_response' => $this->faker->text(10),
         ];
     }
 

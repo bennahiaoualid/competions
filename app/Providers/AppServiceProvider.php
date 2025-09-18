@@ -94,7 +94,8 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(OptimizedCompetitionNotificationService::class),
                 $app->make(AdminApprovalService::class),
                 $app->make(SystemSettingService::class),
-                $app->make(CoinTransactionService::class)
+                $app->make(CoinTransactionService::class),
+                $app->make(CompetitionCacheManagmentSystem::class)
             );
         });
 
@@ -109,7 +110,8 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(AdminApprovalService::class),
                 $app->make(JobTrackingService::class),
                 $app->make(FinishLevelTrackableJobFactory::class),
-                $app->make(SystemSettingService::class)
+                $app->make(SystemSettingService::class),
+                $app->make(CompetitionCacheManagmentSystem::class),
             );
         });
 
