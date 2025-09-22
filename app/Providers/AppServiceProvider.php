@@ -235,6 +235,13 @@ class AppServiceProvider extends ServiceProvider
             );
         });
 
+        // Competition cache management
+        $this->app->bind(CompetitionCacheManagmentSystem::class, function ($app) {
+            return new CompetitionCacheManagmentSystem(
+                $app->make(UserCompetitionRepositoryInterface::class),
+            );
+        });
+
         // delayed process service (bind - lightweight, no dependencies)
         $this->app->bind(DelayedProcessService::class);
 

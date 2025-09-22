@@ -2,27 +2,32 @@
 
 namespace App\Livewire;
 
+use App\Helpers\DateTimeHelper;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Blade;
 use App\Models\Competition\Competition;
 use App\PowerGridThemes\TailwindStriped;
-use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Blade;
 use PowerComponents\LivewirePowerGrid\Button;
 use PowerComponents\LivewirePowerGrid\Column;
-use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
+use PowerComponents\LivewirePowerGrid\Facades\Filter;
 use PowerComponents\LivewirePowerGrid\PowerGridFields;
+use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
 use PowerComponents\LivewirePowerGrid\PowerGridComponent;
 
 final class CompetitionTable extends PowerGridComponent
 {
     public string $tableName = 'competition_table';
     public string $sortField = 'start_date';
+    public string $sortDirection = 'desc';
 
     public function setUp(): array
     {
 
         return [
-            PowerGrid::header()->showSearchInput(),
+            PowerGrid::header()
+            ->showSearchInput(),
+
             PowerGrid::footer()
                 ->showPerPage()
                 ->showRecordCount(),
@@ -31,7 +36,14 @@ final class CompetitionTable extends PowerGridComponent
 
     public function datasource(): Builder
     {
-        return Competition::query()->with("admin");
+        $query =  Competition::query()->with("admin");
+        if (!empty($this->search)) {
+            $query->where(function ($q) {
+                $q->where('title', 'LIKE', $this->search . '%');
+            });
+        }
+        
+        return $query;
     }
 
     public function relationSearch(): array
@@ -55,8 +67,8 @@ final class CompetitionTable extends PowerGridComponent
                 }
                 
             })
-            ->add('start_date', function ($competition) {
-                return e(Carbon::parse($competition->start_date)->timezone(session('timezone')));
+            ->add('start_date_local', function ($competition) {
+                return DateTimeHelper::toLocalDate($competition->start_date);
             })
             ->add('users_age', function ($competition) {
                 return e(
@@ -65,7 +77,6 @@ final class CompetitionTable extends PowerGridComponent
                     __("competition.info.to") ." ". $competition->age_end
                 );
             })
-            ->add('levels_number')
             ->add('status', function ($competition) {
                 return Blade::render(
                     '<x-status-widget status="'. $competition->status.
@@ -82,10 +93,9 @@ final class CompetitionTable extends PowerGridComponent
                 ->sortable()
                 ->searchable(),
             Column::make(__('competition.info.created_by'), 'created_by'),
-            Column::make(__('competition.info.start_date'), 'start_date')
+            Column::make(__('competition.info.start_date'), 'start_date_local','start_date')
                 ->sortable(),
             Column::make(__('competition.info.users_age'), 'users_age'),
-            Column::make(__('competition.info.levels_number'), 'levels_number'),
             Column::make(__('competition.info.status.state'), 'status'),
             Column::action('Action')
         ];
@@ -94,14 +104,11 @@ final class CompetitionTable extends PowerGridComponent
     public function filters(): array
     {
         return [
+            Filter::inputText('title', 'title')
+            ->operators(['starts_with']),
         ];
     }
 
-    #[\Livewire\Attributes\On('edit')]
-    public function edit($rowId): void
-    {
-        $this->js('alert('.$rowId.')');
-    }
 
     public function actions(Competition $row): array
     {

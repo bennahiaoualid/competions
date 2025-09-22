@@ -7,11 +7,8 @@ use App\Models\Competition\Level;
 use App\Contracts\FlasherInterface;
 use App\Models\Competition\Question;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use App\Helpers\CompetitionsOrder;
 use App\Models\Competition\Competition;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Collection;
 use App\Contracts\TransactionManagerInterface;
 use App\Interface\User\UserCompetitionRepositoryInterface;
 use App\Services\CashManagment\CompetitionCacheManagmentSystem;
@@ -32,18 +29,18 @@ class UserCompetitionService
      * Get all public competitions with optional filters
      * @param array $filters
      */
-    public function getAllPublicCompetitions(array $filters = [])
+    public function getAllPublicCompetitions(array $filters = [], int $page, int $perPage)
     {
-        return $this->userCompetitionRepository->getAllPublicCompetitions($filters);
+        return $this->userCompetitionRepository->getAllPublicCompetitions($filters, $page, $perPage);
     }
 
     /**
      * Get user competitions with optional filters
      * @param array $filters
      */
-    public function getUserCompetitions(array $filters = [])
+    public function getUserCompetitions(array $filters = [], int $page, int $perPage)
     {
-        return $this->userCompetitionRepository->getUserCompetitions(Auth::user(), $filters);
+        return $this->userCompetitionRepository->getUserCompetitions(Auth::user(), $filters, $page, $perPage);
     }
 
 

@@ -3,14 +3,15 @@
 namespace App\Services\CashManagment;
 
 use App\Helpers\CompetitionsOrder;
-use App\Models\Competition\Competition;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use App\Models\Competition\Competition;
 use Illuminate\Database\Eloquent\Model;
+use App\Interface\User\UserCompetitionRepositoryInterface;
 
 class CompetitionCacheManagmentSystem
 {
-    public function __construct()
+    public function __construct(protected UserCompetitionRepositoryInterface $userCompetitionRepository)
     {
         
     }
@@ -57,10 +58,37 @@ class CompetitionCacheManagmentSystem
         );
     }
 
+    /**
+     * get comptition list for guest users
+     */
+    public function getUsersCompetitions($user, $filters = [], $page = 1, $perPage = 10)
+    {
+        $cacheKey = $this->buildCacheKey('getUsersComptitions', [
+            'userId' => $user?->id,
+            'filters' => $filters,
+            'perPage' => $perPage,  
+            'page' => $page
+        ]);
+        
+        $cacheTags = $this->getCacheTags('competitions');
+        $cacheDuration = $this->getCacheDuration('getUsersComptitions');
+
+        return Cache::tags($cacheTags)
+            ->remember($cacheKey, $cacheDuration, function () use ($user, $filters, $page, $perPage) {
+                if($user){
+                    return $this->userCompetitionRepository
+                    ->getUserCompetitions($user,$filters, $page, $perPage);
+                }
+                
+                return $this->userCompetitionRepository
+                ->getAllPublicCompetitions($filters, $page, $perPage);
+            });
+    }
+
     public function getCompetitionDetail($compeitionSlug)
     {
-        $cacheTags = $this->getCacheTags('competition_detail',$compeitionSlug);
-        //dd($cacheTags);
+        $cacheTags = $this->getCacheTags('competitions',$compeitionSlug);
+        
         $cacheDuration = $this->getCacheDuration('getCompetitionDetail');
         $cacheKey = $this->buildCacheKey('getCompetitionDetail',[
             'slug' => $compeitionSlug
@@ -74,8 +102,6 @@ class CompetitionCacheManagmentSystem
                 return Competition::with('levels')->where('slug' , $compeitionSlug)->firstOrFail();
             }
         );
-
-
     }
 
     public function getUsersCountForAdminAuditing($adminId) 
@@ -125,12 +151,22 @@ class CompetitionCacheManagmentSystem
         Cache::tags($cacheTags)->flush();
     }
 
-        /**
+    /**
      * Invalidate comptition users order
      */
     public function invalidateComptitionDetail($compeitionSlug): void
     {
-        Cache::tags('competition_detail_'.$compeitionSlug)->flush();
+        Cache::key($this->buildCacheKey('getCompetitionDetail',[
+            'slug' => $compeitionSlug
+        ]))->flush();
+    }
+
+    /**
+     * Invalidate users comptitions informations
+     */
+    public function invalidateUsersComptitionInfo(): void
+    {
+        Cache::tags('competitions')->flush();
     }
         /**
      * Build cache key based on method and parameters
@@ -181,7 +217,8 @@ class CompetitionCacheManagmentSystem
             'getUsersCountForAdminAuditing' => 3600 , // 1 hours
             'getComptitionUsersOreder' => 3600, // 1 hours
             'getComptitionUsersOrederAuditing' => 300, // 5 minut
-            'getCompetitionDetail' => 3600 // 1 hours
+            'getCompetitionDetail' => 3600, // 1 hours
+            'getUsersComptitions' => 3600 // 1hour
 
         ];
 

@@ -4,12 +4,9 @@ namespace App\Repository\User;
 
 use Exception;
 use App\Models\User;
-use Illuminate\View\View;
 use App\Traits\Filterable;
 use App\Traits\RegisterLogs;
 use App\Helpers\PaginationHelper;
-use App\Models\Competition\Level;
-use App\Helpers\CompetitionsOrder;
 use App\Models\Competition\Question;
 use App\Models\Competition\Response;
 use Illuminate\Support\Facades\Auth;
@@ -28,11 +25,11 @@ class UserCompetitionRepository implements UserCompetitionRepositoryInterface
      * Get all public competitions with optional filters
      * @param array $filters
      */
-    public function getAllPublicCompetitions(array $filters = [])
+    public function getAllPublicCompetitions(array $filters = [],  int $page, int $perPage)
     {
         return $this->applyFilters(Competition::query(), $filters)
             ->orderByDesc('start_date')
-            ->paginate(PaginationHelper::perPage());
+            ->paginate($perPage, page: $page);
     }
 
     /**
@@ -40,11 +37,11 @@ class UserCompetitionRepository implements UserCompetitionRepositoryInterface
      * @param User $user
      * @param array $filters
      */
-    public function getUserCompetitions(User $user, array $filters = [])
+    public function getUserCompetitions(User $user, array $filters = [],  int $page, int $perPage)
     {
         return $this->applyFilters($user->competitions(), $filters)
             ->orderByDesc('start_date')
-            ->paginate(PaginationHelper::perPage());
+            ->paginate($perPage, page: $page);
     }
 
     /**

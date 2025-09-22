@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Services\Competition;
+namespace Tests\Feature\Services\Competition;
 
 use Bus;
 use Mockery;
@@ -9,7 +9,6 @@ use App\Models\User;
 use App\Models\Admin\Admin;
 use App\Helpers\UserNotifyEmail;
 use App\Models\Competition\Level;
-use Illuminate\Support\Facades\DB;
 use App\Contracts\FlasherInterface;
 use Illuminate\Support\Facades\Auth;
 use App\Services\SystemSettingService;
@@ -21,7 +20,6 @@ use App\Services\Competition\CompetitionService;
 use App\Services\Payment\CoinTransactionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Jobs\Competetion\SyncCompetitionParticipants;
-use App\Exceptions\AIQuestionGeneration\PaidServiceException;
 use App\Interface\Competition\CompetitionRepositoryInterface;
 use App\Services\CashManagment\CompetitionCacheManagmentSystem;
 use App\Services\Notification\OptimizedCompetitionNotificationService;
@@ -109,6 +107,8 @@ class CompetitionServiceTest extends TestCase
         $this->transactionManager->shouldReceive('run')->andReturnUsing(fn($cb) => $cb());
         $this->flasher->shouldReceive('crudSuccess')->with('saved')->once();
         $this->notificationService->shouldReceive('competitionCreated')->once();
+        $this->cacheSystem->shouldReceive('invalidateUsersComptitionInfo')->once();
+
         $this->coinTransactionService->shouldReceive('createCompetitionWinnerGiftTransaction')->once();
         $result = $this->service->createCompetition($data);
 
@@ -193,7 +193,7 @@ class CompetitionServiceTest extends TestCase
             'competition' => $competition,
             'resyncCompetitionParticipants' => true
         ]);
-        $this->cacheSystem->shouldReceive('invalidateComptitionDetail')->with(Mockery::any())->once();
+        $this->cacheSystem->shouldReceive('invalidateUsersComptitionInfo')->once();
 
         $result = $this->service->updateCompetition($competition, $data);
 
@@ -220,7 +220,7 @@ class CompetitionServiceTest extends TestCase
                         ->with($competition)
                         ->andReturnNull();
 
-        $this->cacheSystem->shouldReceive('invalidateComptitionDetail')->with(Mockery::any())->once();
+        $this->cacheSystem->shouldReceive('invalidateUsersComptitionInfo')->once();
 
         $result = $this->service->updateCompetition($competition, $data);
 
@@ -247,6 +247,8 @@ class CompetitionServiceTest extends TestCase
         $competition = Competition::factory()->create(['admin_id' => $this->mainAdmin->id]);
         $this->competitionRepository->shouldReceive('findById')->andReturn($competition);
         $this->flasher->shouldReceive('crudSuccess')->with('deleted')->once();
+        $this->cacheSystem->shouldReceive('invalidateUsersComptitionInfo')->once();
+
 
         $result = $this->service->deleteCompetition($competition->id);
 
@@ -464,6 +466,8 @@ class CompetitionServiceTest extends TestCase
         $this->notificationService->shouldReceive('competitionActivated')->once();
         $this->flasher->shouldReceive('crudSuccess')->with('activated')->once();
         $this->userNotify->shouldReceive('usersActivateCompetition')->once();
+        $this->cacheSystem->shouldReceive('invalidateUsersComptitionInfo')->once();
+
         
         $result = $this->service->activateCompetition($competition);
         $this->assertTrue($result);

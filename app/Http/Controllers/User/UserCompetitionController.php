@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\User;
 
+use App\Helpers\PaginationHelper;
 use Illuminate\View\View;
 use App\Models\Competition\Level;
 use App\Http\Controllers\Controller;
@@ -11,11 +12,14 @@ use App\Models\Competition\Competition;
 use App\Services\User\UserCompetitionService;
 use App\Http\Requests\Competition\StoreResponseRequest;
 use App\Http\Requests\Competition\FilterCompetitionRequest;
+use App\Services\CashManagment\CompetitionCacheManagmentSystem;
+use Auth;
 
 class UserCompetitionController extends Controller
 {
     public function __construct(
-        protected UserCompetitionService $userCompetitionService
+        protected UserCompetitionService $userCompetitionService,
+        protected CompetitionCacheManagmentSystem $competitionCache
     ) {
     }
 
@@ -26,7 +30,12 @@ class UserCompetitionController extends Controller
      */
     public function getAllPublicCompetitions(FilterCompetitionRequest $request): View
     {
-        $competitions = $this->userCompetitionService->getAllPublicCompetitions($request->validated());
+        $filter = $request->validated();
+        $perPage = PaginationHelper::perPage(10);
+        $page = $request->get('page', 1);
+
+        $competitions = $this->competitionCache
+                            ->getUsersCompetitions(null, $filter, $page, $perPage);
         return view('pages.user.competitions', compact('competitions'));
     }   
 
@@ -37,7 +46,12 @@ class UserCompetitionController extends Controller
      */
     public function getUserCompetitions(FilterCompetitionRequest $request): View
     {
-        $competitions = $this->userCompetitionService->getUserCompetitions($request->validated());
+        $filter = $request->validated();
+        $perPage = PaginationHelper::perPage(10);
+        $page = $request->get('page', 1);
+
+        $competitions = $this->competitionCache
+                    ->getUsersCompetitions(Auth::user(), $filter, $page, $perPage);
         return view('pages.user.competitions', compact('competitions'));
     }
 

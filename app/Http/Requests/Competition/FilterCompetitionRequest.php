@@ -3,9 +3,7 @@
 namespace App\Http\Requests\Competition;
 
 use App\Traits\TimeManipulation;
-use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
 
 class FilterCompetitionRequest extends FormRequest
 {
@@ -35,12 +33,12 @@ class FilterCompetitionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => 'sometimes|string|min:3|max:40',
-            'start_date_from' => 'sometimes|date_format:Y-m-d',
-            'start_date_to' => 'sometimes|date_format:Y-m-d',
-            'age_start' => 'sometimes|integer|min:6',
-            'age_end' => 'sometimes|integer|min:6',
-            'status' => 'sometimes|in:pending,active,finished',
+            'title' => ' string|min:3|max:40',
+            'start_date_from' => ' date_format:Y-m-d',
+            'start_date_to' => ' date_format:Y-m-d',
+            'age_start' => ' integer|min:6',
+            'age_end' => ' integer|min:6',
+            'status' => ' in:pending,active,finished',
         ];
     }
 

@@ -12,12 +12,12 @@ interface UserCompetitionRepositoryInterface
     /**
      * Get all public competitions with optional filters
      */
-    public function getAllPublicCompetitions(array $filters = []);
+    public function getAllPublicCompetitions(array $filters = [], int $page, int $perPage);
 
     /**
      * Get user competitions with optional filters
      */
-    public function getUserCompetitions(User $user, array $filters = []);
+    public function getUserCompetitions(User $user, array $filters = [],  int $page, int $perPage);
 
     /**
      * Get unanswered questions for a level and user

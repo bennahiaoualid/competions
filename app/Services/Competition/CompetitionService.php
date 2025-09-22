@@ -148,6 +148,7 @@ class CompetitionService
                 });
                 return true;
             });
+            $this->competitionCacheManagment->invalidateUsersComptitionInfo();
             $this->flasher->crudSuccess('saved');
             return $result;
         } catch (PaidServiceException $exception) {
@@ -183,8 +184,8 @@ class CompetitionService
                 }
                 // Send notification to competition users
                 $this->notificationService->competitionUpdated($competition);
-                // ivalidate compeition detail data cache
-                $this->competitionCacheManagment->invalidateComptitionDetail($competition->slug);
+                // ivalidate compeition detail data cache and comptitions list
+                $this->competitionCacheManagment->invalidateUsersComptitionInfo();
                 return true;
             });
 
@@ -219,6 +220,10 @@ class CompetitionService
 
             $competition->delete();
             $this->flasher->crudSuccess('deleted');
+
+            $this->competitionCacheManagment->invalidateUsersComptitionInfo();
+
+
             return true;
 
         } catch (Exception $exception) {
@@ -432,6 +437,8 @@ class CompetitionService
                 return true;
             });
             $this->flasher->crudSuccess('activated');
+            $this->competitionCacheManagment->invalidateUsersComptitionInfo();
+
             return $result;
         } catch (Exception $exception) {
             $this->registerLogs('Competition activation error: ', $exception);
