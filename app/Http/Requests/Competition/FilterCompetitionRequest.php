@@ -33,12 +33,12 @@ class FilterCompetitionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => ' string|min:3|max:40',
-            'start_date_from' => ' date_format:Y-m-d',
-            'start_date_to' => ' date_format:Y-m-d',
-            'age_start' => ' integer|min:6',
-            'age_end' => ' integer|min:6',
-            'status' => ' in:pending,active,finished',
+            'title' => 'sometimes|nullable|string|min:3|max:40',
+            'start_date_from' => 'sometimes|nullable|date_format:Y-m-d',
+            'start_date_to' => 'sometimes|nullable|date_format:Y-m-d',
+            'age_start' => 'sometimes|nullable|integer|min:6',
+            'age_end' => 'sometimes|nullable|integer|min:6',
+            'status' => 'sometimes|nullable|in:pending,active,finished',
         ];
     }
 

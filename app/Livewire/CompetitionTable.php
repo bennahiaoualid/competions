@@ -3,7 +3,6 @@
 namespace App\Livewire;
 
 use App\Helpers\DateTimeHelper;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Blade;
 use App\Models\Competition\Competition;
 use App\PowerGridThemes\TailwindStriped;
@@ -31,19 +30,15 @@ final class CompetitionTable extends PowerGridComponent
             PowerGrid::footer()
                 ->showPerPage()
                 ->showRecordCount(),
+            PowerGrid::cache()
+                ->ttl(3600) 
+                ->customTag('competitions'),
         ];
     }
 
     public function datasource(): Builder
     {
-        $query =  Competition::query()->with("admin");
-        if (!empty($this->search)) {
-            $query->where(function ($q) {
-                $q->where('title', 'LIKE', $this->search . '%');
-            });
-        }
-        
-        return $query;
+        return Competition::query()->with("admin");
     }
 
     public function relationSearch(): array
@@ -68,7 +63,7 @@ final class CompetitionTable extends PowerGridComponent
                 
             })
             ->add('start_date_local', function ($competition) {
-                return DateTimeHelper::toLocalDate($competition->start_date);
+                return DateTimeHelper::toLocalDateTime($competition->start_date);
             })
             ->add('users_age', function ($competition) {
                 return e(

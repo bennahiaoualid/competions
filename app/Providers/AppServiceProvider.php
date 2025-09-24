@@ -208,7 +208,17 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(FlasherInterface::class),
                 $app->make(CoinPricingService::class),
                 $app->make(PaymentNotificationService::class),
-                $app->make(CoinTransactionService::class)
+                $app->make(CoinTransactionService::class),
+                $app->make(PaymentCacheManagement::class)
+            );
+        });
+
+        // CoinTransaction service
+        $this->app->bind(CoinTransactionService::class, function ($app) {
+            return new CoinTransactionService(
+                $app->make(TransactionManagerInterface::class),
+                $app->make(FlasherInterface::class),
+                $app->make(PaymentCacheManagement::class)
             );
         });
 
@@ -225,14 +235,6 @@ class AppServiceProvider extends ServiceProvider
         // optimized competition notification service (singleton for performance - batch operations, no user state)
         $this->app->singleton(OptimizedCompetitionNotificationService::class, function ($app) {
             return new OptimizedCompetitionNotificationService();
-        });
-
-        // payment cache management (after PaymentService is registered)
-        $this->app->bind(PaymentCacheManagement::class, function ($app) {
-            return new PaymentCacheManagement(
-                $app->make(PaymentService::class),
-                $app->make(CoinTransactionService::class)
-            );
         });
 
         // Competition cache management

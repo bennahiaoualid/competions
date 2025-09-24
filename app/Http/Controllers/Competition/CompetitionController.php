@@ -15,12 +15,14 @@ use App\Services\Competition\CompetitionService;
 use App\Http\Requests\Competition\StoreCompetitionRequest;
 use App\Http\Requests\Competition\UpdateCompetitionRequest;
 use App\Models\SystemSetting;
+use App\Services\CashManagment\PaymentCacheManagement;
 
 class CompetitionController extends Controller
 {
     public function __construct(
         protected CompetitionService $competitionService,
-        protected SystemSettingService $systemSettingService
+        protected SystemSettingService $systemSettingService,
+        protected PaymentCacheManagement $paymentCacheManagement
     ) {
     }
 
@@ -34,7 +36,7 @@ class CompetitionController extends Controller
         $secondPlacePercentage = $this->systemSettingService->getValueAsInt('second_place_winner_percentage', 50);
         $thirdPlacePercentage = $this->systemSettingService->getValueAsInt('third_place_winner_percentage', 20);
         // Get current admin's coin balance
-        $userBalance = Auth::user()->coinBalance->balance ?? 0;
+        $userBalance =$this->paymentCacheManagement->getUserBalance(Auth::user());
         
         return view("pages.admin.competitions.competition_list", compact(
             'competitionGift',

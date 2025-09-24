@@ -7,13 +7,14 @@ use App\Contracts\FlasherInterface;
 use App\Enums\CoinTransactionTypeEnum;
 use App\Models\Payment\CoinTransaction;
 use App\Contracts\TransactionManagerInterface;
-use App\Events\Payment\PaymentCacheInvalidationEvent;
+use App\Services\CashManagment\PaymentCacheManagement;
 
 class CoinTransactionService
 {
     public function __construct(
         protected TransactionManagerInterface $transactionManager,
-        protected FlasherInterface $flasher
+        protected FlasherInterface $flasher,
+        protected PaymentCacheManagement $paymentCacheManagement
     ) {}
 
     /**
@@ -95,42 +96,15 @@ class CoinTransactionService
             ]);
             if($coinTransaction)
             {
-                event(new PaymentCacheInvalidationEvent('invalidateGetUserCoinTransactions', ['userId' => $transactionable->id]));
+                // invalidate cache directly
+                $this->paymentCacheManagement
+                        ->invalidateGetUserCoinTransactions($transactionable->id,get_class($transactionable));
+                $this->paymentCacheManagement
+                        ->invalidateUserBalanace($transactionable->id,get_class($transactionable));
                 return $coinTransaction;
             }else{
                 throw new Exception('Failed to create coin transaction');
             }
-    }
-
-    /**
-     * Get transactions for a specific entity
-     */
-    public function getTransactionsForEntity($transactionable, array $filters = [], $page = 1, int $perPage = 10)
-    {
-
-        $query = CoinTransaction::byTransactionable($transactionable);
-
-        // Apply type filter
-        if (!empty($filters['type']) && in_array($filters['type'], ['earn', 'spend'])) {
-            $query->where('type', $filters['type']);
-        }
-
-        // Apply detail filter
-        if (!empty($filters['detail'])) {
-            $query->byDetail($filters['detail']);
-        }
-
-        // Apply date range filter
-        if (!empty($filters['date_from'])) {
-            $query->where('created_at', '>=', $filters['date_from']);
-        }
-
-        if (!empty($filters['date_to'])) {
-            $query->where('created_at', '<=', $filters['date_to']);
-        }
-
-        return $query->orderBy('created_at', 'desc')
-                    ->paginate($perPage, page: $page);
     }
 
     /**

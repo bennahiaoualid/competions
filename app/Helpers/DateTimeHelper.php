@@ -64,6 +64,18 @@ class DateTimeHelper
     }
 
     /**
+     * Convert given datetime to local datetime string (Y-m-d H:i format)
+     * 
+     * @param string|Carbon|null $datetime The datetime to convert
+     * @param string|null $timezone The timezone to convert to
+     * @return string|null
+     */
+    public static function toLocalDateTime($datetime, ?string $timezone = null): ?string
+    {
+        return self::toLocalString($datetime, 'Y-m-d H:i', $timezone);
+    }
+
+    /**
      * Convert given datetime to local datetime string with timezone (Y-m-d H:i T format)
      * 
      * @param string|Carbon|null $datetime The datetime to convert

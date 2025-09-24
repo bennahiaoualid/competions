@@ -2,6 +2,7 @@
 
 namespace App\Models\Competition;
 
+use App\Helpers\DateTimeHelper;
 use App\Models\User;
 use App\Models\Admin\Admin;
 use Spatie\Sluggable\HasSlug;
@@ -132,6 +133,11 @@ class Competition extends Model
             'ai_auditing' => 'boolean',
             'auditing_time_for_level' => 'integer',
         ];
+    }
+
+    public function getStartDateLocalAttribute()
+    {
+        return DateTimeHelper::toLocalDateTime($this->start_date);
     }
 
     /**

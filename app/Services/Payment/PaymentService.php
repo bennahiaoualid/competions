@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Payment\PaymentAuditLog;
 use App\Models\Payment\PaymentTransaction;
 use App\Services\Payment\CoinPricingService;
-use App\Services\Payment\CoinTransactionService;
 use App\Contracts\TransactionManagerInterface;
-use App\Events\Payment\PaymentCacheInvalidationEvent;
+use App\Services\Payment\CoinTransactionService;
+use App\Services\CashManagment\PaymentCacheManagement;
 use App\Services\Notification\PaymentNotificationService;
 
 class PaymentService
@@ -26,70 +26,8 @@ class PaymentService
         protected CoinPricingService $coinPricingService,
         protected PaymentNotificationService $notificationService,
         protected CoinTransactionService $coinTransactionService,
+        protected PaymentCacheManagement $paymentCacheManagement
     ) {}
-
-    public function getUserTransactionCountForDay(): int
-    {
-        $user = Auth::user();
-        $count = PaymentTransaction::where('payable_id', $user->id)
-            ->where('payable_type', get_class($user))
-            ->whereDate('created_at', now()->toDateString())
-            ->count();
-        return $count;
-    }
-
-    public function getTransactionsForUser(array $filters = [], $page = 1, int $perPage = 5)
-    {
-        $user = Auth::user();
-        
-        $query = PaymentTransaction::query()
-            ->where('payable_id', $user->id)
-            ->where('payable_type', get_class($user));
-        
-        // Apply search filter
-        if (!empty($filters['search'])) {
-            $search = $filters['search'];
-            $query->where(function($q) use ($search) {
-                $q->where('uuid', 'like', "%{$search}%")
-                  ->orWhere('amount', 'like', "%{$search}%")
-                  ->orWhere('coins_credited', 'like', "%{$search}%");
-            });
-        }
-        
-        // Apply status filter
-        if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
-        
-        // Order and paginate
-        return $query->orderBy('created_at', 'desc')
-                ->paginate($perPage, page: $page);
-    }
-
-    /**
-     * Get status counts for user transactions
-     */
-    public function getUserTransactionStatusCounts(): array
-    {
-        $user = Auth::user();
-        
-        $statusCounts = PaymentTransaction::where('payable_id', $user->id)
-            ->where('payable_type', get_class($user))
-            ->selectRaw('status, count(*) as count')
-            ->groupBy('status')
-            ->pluck('count', 'status')
-            ->toArray();
-        
-        // Ensure all statuses are represented
-        $allStatuses = ['pending', 'approved', 'rejected', 'cancelled'];
-        foreach ($allStatuses as $status) {
-            if (!isset($statusCounts[$status])) {
-                $statusCounts[$status] = 0;
-            }
-        }
-        
-        return $statusCounts;
-    }
 
     /**
      * Create a new payment transaction
@@ -269,12 +207,13 @@ class PaymentService
     /**
      * Fire cache invalidation event for a payment
      */
-    private function fireCacheInvalidationEvent(PaymentTransaction $payment, string $eventType = 'invalidateAllUserPaymentCaches'): void
+    private function fireCacheInvalidationEvent(PaymentTransaction $payment, string $eventType = 'invalidateGetUserTransactions'): void
     {
-        PaymentCacheInvalidationEvent::dispatch(
-            $eventType,
-            ['userId' => $payment->payable_id]
-        );
+        // invalidate cache directly
+        $this->paymentCacheManagement
+            ->invalidateGetUserTransactions($payment->payable_id,$payment->payable_type);
+        $this->paymentCacheManagement
+            ->invalidateUserBalanace($payment->payable_id,$payment->payable_type);
     }
 
     /**

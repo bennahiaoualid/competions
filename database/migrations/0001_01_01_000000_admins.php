@@ -16,13 +16,14 @@ return new class extends Migration
             $table->string('name')->index();
             $table->string('email')->unique();
             $table->date('birthdate');
-            $table->enum('gender', ['male', 'female'])->default('male')->index();
+            $table->enum('gender', ['male', 'female'])->default('male');
             $table->foreignId('admin_id')->nullable()->constrained('admins')->nullOnDelete();
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();
-            $table->index('deleted_at');
+
+            $table->index(['id', 'deleted_at']);
         });
     }
 

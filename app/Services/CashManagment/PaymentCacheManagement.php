@@ -2,9 +2,11 @@
 
 namespace App\Services\CashManagment;
 
+use Auth;
 use Illuminate\Support\Facades\Cache;
-use App\Services\Payment\PaymentService;
-use App\Services\Payment\CoinTransactionService;
+
+use App\Models\Payment\CoinTransaction;
+use App\Models\Payment\PaymentTransaction;
 
 class PaymentCacheManagement
 {
@@ -12,32 +14,53 @@ class PaymentCacheManagement
     /**
      * Create a new service instance.
      */
-    public function __construct(
-        protected PaymentService $paymentService,
-        protected CoinTransactionService $coinTransactionService
-
-        )
-    {
-    }
+    public function __construct(){}
 
     /**
      * Get user transactions from cache or fallback to PaymentService
      */
-    public function getUserTransactions($userId, $filters = [], $page = 1, $perPage = 10)
+    public function getUserTransactions($filters = [], $page = 1, $perPage = 10)
     {
+        $user = Auth::user();
+        $type = get_class($user);
         $cacheKey = $this->buildCacheKey('getUserTransactions', [
-            'userId' => $userId,
+            'userId' => $user->id,
+            'type' => $type,
             'filters' => $filters,
             'perPage' => $perPage,
             'page' => $page
         ]);
         
-        $cacheTags = $this->getCacheTags('user_transactions', $userId);
+        $cacheTags = $this->getCacheTags([
+            ['entity' => 'user_transactions_'.$type, 'id' => $user->id]
+        ]);
         $cacheDuration = $this->getCacheDuration('getUserTransactions');
 
         return Cache::tags($cacheTags)
-            ->remember($cacheKey, $cacheDuration, function () use ($filters, $page, $perPage) {
-                return $this->paymentService->getTransactionsForUser($filters, $page, $perPage);
+            ->remember($cacheKey, $cacheDuration, function () use ($user,$filters, $page, $perPage) {
+                return $this->getTransactionsForUserData($user,$filters, $page, $perPage);
+            });
+    }
+
+    /**
+     * Get user balance
+     */
+    public function getUserBalance($user)
+    {
+        $type = get_class($user);
+        $cacheKey = $this->buildCacheKey('getUserBalance', [
+            'user' => $user->id,
+            'type' => $type
+        ]);
+        
+        $cacheTags = $this->getCacheTags([
+            ['entity' => 'user_balance_'.$type, 'id' => $user->id]
+        ]);
+        $cacheDuration = $this->getCacheDuration('getUserBalance');
+        \Log::info('getUserBalance tags',$cacheTags);
+        return Cache::tags($cacheTags)
+            ->remember($cacheKey, $cacheDuration, function () use ($user) {
+                return $user->coinBalance->balance ?? 0;
             });
     }
 
@@ -46,31 +69,41 @@ class PaymentCacheManagement
      */
     public function getUserTransactionStatusCounts($userId): array
     {
+        $user = Auth::user();
+        $type = get_class($user);
         $cacheKey = $this->buildCacheKey('getUserTransactionStatusCounts', [
             'userId' => $userId,
+            'type' => $type
         ]);
         
-        $cacheTags = $this->getCacheTags('user_transaction_status', $userId);
+        $cacheTags = $this->getCacheTags( [
+            ['entity' => 'user_transactions_'.$type, 'id' => $user->id]
+        ]);
         $cacheDuration = $this->getCacheDuration('getUserTransactionStatusCounts');
 
         return Cache::tags($cacheTags)
-            ->remember($cacheKey, $cacheDuration, function () {
-                return $this->paymentService->getUserTransactionStatusCounts();
+            ->remember($cacheKey, $cacheDuration, function () use($user) {
+                return $this->getUserTransactionStatusCountsData($user);
             });
     }
 
-    public function getUserTransactionCountForDay($userId): int
+    public function getUserTransactionCountForDay(): int
     {
+        $user = Auth::user();
+        $type = get_class($user);
         $cacheKey = $this->buildCacheKey('getUserTransactionCountForDay', [
-            'userId' => $userId,
+            'userId' => $user->id,
+            'type' => $type
         ]);
         
-        $cacheTags = $this->getCacheTags('user_transaction_count_for_day', $userId);
+        $cacheTags = $this->getCacheTags([
+            ['entity' => 'user_transactions_'.$type, 'id' => $user->id]
+        ]);
         $cacheDuration = $this->getCacheDuration('getUserTransactionCountForDay');
 
         return Cache::tags($cacheTags)
-            ->remember($cacheKey, $cacheDuration, function () {
-                return $this->paymentService->getUserTransactionCountForDay();
+            ->remember($cacheKey, $cacheDuration, function () use($user) {
+                return $this->getUserTransactionCountForDayData($user);
             });
     }
 
@@ -86,12 +119,14 @@ class PaymentCacheManagement
             'page' => $page
         ]);
         
-        $cacheTags = $this->getCacheTags('user_coin_transactions', $user->id);
+        $cacheTags = $this->getCacheTags(
+            [['entity' => 'user_coin_transactions', 'id' => $user->id]]
+        );
         $cacheDuration = $this->getCacheDuration('getUserCoinTransactions');
 
         return Cache::tags($cacheTags)
             ->remember($cacheKey, $cacheDuration, function () use ($user, $filters, $page, $perPage) {
-                return $this->coinTransactionService->getTransactionsForEntity($user, $filters, $page, $perPage);
+                return $this->getTransactionsForEntityData($user, $filters, $page, $perPage);
             });
     }
 
@@ -99,19 +134,14 @@ class PaymentCacheManagement
     /**
      * Invalidate user transactions cache and also invalidate status counts
      */
-    public function invalidateGetUserTransactions($userId): void
+    public function invalidateGetUserTransactions($userId,$type): void
     {
         // Invalidate user transactions cache
-        $transactionTags = $this->getCacheTags('user_transactions', $userId);
-        Cache::tags($transactionTags)->flush();
+        $cacheTags = $this->getCacheTags([
+            ['entity' => 'user_transactions_'.$type, 'id' => $userId]
+        ]);
+        Cache::tags($cacheTags)->flush();
 
-        // Also invalidate user transaction status counts cache
-        $statusTags = $this->getCacheTags('user_transaction_status', $userId);
-        Cache::tags($statusTags)->flush();
-
-        // Also invalidate user transaction count for day cache
-        $countTags = $this->getCacheTags('user_transaction_count_for_day', $userId);
-        Cache::tags($countTags)->flush();
 
         // Optional: Log cache invalidation for debugging
         \Log::info("Cache invalidated for user {$userId}: transactions and status counts");
@@ -121,9 +151,22 @@ class PaymentCacheManagement
     /**
      * Invalidate user coin transactions cache
      */
-    public function invalidateGetUserCoinTransactions($userId): void
+    public function invalidateGetUserCoinTransactions($userId,$type): void
     {
-        $cacheTags = $this->getCacheTags('user_coin_transactions', $userId);
+        $cacheTags = $this->getCacheTags(
+            [['entity' => 'user_coin_transactions', 'id' => $userId]]
+        );
+        Cache::tags($cacheTags)->flush();
+    }
+
+    /**
+     * Invalidate user balance cache
+     */
+    public function invalidateUserBalanace($userId,$type): void
+    {
+        $cacheTags = $this->getCacheTags([
+            ['entity' => 'user_balance_'.$type, 'id' => $userId]
+        ]);
         Cache::tags($cacheTags)->flush();
     }
 
@@ -155,15 +198,18 @@ class PaymentCacheManagement
 
     /**
      * Get cache tags for organized cache invalidation
+     * @param array $entities [[entity,id]]
      */
-    private function getCacheTags($entity, $id = null): array
+    private function getCacheTags($entities): array
     {
-        $tags = ['payments', $entity];
-        
-        if ($id !== null) {
-            $tags[] = $entity . '_' . $id;
+        $tags = [];
+        foreach($entities as $entity){
+            if ($entity['id'] !== null) {
+                $tags[] = $entity['entity'] . '_' . $entity['id'];
+            }else{
+                $tags[] = $entity['entity'];
+            }
         }
-
         return $tags;
     }
 
@@ -177,6 +223,7 @@ class PaymentCacheManagement
             'getUserCoinTransactions' => 3600 , // 1 hour
             'getUserTransactionCountForDay' => 43200 , // 12 hours
             'getUserTransactionStatusCounts' => 43200 , // 12 hours
+            'getUserBalance' => 3600 
         ];
 
         return $cacheDurations[$method] ?? 600; // Default 10 minutes
@@ -254,12 +301,97 @@ class PaymentCacheManagement
         return $stats;
     }
 
-    /**
-     * Clear all payment-related caches (use with caution)
-     */
-    public function flushAllPaymentCaches(): void
+
+    /* data getres methods */
+    private function getTransactionsForUserData($user,array $filters = [], $page = 1, int $perPage = 5)
     {
-        Cache::tags(['payments'])->flush();
-        \Log::warning("All payment caches have been flushed");
+        
+        $query = PaymentTransaction::query()
+            ->where('payable_id', $user->id)
+            ->where('payable_type', get_class($user));
+        
+        // Apply search filter
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function($q) use ($search) {
+                $q->where('uuid', 'like', "%{$search}%")
+                    ->orWhere('amount', 'like', "%{$search}%")
+                    ->orWhere('coins_credited', 'like', "%{$search}%");
+            });
+        }
+        
+        // Apply status filter
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+        
+        // Order and paginate
+        return $query->orderBy('created_at', 'desc')
+                ->paginate($perPage, page: $page);
     }
+
+    /**
+     * Get status counts for user transactions
+     */
+    private function getUserTransactionStatusCountsData($user): array
+    {
+        
+        $statusCounts = PaymentTransaction::where('payable_id', $user->id)
+            ->where('payable_type', get_class($user))
+            ->selectRaw('status, count(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
+        
+        // Ensure all statuses are represented
+        $allStatuses = ['pending', 'approved', 'rejected', 'cancelled'];
+        foreach ($allStatuses as $status) {
+            if (!isset($statusCounts[$status])) {
+                $statusCounts[$status] = 0;
+            }
+        }
+        
+        return $statusCounts;
+    }
+
+    private function getUserTransactionCountForDayData($user): int
+    {
+        $count = PaymentTransaction::where('payable_id', $user->id)
+            ->where('payable_type', get_class($user))
+            ->whereDate('created_at', now()->toDateString())
+            ->count();
+        return $count;
+    }
+
+        /**
+     * Get transactions for a specific entity
+     */
+    private function getTransactionsForEntityData($transactionable, array $filters = [], $page = 1, int $perPage = 10)
+    {
+
+        $query = CoinTransaction::byTransactionable($transactionable);
+
+        // Apply type filter
+        if (!empty($filters['type']) && in_array($filters['type'], ['earn', 'spend'])) {
+            $query->where('type', $filters['type']);
+        }
+
+        // Apply detail filter
+        if (!empty($filters['detail'])) {
+            $query->byDetail($filters['detail']);
+        }
+
+        // Apply date range filter
+        if (!empty($filters['date_from'])) {
+            $query->where('created_at', '>=', $filters['date_from']);
+        }
+
+        if (!empty($filters['date_to'])) {
+            $query->where('created_at', '<=', $filters['date_to']);
+        }
+
+        return $query->orderBy('created_at', 'desc')
+                    ->paginate($perPage, page: $page);
+    }
+
 }

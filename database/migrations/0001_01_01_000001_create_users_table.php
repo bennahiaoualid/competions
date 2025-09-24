@@ -18,14 +18,16 @@ return new class extends Migration
             $table->boolean('guest')->default(false)->index();
             $table->foreignId('admin_id')->nullable()->constrained('admins')->nullOnDelete();
             $table->date('birthdate')->nullable();
-            $table->enum('gender', ['male', 'female'])->default('male')->index();
+            $table->enum('gender', ['male', 'female'])->default('male');
             $table->timestamp('email_verified_at')->nullable()->index();
             $table->string('password');
             $table->uuid('anonymized_identifier')->unique();
             $table->softDeletes();
-            $table->index('deleted_at');
             $table->rememberToken();
             $table->timestamps();
+
+            $table->index(['id', 'deleted_at']);
+
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
