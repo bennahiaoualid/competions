@@ -1,7 +1,6 @@
 <?php
 
-use PowerComponents\LivewirePowerGrid\Components\Exports\OpenSpout\v4\ExportToCsv;
-use PowerComponents\LivewirePowerGrid\Components\Exports\OpenSpout\v4\ExportToXLS;
+use Illuminate\Support\Js;
 
 return [
 
@@ -15,8 +14,24 @@ return [
     */
 
     'theme' => \PowerComponents\LivewirePowerGrid\Themes\Tailwind::class,
-    //'theme' => \PowerComponents\LivewirePowerGrid\Themes\Bootstrap5::class,
-    //'theme' => \App\PowerGridThemes\TailwindStriped::class,
+    // 'theme' => \PowerComponents\LivewirePowerGrid\Themes\DaisyUI::class,
+    // 'theme' => \PowerComponents\LivewirePowerGrid\Themes\Bootstrap5::class,
+
+    'cache_ttl' => 600,
+
+    'icon_resources' => [
+        'paths' => [
+            // 'default' => 'resources/views/components/icons',
+            // 'outline' => 'vendor/wireui/wireui/resources/views/components/icons/outline',
+            // 'solid'   => 'vendor/wireui/wireui/resources/views/components/icons/solid',
+        ],
+
+        'allowed' => [
+            // 'pencil',
+        ],
+
+        'attributes' => ['class' => 'w-5 text-red-600'],
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -85,6 +100,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Filters Attributes
+    |--------------------------------------------------------------------------
+
+    | You can add custom attributes to the filters.
+    | The key is the filter type and the value is a callback function.
+    | like: input_text, select, datetime, etc.
+    | The callback function receives the field and title as parameters.
+    | The callback function must return an array with the attributes.
+    */
+
+    'filter_attributes' => [
+        'input_text' => \PowerComponents\LivewirePowerGrid\FilterAttributes\InputText::class,
+        'boolean'    => \PowerComponents\LivewirePowerGrid\FilterAttributes\Boolean::class,
+        'number'     => \PowerComponents\LivewirePowerGrid\FilterAttributes\Number::class,
+        'select'     => \PowerComponents\LivewirePowerGrid\FilterAttributes\Select::class,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Persisting
     |--------------------------------------------------------------------------
     |
@@ -99,32 +133,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Cache
-    |--------------------------------------------------------------------------
-    |
-    | Cache is enabled by default to improve search performance when using collections.
-    | When enabled, data is reloaded whenever the page is refreshed or a field is updated.
-    |
-    */
-
-    'cached_data' => true,
-
-    /*
-    |--------------------------------------------------------------------------
-    | New Release Notification
-    |--------------------------------------------------------------------------
-    |
-    | PowerGrid can verify if a new release is available when you create a new PowerGrid Table.
-    |
-    | This feature depends on composer/composer.
-    | To install, run: `composer require composer/composer --dev`
-    |
-    */
-
-    'check_version' => false,
-
-    /*
-    |--------------------------------------------------------------------------
     | Exportable class
     |--------------------------------------------------------------------------
     |
@@ -136,10 +144,6 @@ return [
         'openspout_v4' => [
             'xlsx' => \PowerComponents\LivewirePowerGrid\Components\Exports\OpenSpout\v4\ExportToXLS::class,
             'csv'  => \PowerComponents\LivewirePowerGrid\Components\Exports\OpenSpout\v4\ExportToCsv::class,
-        ],
-        'openspout_v3' => [
-            'xlsx' => ExportToXLS::class,
-            'csv'  => ExportToCsv::class,
         ],
     ],
 

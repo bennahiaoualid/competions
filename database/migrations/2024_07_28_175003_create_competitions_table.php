@@ -31,27 +31,21 @@ return new class extends Migration
             $table->integer('auditing_time_for_level')->default(30)->comment('Minutes after level end before auto-assign/confirm AI audit');
             $table->timestamps();
 
-            // OPTIMIZED INDEXES based on our analysis:
-    
-            // For default admin dashboard: ORDER BY start_date (no WHERE clause)
-            $table->index('start_date');
+            // 1. PRIMARY QUERY: User competition list pagination
+            // WHERE is_suspended = 0 ORDER BY start_date DESC
+            $table->index(['is_suspended', 'start_date'], 'idx_user_competitions');
             
-            // For admin filtered queries: status + date sorting + ownership
-            $table->index(['status', 'start_date', 'admin_id']);
-            $table->index(['is_suspended', 'admin_id']);
+            // 2. Admin filtering: status + ownership + date
+            // WHERE status = 'active' AND admin_id = 1 ORDER BY start_date
+            $table->index(['admin_id', 'status', 'start_date'], 'idx_admin_filter');
+            
+            // 3. Search functionality  
+            // WHERE is_suspended = 0 AND title LIKE '%keyword%'
+            $table->index(['is_suspended', 'title'], 'idx_search');
+            
 
-            
-            // For user browsing: active, non-suspended competitions by date
-            $table->index(['status', 'is_suspended', 'start_date']);
-            
-            // For age range filtering (user interface)
-            $table->index(['age_start', 'age_end', 'status', 'is_suspended']);
-            
-            // For search optimization (PowerGrid search with is_suspended filter)
-            $table->index(['is_suspended', 'title']);
-            
-            // Optional: Full-text search for better search performance (uncomment if needed)
-            // $table->fullText(['title', 'description']);
+            // OPTIONAL: Full-text search (only add if you have complex search requirements)
+            // $table->fullText(['title', 'description'], 'idx_fulltext_search')
         });
     }
 

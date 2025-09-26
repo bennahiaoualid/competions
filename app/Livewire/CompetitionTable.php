@@ -30,9 +30,6 @@ final class CompetitionTable extends PowerGridComponent
             PowerGrid::footer()
                 ->showPerPage()
                 ->showRecordCount(),
-            PowerGrid::cache()
-                ->ttl(3600) 
-                ->customTag('competitions'),
         ];
     }
 
@@ -107,7 +104,6 @@ final class CompetitionTable extends PowerGridComponent
 
     public function actions(Competition $row): array
     {
-
         return [
             Button::add('edit')
                 ->slot('<i class="fa-regular fa-pen-to-square"></i>')

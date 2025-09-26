@@ -31,7 +31,6 @@
         </div>
     </div>
     <x-notification-detail-modal />
-    @livewireScripts
 
     {{-- set up auth user global info for notifications --}}
     @auth
@@ -50,6 +49,7 @@
             window.Laravel = @json($broadcastingConfig);
         </script>
     @endauth
+    @livewireScripts
     @include('layouts.admin.footer-scripts')
     @include('layouts.session_notifications_taoster')
     {{-- Include notification scripts --}}

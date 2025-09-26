@@ -15,12 +15,13 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AdminSeeder::class,
             RoleSeeder::class,
-            PaymentSeeder::class,
+            //PaymentSeeder::class,
             SystemSettingSeeder::class,
             //UserSeeder::class,
             // You can add other seeders here as well
             // e.g., CompetitionSeeder::class,
             // LevelSeeder::class,
+            CompetitionBulkSeeder::class,
         ]);
 
         // Example of creating a specific user if needed, can be removed or kept
