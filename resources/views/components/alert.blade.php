@@ -41,6 +41,10 @@
 <div
     x-data="{ show: true }"
     x-show="show"
+    x-transition:leave="transition ease-in duration-200"
+    x-transition:leave-start="opacity-100 transform scale-100"
+    x-transition:leave-end="opacity-0 transform scale-95"
+
     {{ $attributes->merge(['class' => $base_classes . ' ' . $size_classes . ' ' . $color_classes]) }}
 >
     <div class="flex-shrink-0">

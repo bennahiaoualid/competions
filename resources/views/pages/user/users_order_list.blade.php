@@ -14,7 +14,7 @@
             </th>
             @if(!$audit_finish)
                 <th>
-                    <span class="px-2 py-0.5 bg-primary rounded-md text-white text-nowrap">
+                    <span class="px-2 py-0.5 bg-primary rounded-sm-md text-white text-nowrap">
                         {{__('competition.result.temp')}}
                     </span>
                 </th>
@@ -52,10 +52,10 @@
 @else
     <div class="text-center">
         <div class="text-gray-500 mb-4">
-            <i class="fas fa-folder-open text-6xl"></i>
+            <i class="fa-solid fa-hourglass-start text-6xl text-primary animate-spin"></i>
         </div>
-        <div class="text-gray-700 text-lg font-semibold">
-            {{__('messages.global.no_records')}}
+        <div class="text-gray-700 text-lg font-semibold capitalize">
+            {{__('messages.global.coming_soon')}} ...
         </div>
     </div>
 @endif

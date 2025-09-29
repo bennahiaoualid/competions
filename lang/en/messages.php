@@ -177,6 +177,7 @@ return [
         'choose' => 'choose',
         'coins' => 'coins',
         'coin' => 'coin',
+        'coming_soon' => 'coming soon'
     ],
     'mail' => [
         'welcome' => 'Welcome dear :user',

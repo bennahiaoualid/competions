@@ -28,6 +28,9 @@ export default {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
                 arabic:['Cairo', 'sans-serif']
             },
+            backgroundImage: {
+                'primary-elegant': 'linear-gradient(to right, #b224ef, #7579ff)',
+            },
             colors:{
                 primary: {
                     DEFAULT: '#6366f1', // indigo-500

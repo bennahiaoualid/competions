@@ -178,6 +178,7 @@ return [
         'choose' => 'إختر',
         'coins' => 'عملات',
         'coin' => 'عملة',
+        'coming_soon' => 'قادمة قريبا'
     ],
     'mail' => [
         'welcome' => 'مرحبا :user',

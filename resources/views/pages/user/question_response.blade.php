@@ -1,75 +1,58 @@
 @extends('layouts.user.master')
 @section('css')
-
     @section('title')
-        {{\Illuminate\Support\Facades\Auth::user()->name . ' | ' . __('competition.response.response')}}
+        {{ $competition_title . ' | ' . __('competition.response.response')}}
     @stop
 @endsection
 
 
 @section('content')
-    <div class="flex justify-between items-center my-2 p-4 shadow-lg" >
-        <h1 class="text-xl font-bold capitalize">
-            {{__('competition.response.response')}}
-            {{' : ' . $level->name}}
-        </h1>
-    </div>
-    <div class="flex flex-col sm:flex-row sm:justify-between sm:space-x-4">
-        <!-- First Column (45% on sm and above, 100% on small screens) -->
-        <div class="w-full sm:w-[45%] mb-4 sm:mb-0">
-            <x-collapsible-card
-                :title="__('competition.question.info') . ' ' . $question_count['current'] . '/' . $question_count['all'] "
-                type="info">
-                <div class="space-y-4">
-                    <div>
-                        <h4 class="text-lg text-primary mb-2">{{__('competition.question.question_text')}}</h4>
-                        <p>{{$question->question_text}}</p>
-                    </div>
-                    <div class="flex gap-2">
-                        <h4 class="text-lg text-primary mb-2">{{__('competition.question.max_score')}}</h4>
-                        <p>{{$question->max_score}}</p>
-                    </div>
-                    <div class="flex gap-2">
-                        <h4 class=" text-lg text-primary mb-2">{{__('competition.question.duration')}}</h4>
-                        <p>{{$question->duration .' '. __('messages.global.second')}}</p>
-                    </div>
-
-                    <x-alert
-                        type="danger"
-                        outline="true"
-                        size="sm"
-                        :title="__('messages.alert.type.danger')"
-                    >
-                        {{__('messages.alert.content.leave_without_response')}}
-                    </x-alert>
-
-                </div>
-            </x-collapsible-card>
-
+    <div class="p-4 rounded-sm-md shadow-2xl max-w-3xl mx-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg md:text-xl text-primary font-bold capitalize ">{{ __('competition.question.the_question') }}</h2>
+            <span class="inline-block px-4 text-primary border-2 border-primary rounded-xl ">
+                {{ $question_count['current'] . '/' . $question_count['all'] }}
+            </span>
+        </div>
+        <hr class="border-t border-gray-400" />
+        <div class="my-8">
+            <div class="flex justify-between items-center">
+                <h3 class="capitalize md:text-lg font-semibold mb-2">{{__('competition.question.question_text')}}</h3>
+                <p class="px-4 py-1 capitalize bg-primary-elegant text-white text-center rounded-xl ">
+                    {{__('competition.question.max_score') . ': '. $question->max_score}}
+                </p>
+            </div>
+            <p class="mt-4">
+                {{ $question->question_text }}
+            </p>
         </div>
 
-        <!-- Second Column (50% on sm and above, 100% on small screens) -->
-        <div class="w-full sm:w-[50%]">
-            <!-- Your content for the second column -->
-            <x-collapsible-card :title="__('competition.response.response')" type="info">
-
-                <form id="response_form" method="post" action="{{ route('user.competitions.level.response.store',['question' => $question]) }}" class="space-y-2">
-                    @csrf
-                    @method('post')
-                    <input type="hidden" name="keystrokes" id="keystrokes">
-                    <div>
-                        <x-input-label for="response_text" :value=" ucwords(__('competition.response.response_text'))" />
-                        <x-text-area id="response_text" name="response_text"  class="mt-1 block w-full">
-                            {{old('response_text')}}
-                        </x-text-area>
-                        <x-input-error :messages="$errors->storeResponse->get('response_text')" class="mt-2" />
-                    </div>
-                    <div class="flex justify-end">
-                        <x-button  color_type="success" >{{ __('form.actions.save') }}</x-button>
-                    </div>
-                </form>
-            </x-collapsible-card>
-
+        <x-alert
+            type="danger"
+            outline="true"
+            size="sm"
+            :closable="true"
+            :title="__('messages.alert.type.danger')">
+            {{__('messages.alert.content.leave_without_response')}}
+        </x-alert>
+        
+        <div>
+            <h3 class="capitalize md:text-lg font-semibold mb-2">{{__('competition.response.response')}}</h3>
+            <form id="response_form" method="post" action="{{ route('user.competitions.level.response.store',['question' => $question]) }}" class="space-y-2">
+                @csrf
+                @method('post')
+                <input type="hidden" name="keystrokes" id="keystrokes">
+                <div>
+                    <x-input-label for="response_text" :value=" ucwords(__('competition.response.response_text'))" />
+                    <x-text-area id="response_text" name="response_text"  class="mt-1 block w-full">
+                        {{old('response_text')}}
+                    </x-text-area>
+                    <x-input-error :messages="$errors->storeResponse->get('response_text')" class="mt-2" />
+                </div>
+                <div class="flex justify-end">
+                    <x-button  color_type="success" >{{ __('form.actions.save') }}</x-button>
+                </div>
+            </form>
         </div>
     </div>
 @endsection
@@ -78,10 +61,10 @@
     <script>
 
         // disable copy past
-        document.addEventListener('copy', e => e.preventDefault());
-        document.addEventListener('paste', e => e.preventDefault());
-        document.addEventListener('cut', e => e.preventDefault());
-        document.addEventListener('contextmenu', e => e.preventDefault());
+        //document.addEventListener('copy', e => e.preventDefault());
+        //document.addEventListener('paste', e => e.preventDefault());
+        //document.addEventListener('cut', e => e.preventDefault());
+       // document.addEventListener('contextmenu', e => e.preventDefault());
 
 
         let isSubmitted = false;

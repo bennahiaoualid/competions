@@ -31,7 +31,7 @@
                     </p>
                     <p class="py-1 px-2 border border-sky-600 text-sky-600 max-w-fit">
                         {{__('competition.info.start_date') . ' : '}}
-                        {{$competition->start_date->inUserTimezone()->format('Y-m-d H:i')}}
+                        {{$competition->start_date_local}}
                     </p>
                 </div>
             </x-collapsible-card>

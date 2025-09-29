@@ -1,5 +1,5 @@
-<header>
-    <nav class="bg-white border-gray-200 shadow-card">
+<header class="mb-4">
+    <nav class="bg-white border-gray-200 shadow-xs-card">
         <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
             <div class="flex gap-2 items-center">
                 @auth
@@ -13,22 +13,24 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
+                    @yield('page-header','')
+                @else
+                    <a href="{{route('home')}}" class="flex items-center space-x-3 rtl:space-x-reverse">
+                        <img src="{{asset('assets/images/logo.png')}}" class="w-8 md:w-12" alt="site Logo" />
+                        <span class="self-center text-xl md:text-2xl font-semibold whitespace-nowrap capitalize">{{__('messages.global.site_name')}}</span>
+                    </a>
                 @endauth
-                <a href="{{route('home')}}" class="flex items-center space-x-3 rtl:space-x-reverse">
-                    <img src="{{asset('assets/images/logo.png')}}" class="w-8 md:w-12" alt="site Logo" />
-                    <span class="self-center text-xl md:text-2xl font-semibold whitespace-nowrap capitalize">{{__('messages.global.site_name')}}</span>
-                </a>
             </div>
 
             <div class="flex items-center gap-4 md:order-2">
                 {{-- Notification Dropdown --}}
                 <x-dropdown alignment="right" width="min-w-96">
                     <x-slot name="trigger">
-                        <button class="flex items-center text-gray-600 hover:text-gray-800 focus:outline-none focus:shadow-outline p-2 rounded-md transition-colors duration-200 relative">
+                        <button class="flex items-center text-gray-600 hover:text-gray-800 focus:outline-none focus:shadow-xs-outline p-2 rounded-md transition-colors duration-200 relative">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                             </svg>
-                            <span id="notification-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold" style="display: none;">0</span>
+                            <span id="notification-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-sm-full h-5 w-5 flex items-center justify-center font-bold" style="display: none;">0</span>
                         </button>
                     </x-slot>
                     
@@ -84,7 +86,7 @@
                 @else
                     <a class="py-1 px-2 border border-gray-300 hidden md:block" href="{{route('login')}}">{{__('form.actions.login')}}</a>
                 
-                    <button id="main-navbar-toggle" type="button" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200" aria-controls="main-navbar" aria-expanded="false">
+                    <button id="main-navbar-toggle" type="button" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-sm-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200" aria-controls="main-navbar" aria-expanded="false">
                         <span class="sr-only">Open main menu</span>
                         <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/>
@@ -96,10 +98,10 @@
             @guest
                 @php
                     $active_class = 'block py-2 px-3 text-white bg-primary md:bg-transparent md:text-primary md:p-0 capitalize';
-                    $inactive_classes = 'block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-primary md:p-0 capitalize';
+                    $inactive_classes = 'block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:hover:text-primary md:p-0 capitalize';
                 @endphp
                 <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="main-navbar">
-                    <ul class="flex flex-col font-medium p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-white">
+                    <ul class="flex flex-col font-medium p-4 md:p-0 mt-4 border border-gray-100 rounded-sm-lg bg-gray-50 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-white">
                         <li>
                             <a href="{{route('home')}}" class="{{request()->routeIs('home') ? $active_class : $inactive_classes}}" aria-current="page">
                                 {{__('links.home')}}
@@ -122,13 +124,13 @@
                             </a>
                         </li>
                         <li class="md:hidden">
-                            <a class="py-1 px-2 bg-primary rounded-sm block my-2 mx-auto text-white text-center uppercase" href="{{route('login')}}">{{__('form.actions.login')}}</a>
+                            <a class="py-1 px-2 bg-primary rounded-sm-xs block my-2 mx-auto text-white text-center uppercase" href="{{route('login')}}">{{__('form.actions.login')}}</a>
                         </li>
                         <li class="md:hidden mt-4">
                             {{-- language select dropdown --}}
                             <x-dropdown alignment="right" >
                                 <x-slot name="trigger">
-                                    <button class="w-full py-1 px-4  text-gray-600 rounded-md border  font-semibold focus:outline-none focus:shadow-outline text-sm overflow-hidden">
+                                    <button class="w-full py-1 px-4  text-gray-600 rounded-sm-md border  font-semibold focus:outline-none focus:shadow-xs-outline text-sm overflow-hidden">
                                         <i class="fa-solid fa-globe"></i> {{ LaravelLocalization::getCurrentLocaleNative() }}
                                     </button>
                                 </x-slot>
