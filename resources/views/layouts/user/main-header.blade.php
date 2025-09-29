@@ -1,5 +1,5 @@
 <header class="mb-4">
-    <nav class="bg-white border-gray-200 shadow-xs-card">
+    <nav class="bg-white border-gray-200 shadow-card">
         <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
             <div class="flex gap-2 items-center">
                 @auth

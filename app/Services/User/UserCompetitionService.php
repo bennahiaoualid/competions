@@ -96,6 +96,7 @@ class UserCompetitionService
             'level' => $level,
             'users' => $results['users'],
             'audit_finish' => $results['audit_finish'],
+            'userCanParticipate' => $level->userCanParticipate()
         ];
     }
 

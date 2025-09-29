@@ -12,14 +12,6 @@
             <th class="px-6 bg-slate-300 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-center">
                 {{__('competition.response.score')}}
             </th>
-            @if(!$audit_finish)
-                <th>
-                    <span class="px-2 py-0.5 bg-primary rounded-sm-md text-white text-nowrap">
-                        {{__('competition.result.temp')}}
-                    </span>
-                </th>
-            @endif
-
         </tr>
         </thead>
 

@@ -6,7 +6,7 @@
 ])
 
 @php
-    $base_classes = "rounded-md p-4 mb-4 flex items-start";
+    $base_classes = "rounded-md px-2 py-4 sm:px-4 mb-4 flex items-start";
     $size_classes = "text-sm md:text-base";
 
     // Color classes based on type

@@ -7,31 +7,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\User\UserProfileController;
 use App\Http\Controllers\Payment\PaymentProofController;
+use App\Models\Competition\Competition;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
-Route::get('/test-ui', function () {
-  $user = User::factory()->make([
-    'id' => 999,
-    'name' => 'Fake Dev User',
-    'email' => 'fake@example.com',
-]);
 
-// Inject into Auth
-Auth::setUser($user);
-  $level = Level::factory()->make();
-  $question = Question::factory()->for($level)->make(['id' => 1]);
-    $data = [
-      'status' => 'success',
-      'question' => $question,
-      'question_count' => [
-        'current' =>  1,
-        'all' => $level->questions_number
-    ],
-      'level_name' => $level->name,
-      'competition_title' => $level->competition->title
-  ];
-  return view('pages.user.question_response', $data);
-
-});
 
 
 Route::group(
@@ -39,6 +17,36 @@ Route::group(
         'prefix' => LaravelLocalization::setLocale(),
         'middleware' => [ 'localeSessionRedirect', 'localizationRedirect', 'localeViewPath']
     ], function(){
+
+    ////////////////////////////////// testint
+    Route::get('/test-ui', function () {
+        $user = User::factory()->make([
+            'id' => 999,
+            'name' => 'Fake Dev User',
+            'email' => 'fake@example.com',
+        ]);
+        
+        $users = User::factory()->count(2)->make();
+        $allUsers = collect([$user])->merge($users)->map(function ($user) {
+            $user->total_score = 10;
+            return $user;
+        });
+        
+        // Inject into Auth
+        Auth::setUser($user);
+          $level = Level::factory()->make(['id' => 1]);
+            $data = [
+                'level' => $level,
+                'users' => $allUsers,
+                'audit_finish' => false,
+                'userCanParticipate' => true
+        
+            ];
+          return view('pages.user.level_detail', $data);
+        
+        });
+
+    /////////////////////////////////// endf testing
 
     Route::get('/', function () {
         return view('welcome');
