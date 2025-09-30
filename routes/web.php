@@ -34,7 +34,7 @@ Route::group(
         
         // Inject into Auth
         Auth::setUser($user);
-          $level = Level::factory()->make(['id' => 1]);
+          $level = Level::factory()->make(['id' => 1,'start_date' => now()->subDay(),'status'=>'active']);
             $data = [
                 'level' => $level,
                 'users' => $allUsers,

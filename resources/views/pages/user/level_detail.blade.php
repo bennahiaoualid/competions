@@ -93,8 +93,19 @@
                                 >
                                     {{__('messages.alert.content.time_response_end')}}
                                 </x-alert>
+
+                                <div class="flex justify-between items-center my-4 p-2 border border-primary rounded" >
+                                    <p class="text-lg font-bold capitalize text-primary">{{__('competition.response.response')}}</p>
+                                    <x-button :islink="true" href='{{route("user.competitions.response",["level"=>$level])}}'>
+                                        <x-slot:icon>
+                                            <i class="fa-solid fa-eye me-2"></i>
+                                        </x-slot:icon>
+                                        {{__("form.actions.show")}}
+                                    </x-button>
+                                </div>
                             @endif
                         @endif
+                        
                     @else
                         <x-alert
                             type="info"
@@ -107,22 +118,6 @@
                     @endif
                 </div>
 
-                {{-- show competitor responses list --}}
-                @if($userCanParticipate && $level->status != 'pending' && !$level->isStillActive() )
-                    <x-collapsible-card :title="__('competition.response.info')" type="info">
-                        <div class="flex justify-between items-center my-4 p-2 border border-primary rounded" >
-                            <p class="text-lg font-bold capitalize text-primary">{{__('competition.response.response')}}</p>
-                            <x-button :islink="true" href='{{route("user.competitions.response",["level"=>$level])}}'>
-                                <x-slot:icon>
-                                    <i class="fa-solid fa-eye me-2"></i>
-                                </x-slot:icon>
-                                {{__("form.actions.show")}}
-                            </x-button>
-                        </div>
-                    </x-collapsible-card>
-                @endif
-
-                
                 <!-- users order list -->
                 <div class="p-4 shadow-xl space-y-3 border border-gray-300 rounded-sm">
                     <div class="flex justify-between">
