@@ -3,14 +3,15 @@
 use App\Models\User;
 use App\Models\Competition\Level;
 use App\Models\Competition\Question;
+use App\Models\Competition\Response;
 use Illuminate\Support\Facades\Route;
+use PharIo\Manifest\ElementCollection;
+use App\Models\Competition\Competition;
 use App\Http\Controllers\User\UserController;
+use Illuminate\Pagination\LengthAwarePaginator;
 use App\Http\Controllers\User\UserProfileController;
 use App\Http\Controllers\Payment\PaymentProofController;
-use App\Models\Competition\Competition;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
-
-
 
 Route::group(
     [
@@ -19,32 +20,89 @@ Route::group(
     ], function(){
 
     ////////////////////////////////// testint
-    Route::get('/test-ui', function () {
+    Route::get('/test-ui2', function () {
         $user = User::factory()->make([
             'id' => 999,
             'name' => 'Fake Dev User',
             'email' => 'fake@example.com',
         ]);
-        
-        $users = User::factory()->count(2)->make();
-        $allUsers = collect([$user])->merge($users)->map(function ($user) {
-            $user->total_score = 10;
-            return $user;
+        $level = Level::factory()->make(['id' => 1,'start_date' => now()->subDay(),'status'=>'active']);
+           // Fake questions for this level
+        $questions = Question::factory()
+        ->count(3)
+        ->make()
+        ->each(function ($q, $i) use ($level) {
+            $q->id = $i + 1;
+            $q->level_id = $level->id;
         });
+
+        // Build fake responses
+        $responses = $questions->map(function ($question, $i) use ($user) {
+            $response = Response::factory()
+                ->for($user)
+                ->make([
+                    'id' => $i + 1,
+                    'user_id' => $user->id,
+                    'question_id' => $question->id,
+                ]);
+
+            // Attach the related question manually like with() does
+            $response->setRelation('question', $question);
+
+            return $response;
+        });
+
+           // ---- Fake Pagination ----
+    $perPage = 3;
+    $page = request()->get('page', 1);
+    $paginated = new LengthAwarePaginator(
+        $responses->forPage($page, $perPage), // slice items
+        $responses->count(),                  // total items
+        $perPage,                             // items per page
+        $page,                                // current page
+        ['path' => request()->url(), 'query' => request()->query()] // keep query params
+    );
+
+                
         
         // Inject into Auth
         Auth::setUser($user);
           $level = Level::factory()->make(['id' => 1,'start_date' => now()->subDay(),'status'=>'active']);
             $data = [
                 'level' => $level,
-                'users' => $allUsers,
-                'audit_finish' => false,
-                'userCanParticipate' => true
+            'responses' => $paginated,
         
             ];
-          return view('pages.user.level_detail', $data);
+          return view('pages.user.user_responses_list', $data);
         
         });
+
+        Route::get('/test-ui', function () {
+            $user = User::factory()->make([
+                'id' => 999,
+                'name' => 'Fake Dev User',
+                'email' => 'fake@example.com',
+            ]);
+            
+            $users = User::factory()->count(2)->make();
+            $allUsers = collect([$user])->merge($users)->map(function ($user) {
+                $user->total_score = 10;
+                return $user;
+            });
+            
+            // Inject into Auth
+            Auth::setUser($user);
+              $level = Level::factory()->make(['id' => 1,'start_date' => now()->subDay(),'status'=>'active']);
+                $data = [
+                    'level' => $level,
+                    'users' => $allUsers,
+                    'audit_finish' => false,
+                    'userCanParticipate' => true
+            
+                ];
+              return view('pages.user.level_detail', $data);
+            
+            });
 
     /////////////////////////////////// endf testing
 

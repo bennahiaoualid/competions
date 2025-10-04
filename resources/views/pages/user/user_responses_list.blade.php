@@ -14,7 +14,105 @@
             {{' : ' . $level->name}}
         </h1>
     </div>
-    <div class="block w-full overflow-x-auto">
+    <div class="space-y-8">
+        @foreach ($responses as $response)
+            @php
+                $border_top_color = "border-t-danger border-t-2";
+                $score_color_style = "text-danger border-danger";
+                if ($response->final_score >= $response->question->max_score / 2) {
+                    $border_top_color = "border-t-success border-t-2";
+                    $score_color_style = "text-success border-success";
+                }
+            @endphp
+            <div x-data="{ open: false }" 
+                class="max-w-4xl mx-auto rounded-t-md 
+                        shadow-xl border border-gray-300 {{ $border_top_color }}">
+                <div @click="open = !open"
+                    :class="open ? 'my-0' : 'my-2'"
+                    class="cursor-pointer py-2 px-4 flex flex-row 
+                            justify-between items-center gap-2">
+                    <h3 class="hidden sm:block">
+                        {{ $response->question->question_text }}
+                    </h3>
+                    <h3 class="text-primary text-lg sm:hidden">
+                        {{ __('competition.question.the_question').' '.$loop->index+1 }}
+                    </h3>
+
+                    <div class="flex gap-2">
+                        <span dir="ltr" 
+                                class="px-2 py-1 whitespace-nowrap border-2 rounded-full {{ $score_color_style }}">
+                            {{ $response->final_score }} / 
+                            <span class="text-sm">{{ $response->question->max_score }}</span>
+                        </span>
+                        <span>
+                            <i class="fa-solid fa-chevron-up text-primary text-end"  x-show="open"></i>
+                            <i class="fa-solid fa-chevron-down text-primary text-end" x-show="!open"></i>
+                        </span>
+                    </div>
+                </div>
+                <div x-show="open"
+                    class=" py-2 px-4 border border-t-0 rounded-b-md">
+                    <hr class="border-t border-gray-300 mt-1 mb-4">
+
+                    <div class="my-4 sm:my-6 sm:hidden">
+                        <h4 class="capitalize text-primary font-semibold text-lg mb-2">
+                            {{__('competition.question.question_text')}}
+                        </h4>
+                        <p> {{$response->question->question_text}}</p>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class=" capitalize text-primary font-semibold text-lg">
+                                {{__('competition.response.response_text')}}
+                            </h4>
+                            <span class="text-sm sm:text-base text-primary">
+                                {{$response->response_duration . ' ' .  __('messages.global.second')}}
+                            <span>
+                        </div>
+                        <p> {{$response->response_text}}</p>
+                    </div>
+
+                    @php
+                        $flags = json_decode($response->flags ?? '[]');
+                    @endphp
+                    @if ($flags)    
+                        <div class="my-4 sm:my-6">
+                            <h4 class="mb-2 capitalize text-danger font-semibold text-lg">
+                                {{__('competition.response.penalty').' : '}}
+                                <span dir="ltr">(-{{$response->penalty * 100}}%)</span>
+                            </h4>
+                            <div class="flex flex-wrap gap-2 mt-2 md:mt-4">
+                                @foreach ($flags as $flag)
+                                    <span class="px-2 py-1 text-sm text-danger whitespace-nowrap border-2 border-danger rounded-full">
+                                        {{ __('competition.response.flag.'.$flag) }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    <h4 class="my-4 sm:my-6 capitalize text-primary font-semibold text-lg">
+                        {{__('competition.response.score').' : '}}
+                        <span dir="ltr" class="text-lg">
+                            {{ $response->score }} / 
+                            <span class="text-sm">{{ $response->question->max_score }}</span>
+                        </span>
+                    </h4> 
+                    
+                    <h4 class="my-4 sm:my-6 capitalize text-primary font-semibold text-lg">
+                        {{__('competition.response.final_score').' : '}}
+                        <span dir="ltr" class="text-lg">
+                            {{ $response->final_score }} / 
+                            <span class="text-sm">{{ $response->question->max_score }}</span>
+                        </span>
+                    </h4> 
+                    
+                </div>
+            </div>
+        @endforeach
+    </div>
+    <div class="block w-full overflow-x-auto hidden">
         <table class="items-center bg-transparent w-full border-collapse ">
             <thead>
             <tr>

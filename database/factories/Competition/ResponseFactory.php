@@ -23,6 +23,11 @@ class ResponseFactory extends Factory
     protected ?Question $providedQuestion = null;
     protected ?User $providedUser = null;
     protected ?Admin $providedAdmin = null;
+    protected $flags = [
+        'too_fast_long_answer' => 0.2,
+        'low_keystrokes' => 0.2,
+        'suspicious_wpm' => 0.2,
+    ];
 
     /**
      * Define the model's default state.
@@ -35,16 +40,20 @@ class ResponseFactory extends Factory
         $userId = $this->providedUser ? $this->providedUser->id : User::factory();
         $adminId = $this->providedAdmin ? $this->providedAdmin->id : null;
 
+        $flags = $this->getFlags();
+        $score = $this->faker->optional(0.7, 0)->randomFloat(2, 0, 20);
+
         return [
             'response_text' => $this->faker->realText(200),
             'question_id' => $questionId,
             'user_id' => $userId,
             'admin_id' => $adminId, // Or Admin::factory() if an admin should always be associated
-            'score' => $this->faker->optional(0.7, 0)->randomFloat(2, 0, 20), // 70% chance of having a score, otherwise 0
+            'score' => $score, // 70% chance of having a score, otherwise 0
             'response_duration' => $this->faker->numberBetween(10, 100), // Duration in seconds
             'keystrokes' => $this->faker->numberBetween(10, 100),
-            'penalty' => 0,
-            'flags' => json_encode([]),
+            'penalty' => $flags[1],
+            'flags' => json_encode($flags[0]),
+            'final_score' =>round($score - ($score * $flags[1]), 2),
         ];
     }
 
@@ -112,5 +121,19 @@ class ResponseFactory extends Factory
     {
         $this->providedAdmin = $admin;
         return $this;
+    }
+
+    private function getFlags()
+    {
+        $count = rand(0, count($this->flags));
+
+        $randomKeys = $count ? array_rand($this->flags, $count) : [];
+        $randomKeys = (array) $randomKeys; 
+
+        $total = $count ? 
+        array_sum(array_intersect_key($this->flags, array_flip($randomKeys))):0;
+        return [
+            $randomKeys,$total
+        ];
     }
 } 
